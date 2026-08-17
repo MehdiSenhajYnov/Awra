@@ -1,0 +1,23 @@
+// SPDX-License-Identifier: LGPL-2.1-or-later
+
+using Gtk 4.0;
+using Awra 1.0;
+
+Awra.Surface example_surface {
+  role: card;
+  radius: 20;
+  elevation: 2;
+
+  child: Box {
+    orientation: vertical;
+    spacing: 8;
+
+    Label {
+      label: "Built with Awra and Blueprint";
+    }
+
+    Awra.Button {
+      label: "Accessible GTK action";
+    }
+  };
+}
