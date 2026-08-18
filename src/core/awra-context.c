@@ -7,6 +7,8 @@
 #include "awra-init-private.h"
 #include "core/awra-context-private.h"
 #include "core/awra-style-manager-private.h"
+#include "material/awra-material-resolution-private.h"
+#include "material/awra-material-resolver-private.h"
 #include "platform/awra-diagnostics-private.h"
 
 struct _AwraContext {
@@ -15,6 +17,7 @@ struct _AwraContext {
   AwraStyleManager *style_manager;
   AwraDiagnostics *diagnostics;
   AwraEffectCoordinator *coordinator;
+  gulong token_handler;
 };
 
 G_DEFINE_FINAL_TYPE (AwraContext, awra_context, G_TYPE_OBJECT)
@@ -26,6 +29,10 @@ awra_context_dispose (GObject *object)
 {
   AwraContext *self = AWRA_CONTEXT (object);
 
+  if (self->token_handler != 0) {
+    g_signal_handler_disconnect (self->style_manager, self->token_handler);
+    self->token_handler = 0;
+  }
   awra_effect_coordinator_free (g_steal_pointer (&self->coordinator));
   g_clear_object (&self->style_manager);
   g_clear_object (&self->diagnostics);
@@ -53,6 +60,17 @@ detect_session_type (void)
   return session != NULL && *session != '\0' ? session : "unknown";
 }
 
+static void
+token_set_changed_cb (AwraStyleManager *manager,
+                      GParamSpec       *pspec,
+                      AwraContext      *self)
+{
+  (void) pspec;
+  awra_update_css_for_display (
+    self->display,
+    awra_style_manager_get_token_set (manager));
+}
+
 AwraContext *
 awra_context_get_for_display (GdkDisplay *display)
 {
@@ -71,6 +89,13 @@ awra_context_get_for_display (GdkDisplay *display)
   self = g_object_new (AWRA_TYPE_CONTEXT, NULL);
   self->display = display;
   self->style_manager = awra_style_manager_new_for_display (display);
+  awra_update_css_for_display (
+    display,
+    awra_style_manager_get_token_set (self->style_manager));
+  self->token_handler = g_signal_connect (self->style_manager,
+                                          "notify::token-set",
+                                          G_CALLBACK (token_set_changed_cb),
+                                          self);
   self->diagnostics = awra_diagnostics_new (detect_session_type (),
                                             G_OBJECT_TYPE_NAME (display));
   self->coordinator = awra_effect_coordinator_new (display,
@@ -105,10 +130,40 @@ awra_context_get_diagnostics (AwraContext *self)
   return self->diagnostics;
 }
 
+AwraMaterialResolution *
+awra_context_resolve_material (AwraContext     *self,
+                               AwraMaterial    *material,
+                               AwraSurfaceRole  role,
+                               gboolean         window_active,
+                               guint            elevation)
+{
+  AwraResolvedMaterial resolved;
+  gboolean blur_available;
+
+  g_return_val_if_fail (AWRA_IS_CONTEXT (self), NULL);
+  g_return_val_if_fail (AWRA_IS_MATERIAL (material), NULL);
+  g_return_val_if_fail (role >= AWRA_SURFACE_ROLE_WINDOW &&
+                        role <= AWRA_SURFACE_ROLE_HUD, NULL);
+
+  blur_available =
+    (awra_diagnostics_get_capabilities (self->diagnostics) &
+     AWRA_EFFECT_CAPABILITY_BLUR) != 0 &&
+    awra_style_manager_get_native_blur_enabled (self->style_manager);
+  awra_material_resolve (
+    material,
+    awra_style_manager_get_token_set (self->style_manager),
+    role,
+    !!window_active,
+    blur_available,
+    awra_style_manager_get_reduced_transparency (self->style_manager),
+    elevation,
+    &resolved);
+  return awra_material_resolution_new (&resolved);
+}
+
 AwraEffectCoordinator *
 awra_context_get_effect_coordinator (AwraContext *self)
 {
   g_return_val_if_fail (AWRA_IS_CONTEXT (self), NULL);
   return self->coordinator;
 }
-

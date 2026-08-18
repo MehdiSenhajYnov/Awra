@@ -1,0 +1,8 @@
+src/layout/awra-edge-panel.c
+src/navigation/awra-tab-view.c
+src/overlays/awra-command-palette.c
+src/overlays/awra-popover.c
+src/widgets/awra-advanced-inputs.c
+src/widgets/awra-data-view.c
+src/widgets/awra-dropdown.c
+src/widgets/awra-selection-toolbar.c

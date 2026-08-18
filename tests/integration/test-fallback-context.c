@@ -8,6 +8,7 @@ main (int   argc,
 {
   AwraContext *context;
   AwraDiagnostics *diagnostics;
+  g_autofree char *report = NULL;
 
   g_test_init (&argc, &argv, NULL);
   if (!gtk_init_check ()) {
@@ -24,6 +25,8 @@ main (int   argc,
                    ==,
                    AWRA_EFFECT_CAPABILITY_NONE);
   g_assert_nonnull (awra_diagnostics_get_fallback_reason (diagnostics));
+  report = awra_diagnostics_dup_report (diagnostics);
+  g_assert_nonnull (strstr (report, "effect-backend: generic-fallback"));
+  g_assert_nonnull (strstr (report, "effect-regions:"));
   return 0;
 }
-

@@ -13,4 +13,6 @@ void awra_diagnostics_set_backend      (AwraDiagnostics      *self,
 void awra_diagnostics_set_counts       (AwraDiagnostics      *self,
                                         guint                 native_surfaces,
                                         guint                 effects_applied);
-
+void awra_diagnostics_set_region_details (AwraDiagnostics *self,
+                                          guint64          update_count,
+                                          const char      *summary);

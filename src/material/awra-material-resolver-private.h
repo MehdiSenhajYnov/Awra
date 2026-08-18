@@ -11,6 +11,10 @@ typedef struct {
   GdkRGBA shadow;
   double radius;
   double border_width;
+  AwraSurfaceEdge border_edges;
+  AwraSurfaceEdge highlight_edges;
+  double highlight_width;
+  double grain_opacity;
   gboolean request_blur;
   gboolean fallback;
 } AwraResolvedMaterial;
@@ -23,4 +27,3 @@ void awra_material_resolve (AwraMaterial         *material,
                             gboolean              reduced_transparency,
                             guint                 elevation,
                             AwraResolvedMaterial *resolved);
-

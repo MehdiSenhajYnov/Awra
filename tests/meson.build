@@ -1,20 +1,110 @@
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
+awra_test_internal = static_library(
+  'awra-test-internal',
+  awra_sources,
+  awra_resources,
+  dependencies: awra_deps,
+  include_directories: [inc_public, inc_private],
+)
+awra_test_internal_dep = declare_dependency(
+  link_whole: awra_test_internal,
+  include_directories: [inc_public, inc_private],
+  dependencies: awra_deps,
+)
+
 unit_material = executable(
   'test-material',
   'unit/test-material.c',
-  dependencies: awra_dep,
+  dependencies: [awra_test_internal_dep, cc.find_library('m')],
   include_directories: inc_private,
 )
 test('material-matrix', unit_material)
 
+external_c = executable(
+  'external-smoke-c',
+  'integration/external-smoke.c',
+  dependencies: awra_dep,
+)
+test('external-c-consumer', external_c)
+
+test(
+  'public-symbols',
+  python,
+  args: [
+    files('api/test-public-symbols.py'),
+    libawra,
+    files('api/phase-a-contract.txt'),
+    public_headers,
+  ],
+  depends: [libawra, awra_symbol_map],
+)
+
+test(
+  'public-consumer-boundary',
+  python,
+  args: [
+    files('../build-aux/check-public-consumers.py'),
+    meson.project_source_root() / 'showcase',
+    meson.project_source_root() / 'docs/guides',
+      meson.project_source_root() / 'tests/consumers',
+      meson.project_source_root() / 'bindings/rust',
+      meson.project_source_root() / 'examples',
+  ],
+)
+
+test(
+  'flatpak-manifest-contract',
+  python,
+  args: [
+    files('api/test-flatpak-manifest.py'),
+    files('../packaging/org.awra.Showcase.Devel.json'),
+  ],
+)
+
+test(
+  'rust-safe-projection',
+  python,
+  args: [
+    files('api/test-rust-projection.py'),
+    meson.project_source_root() / 'bindings/rust/awra',
+  ],
+)
+
 widget_basics = executable(
   'test-widgets',
   'widget/test-widgets.c',
-  dependencies: awra_dep,
+  dependencies: awra_test_internal_dep,
   include_directories: inc_private,
 )
 test('widget-basics', widget_basics, is_parallel: false)
+
+accessibility_audit = executable(
+  'test-accessibility',
+  'widget/test-accessibility.c',
+  dependencies: awra_test_internal_dep,
+  include_directories: inc_private,
+)
+test(
+  'accessibility-rtl',
+  accessibility_audit,
+  env: ['G_DEBUG=fatal-warnings'],
+  is_parallel: false,
+)
+
+render_budget = executable(
+  'test-render-budget',
+  'performance/test-render-budget.c',
+  dependencies: awra_test_internal_dep,
+  include_directories: inc_private,
+)
+test(
+  'render-budget',
+  render_budget,
+  env: ['G_DEBUG=fatal-warnings'],
+  timeout: 45,
+  is_parallel: false,
+)
 
 fallback_context = executable(
   'test-fallback-context',
@@ -43,5 +133,132 @@ test(
   'visual-render',
   visual_render,
   env: ['AWRA_FORCE_FALLBACK=1'],
+  is_parallel: false,
+)
+
+style_isolation = executable(
+  'test-style-isolation',
+  'visual/test-style-isolation.c',
+  dependencies: awra_dep,
+)
+
+page_invariants = executable(
+  'test-page-invariants',
+  'visual/test-page-invariants.c',
+  dependencies: awra_dep,
+)
+test(
+  'page-invariants',
+  page_invariants,
+  env: [
+    'G_DEBUG=fatal-warnings',
+    'GTK_A11Y=none',
+  ],
+  timeout: 45,
+  is_parallel: false,
+)
+
+if gir.length() > 0
+  test(
+    'gir-contract',
+    python,
+    args: [files('api/test-gir-contract.py'), gir[0]],
+    depends: gir,
+  )
+  test(
+    'api-1.0-baseline',
+    python,
+    args: [
+      files('api/test-api-baseline.py'),
+      gir[0],
+      files('api/awra-1.0-api.json'),
+    ],
+    depends: gir,
+  )
+  test(
+    'python-gi-consumer',
+    python,
+    args: files('integration/external-smoke.py'),
+    env: [
+      'GI_TYPELIB_PATH=' + meson.project_build_root(),
+      'LD_LIBRARY_PATH=' + meson.project_build_root(),
+    ],
+    depends: gir,
+    is_parallel: false,
+  )
+
+  if vala_available and have_awra_vapi
+    external_vala = executable(
+      'external-smoke-vala',
+      'integration/external-smoke.vala',
+      dependencies: [awra_dep, awra_vapi],
+      c_args: ['-Wno-unused-parameter'],
+    )
+    test('external-vala-consumer', external_vala)
+  endif
+
+  cargo = find_program('cargo', required: false)
+  if cargo.found() and get_option('developer')
+    rust_manifest = files('consumers/rust-experimental/Cargo.toml')
+    test(
+      'rust-experimental-consumer',
+      cargo,
+      args: [
+        'run',
+        '--quiet',
+        '--offline',
+        '--manifest-path', rust_manifest,
+      ],
+      env: [
+        'AWRA_BUILD_DIR=' + meson.project_build_root(),
+        'AWRA_GIR_PATH=' + meson.project_build_root() / 'Awra-1.0.gir',
+        'CARGO_TARGET_DIR=' + meson.project_build_root() / 'rust-consumer-target',
+        'LD_LIBRARY_PATH=' + meson.project_build_root(),
+      ],
+      depends: gir,
+      timeout: 240,
+      is_parallel: false,
+    )
+    rust_bindings_manifest = files('../bindings/rust/Cargo.toml')
+    rust_bindings_env = [
+      'PKG_CONFIG_PATH=' + meson.project_build_root() / 'meson-uninstalled',
+      'LD_LIBRARY_PATH=' + meson.project_build_root(),
+      'CARGO_TARGET_DIR=' + meson.project_build_root() / 'rust-bindings-target',
+    ]
+    test(
+      'rust-generated-bindings',
+      cargo,
+      args: [
+        'test', '--quiet', '--offline',
+        '--manifest-path', rust_bindings_manifest,
+      ],
+      env: rust_bindings_env,
+      depends: gir,
+      timeout: 300,
+      is_parallel: false,
+    )
+    test(
+      'rust-generated-example',
+      cargo,
+      args: [
+        'run', '--quiet', '--offline',
+        '--manifest-path', rust_bindings_manifest,
+        '-p', 'awra-rust-example',
+      ],
+      env: rust_bindings_env,
+      depends: gir,
+      timeout: 300,
+      is_parallel: false,
+    )
+  endif
+endif
+test(
+  'style-isolation',
+  style_isolation,
+  env: [
+    'G_DEBUG=fatal-warnings',
+    'GTK_A11Y=none',
+  ],
+  timeout: 45,
   is_parallel: false,
 )

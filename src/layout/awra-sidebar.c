@@ -1,9 +1,14 @@
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
 
 #include <awra/awra-sidebar.h>
+#include <awra/awra-layout.h>
 
-struct _AwraSidebar { GtkWidget parent_instance; AwraSurface *surface; };
-enum { PROP_0, PROP_CHILD, PROP_SURFACE, N_PROPS };
+struct _AwraSidebar {
+  GtkWidget parent_instance;
+  AwraSurface *surface;
+  guint inset;
+};
+enum { PROP_0, PROP_CHILD, PROP_SURFACE, PROP_INSET, N_PROPS };
 static GParamSpec *properties[N_PROPS];
 G_DEFINE_FINAL_TYPE (AwraSidebar, awra_sidebar, GTK_TYPE_WIDGET)
 
@@ -20,12 +25,21 @@ static void awra_sidebar_get_property (GObject *object, guint id, GValue *value,
   switch (id) {
   case PROP_CHILD: g_value_set_object (value, awra_sidebar_get_child (self)); break;
   case PROP_SURFACE: g_value_set_object (value, self->surface); break;
+  case PROP_INSET: g_value_set_uint (value, self->inset); break;
   default: G_OBJECT_WARN_INVALID_PROPERTY_ID (object, id, pspec);
   }
 }
 static void awra_sidebar_set_property (GObject *object, guint id, const GValue *value, GParamSpec *pspec) {
-  if (id == PROP_CHILD) awra_sidebar_set_child (AWRA_SIDEBAR (object), g_value_get_object (value));
-  else G_OBJECT_WARN_INVALID_PROPERTY_ID (object, id, pspec);
+  switch (id) {
+  case PROP_CHILD:
+    awra_sidebar_set_child (AWRA_SIDEBAR (object), g_value_get_object (value));
+    break;
+  case PROP_INSET:
+    awra_sidebar_set_inset (AWRA_SIDEBAR (object), g_value_get_uint (value));
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, id, pspec);
+  }
 }
 static void awra_sidebar_class_init (AwraSidebarClass *klass) {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -38,17 +52,18 @@ static void awra_sidebar_class_init (AwraSidebarClass *klass) {
     G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
   properties[PROP_SURFACE] = g_param_spec_object ("surface", NULL, NULL, AWRA_TYPE_SURFACE,
     G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+  properties[PROP_INSET] = g_param_spec_uint (
+    "inset", NULL, NULL, 0, 128, 12,
+    G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
   g_object_class_install_properties (object_class, N_PROPS, properties);
   gtk_widget_class_set_layout_manager_type (widget_class, GTK_TYPE_BIN_LAYOUT);
   gtk_widget_class_set_css_name (widget_class, "awrasidebar");
   gtk_widget_class_set_accessible_role (widget_class, GTK_ACCESSIBLE_ROLE_NAVIGATION);
 }
 static void awra_sidebar_init (AwraSidebar *self) {
-  g_autoptr (AwraMaterial) material = awra_material_new_translucent ();
   self->surface = AWRA_SURFACE (awra_surface_new_with_role (AWRA_SURFACE_ROLE_SIDEBAR));
-  awra_surface_set_material (self->surface, material);
-  awra_surface_set_radius (self->surface, 0.0);
   gtk_widget_set_parent (GTK_WIDGET (self->surface), GTK_WIDGET (self));
+  awra_sidebar_set_inset_spacing (self, AWRA_SPACING_MD);
 }
 GtkWidget *awra_sidebar_new (void) { return g_object_new (AWRA_TYPE_SIDEBAR, NULL); }
 GtkWidget *awra_sidebar_get_child (AwraSidebar *self) {
@@ -61,4 +76,26 @@ void awra_sidebar_set_child (AwraSidebar *self, GtkWidget *child) {
 AwraSurface *awra_sidebar_get_surface (AwraSidebar *self) {
   g_return_val_if_fail (AWRA_IS_SIDEBAR (self), NULL); return self->surface;
 }
+guint awra_sidebar_get_inset (AwraSidebar *self) {
+  g_return_val_if_fail (AWRA_IS_SIDEBAR (self), 0); return self->inset;
+}
+void awra_sidebar_set_inset (AwraSidebar *self, guint inset) {
+  g_return_if_fail (AWRA_IS_SIDEBAR (self));
+  g_return_if_fail (inset <= 128);
+  if (self->inset == inset) return;
+  self->inset = inset;
+  gtk_widget_set_margin_top (GTK_WIDGET (self->surface), (int) inset);
+  gtk_widget_set_margin_bottom (GTK_WIDGET (self->surface), (int) inset);
+  gtk_widget_set_margin_start (GTK_WIDGET (self->surface), (int) inset);
+  gtk_widget_set_margin_end (GTK_WIDGET (self->surface), (int) inset);
+  g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_INSET]);
+}
 
+void
+awra_sidebar_set_inset_spacing (AwraSidebar *self,
+                                AwraSpacing  spacing)
+{
+  g_return_if_fail (AWRA_IS_SIDEBAR (self));
+  awra_sidebar_set_inset (
+    self, (guint) awra_spacing_resolve (GTK_WIDGET (self), spacing));
+}

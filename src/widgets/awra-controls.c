@@ -8,19 +8,66 @@
 #include <awra/awra-switch.h>
 #include <awra/awra-toggle-button.h>
 
-struct _AwraToggleButton { GtkToggleButton parent_instance; };
+struct _AwraToggleButton {
+  GtkToggleButton parent_instance;
+  AwraButtonAppearance appearance;
+};
+enum { TOGGLE_PROP_0, TOGGLE_PROP_APPEARANCE, TOGGLE_N_PROPS };
+static GParamSpec *toggle_properties[TOGGLE_N_PROPS];
 G_DEFINE_FINAL_TYPE (AwraToggleButton, awra_toggle_button, GTK_TYPE_TOGGLE_BUTTON)
+static const char *toggle_appearance_classes[] = {
+  "awra-primary", "awra-secondary", "awra-ghost", "awra-destructive",
+  "awra-toolbar-button",
+};
+static void update_toggle_appearance (AwraToggleButton *self) {
+  for (guint i = 0; i < G_N_ELEMENTS (toggle_appearance_classes); i++)
+    gtk_widget_remove_css_class (GTK_WIDGET (self), toggle_appearance_classes[i]);
+  gtk_widget_add_css_class (GTK_WIDGET (self),
+                            toggle_appearance_classes[self->appearance]);
+}
+static void toggle_get_property (GObject *object, guint id, GValue *value, GParamSpec *pspec) {
+  if (id == TOGGLE_PROP_APPEARANCE)
+    g_value_set_enum (value, AWRA_TOGGLE_BUTTON (object)->appearance);
+  else G_OBJECT_WARN_INVALID_PROPERTY_ID (object, id, pspec);
+}
+static void toggle_set_property (GObject *object, guint id, const GValue *value, GParamSpec *pspec) {
+  if (id == TOGGLE_PROP_APPEARANCE)
+    awra_toggle_button_set_appearance (AWRA_TOGGLE_BUTTON (object), g_value_get_enum (value));
+  else G_OBJECT_WARN_INVALID_PROPERTY_ID (object, id, pspec);
+}
 static void awra_toggle_button_class_init (AwraToggleButtonClass *klass) {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  object_class->get_property = toggle_get_property;
+  object_class->set_property = toggle_set_property;
   gtk_widget_class_set_css_name (GTK_WIDGET_CLASS (klass), "button");
   gtk_widget_class_set_accessible_role (GTK_WIDGET_CLASS (klass), GTK_ACCESSIBLE_ROLE_TOGGLE_BUTTON);
+  toggle_properties[TOGGLE_PROP_APPEARANCE] = g_param_spec_enum (
+    "appearance", NULL, NULL, AWRA_TYPE_BUTTON_APPEARANCE,
+    AWRA_BUTTON_APPEARANCE_SECONDARY,
+    G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+  g_object_class_install_properties (object_class, TOGGLE_N_PROPS,
+                                     toggle_properties);
 }
 static void awra_toggle_button_init (AwraToggleButton *self) {
+  self->appearance = AWRA_BUTTON_APPEARANCE_SECONDARY;
   gtk_widget_add_css_class (GTK_WIDGET (self), "awra-button");
   gtk_widget_add_css_class (GTK_WIDGET (self), "awra-toggle-button");
+  update_toggle_appearance (self);
 }
 GtkWidget *awra_toggle_button_new (void) { return g_object_new (AWRA_TYPE_TOGGLE_BUTTON, NULL); }
 GtkWidget *awra_toggle_button_new_with_label (const char *label) {
   return g_object_new (AWRA_TYPE_TOGGLE_BUTTON, "label", label, NULL);
+}
+AwraButtonAppearance awra_toggle_button_get_appearance (AwraToggleButton *self) {
+  g_return_val_if_fail (AWRA_IS_TOGGLE_BUTTON (self), AWRA_BUTTON_APPEARANCE_SECONDARY);
+  return self->appearance;
+}
+void awra_toggle_button_set_appearance (AwraToggleButton *self, AwraButtonAppearance appearance) {
+  g_return_if_fail (AWRA_IS_TOGGLE_BUTTON (self));
+  g_return_if_fail (appearance >= AWRA_BUTTON_APPEARANCE_PRIMARY && appearance <= AWRA_BUTTON_APPEARANCE_TOOLBAR);
+  if (self->appearance == appearance) return;
+  self->appearance = appearance; update_toggle_appearance (self);
+  g_object_notify_by_pspec (G_OBJECT (self), toggle_properties[TOGGLE_PROP_APPEARANCE]);
 }
 
 struct _AwraEntry { GtkEntry parent_instance; };
@@ -132,7 +179,7 @@ static void awra_switch_snapshot (GtkWidget *widget, GtkSnapshot *snapshot) { gt
 static void awra_switch_get_property (GObject *object, guint id, GValue *value, GParamSpec *pspec) { if (id == SWITCH_PROP_ACTIVE) g_value_set_boolean (value, awra_switch_get_active (AWRA_SWITCH (object))); else G_OBJECT_WARN_INVALID_PROPERTY_ID (object, id, pspec); }
 static void awra_switch_set_property (GObject *object, guint id, const GValue *value, GParamSpec *pspec) { if (id == SWITCH_PROP_ACTIVE) awra_switch_set_active (AWRA_SWITCH (object), g_value_get_boolean (value)); else G_OBJECT_WARN_INVALID_PROPERTY_ID (object, id, pspec); }
 static void awra_switch_class_init (AwraSwitchClass *klass) { GObjectClass *oc = G_OBJECT_CLASS (klass); GtkWidgetClass *wc = GTK_WIDGET_CLASS (klass); oc->dispose = awra_switch_dispose; oc->get_property = awra_switch_get_property; oc->set_property = awra_switch_set_property; wc->snapshot = awra_switch_snapshot; switch_properties[SWITCH_PROP_ACTIVE] = g_param_spec_boolean ("active", NULL, NULL, FALSE, G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS); g_object_class_install_properties (oc, SWITCH_N_PROPS, switch_properties); gtk_widget_class_set_layout_manager_type (wc, GTK_TYPE_BIN_LAYOUT); }
-static void awra_switch_init (AwraSwitch *self) { self->delegate = GTK_SWITCH (gtk_switch_new ()); gtk_widget_add_css_class (GTK_WIDGET (self->delegate), "awra-switch"); gtk_widget_set_parent (GTK_WIDGET (self->delegate), GTK_WIDGET (self)); g_signal_connect (self->delegate, "notify::active", G_CALLBACK (switch_notify_cb), self); }
+static void awra_switch_init (AwraSwitch *self) { self->delegate = GTK_SWITCH (gtk_switch_new ()); gtk_widget_add_css_class (GTK_WIDGET (self->delegate), "awra-switch"); gtk_widget_set_halign (GTK_WIDGET (self->delegate), GTK_ALIGN_START); gtk_widget_set_valign (GTK_WIDGET (self->delegate), GTK_ALIGN_CENTER); gtk_widget_set_valign (GTK_WIDGET (self), GTK_ALIGN_CENTER); gtk_widget_set_parent (GTK_WIDGET (self->delegate), GTK_WIDGET (self)); g_signal_connect (self->delegate, "notify::active", G_CALLBACK (switch_notify_cb), self); }
 GtkWidget *awra_switch_new (void) { return g_object_new (AWRA_TYPE_SWITCH, NULL); }
 gboolean awra_switch_get_active (AwraSwitch *self) { g_return_val_if_fail (AWRA_IS_SWITCH (self), FALSE); return gtk_switch_get_active (self->delegate); }
 void awra_switch_set_active (AwraSwitch *self, gboolean active) { g_return_if_fail (AWRA_IS_SWITCH (self)); gtk_switch_set_active (self->delegate, active); }

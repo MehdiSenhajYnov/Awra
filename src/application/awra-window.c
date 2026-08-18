@@ -1,13 +1,15 @@
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
 
 #include <awra/awra-context.h>
+#include <awra/awra-header.h>
 #include <awra/awra-window.h>
 
 #include "core/awra-context-private.h"
 
 typedef struct {
   AwraSurface *root_surface;
-  GtkWidget *title_label;
+  GtkWidget *default_chrome;
+  GtkWidget *chrome;
   AwraContext *context;
   gulong material_handler;
   gulong style_handler;
@@ -17,6 +19,7 @@ enum {
   PROP_0,
   PROP_CONTENT,
   PROP_ROOT_SURFACE,
+  PROP_CHROME,
   N_PROPS,
 };
 
@@ -24,10 +27,34 @@ static GParamSpec *properties[N_PROPS];
 
 G_DEFINE_TYPE_WITH_PRIVATE (AwraWindow, awra_window, GTK_TYPE_APPLICATION_WINDOW)
 
+static void sync_native_effect (AwraWindow *self);
+
 static AwraWindowPrivate *
 get_priv (AwraWindow *self)
 {
   return awra_window_get_instance_private (self);
+}
+
+static double
+get_effect_radius (AwraWindow *self)
+{
+  AwraWindowPrivate *priv = get_priv (self);
+  double radius = awra_surface_get_radius (priv->root_surface);
+
+  if (radius >= 0.0)
+    return radius;
+  if (priv->context != NULL) {
+    g_autoptr (AwraMaterialResolution) resolved =
+      awra_context_resolve_material (
+        priv->context,
+        awra_surface_get_material (priv->root_surface),
+        awra_surface_get_role (priv->root_surface),
+        gtk_window_is_active (GTK_WINDOW (self)),
+        awra_surface_get_elevation (priv->root_surface));
+
+    return awra_material_resolution_get_radius (resolved);
+  }
+  return 22.0;
 }
 
 static void
@@ -43,6 +70,10 @@ update_appearance_class (AwraWindow *self)
   dark = awra_token_set_get_dark (awra_style_manager_get_token_set (manager));
   gtk_widget_remove_css_class (GTK_WIDGET (self), dark ? "awra-light" : "awra-dark");
   gtk_widget_add_css_class (GTK_WIDGET (self), dark ? "awra-dark" : "awra-light");
+  if (awra_style_manager_get_high_contrast (manager))
+    gtk_widget_add_css_class (GTK_WIDGET (self), "awra-high-contrast");
+  else
+    gtk_widget_remove_css_class (GTK_WIDGET (self), "awra-high-contrast");
 }
 
 static void
@@ -53,6 +84,7 @@ style_changed_cb (AwraStyleManager *manager,
   (void) manager;
   (void) pspec;
   update_appearance_class (self);
+  sync_native_effect (self);
 }
 
 static void
@@ -67,9 +99,19 @@ sync_native_effect (AwraWindow *self)
     awra_context_get_effect_coordinator (priv->context),
     GTK_NATIVE (self),
     awra_surface_get_material (priv->root_surface),
-    awra_surface_get_radius (priv->root_surface) >= 0.0
-      ? awra_surface_get_radius (priv->root_surface)
-      : 18.0);
+    get_effect_radius (self));
+}
+
+static void
+sync_header_material (AwraWindow *self,
+                      GtkWidget  *chrome)
+{
+  AwraWindowPrivate *priv = get_priv (self);
+
+  if (AWRA_IS_HEADER (chrome) &&
+      awra_header_get_blend_with_window (AWRA_HEADER (chrome)))
+    awra_header_set_material (
+      AWRA_HEADER (chrome), awra_surface_get_material (priv->root_surface));
 }
 
 static void
@@ -79,6 +121,7 @@ material_changed_cb (AwraSurface *surface,
 {
   (void) surface;
   (void) pspec;
+  sync_header_material (self, get_priv (self)->chrome);
   sync_native_effect (self);
 }
 
@@ -91,7 +134,13 @@ active_changed_cb (AwraWindow *self,
 
   (void) pspec;
   (void) user_data;
+  /* Reassert the compositor-owned region on both focus transitions. The
+   * request is deliberately identical; this only prevents a compositor from
+   * retaining stale double-buffered state. */
+  sync_native_effect (self);
   gtk_widget_queue_draw (GTK_WIDGET (priv->root_surface));
+  if (priv->chrome != NULL)
+    gtk_widget_queue_draw (priv->chrome);
 }
 
 static void
@@ -114,9 +163,7 @@ awra_window_map (GtkWidget *widget)
     awra_context_get_effect_coordinator (priv->context),
     GTK_NATIVE (self),
     awra_surface_get_material (priv->root_surface),
-    awra_surface_get_radius (priv->root_surface) >= 0.0
-      ? awra_surface_get_radius (priv->root_surface)
-      : 18.0);
+    get_effect_radius (self));
 }
 
 static void
@@ -167,7 +214,8 @@ awra_window_dispose (GObject *object)
     priv->style_handler = 0;
   }
   priv->root_surface = NULL;
-  priv->title_label = NULL;
+  g_clear_object (&priv->default_chrome);
+  priv->chrome = NULL;
   priv->context = NULL;
 
   G_OBJECT_CLASS (awra_window_parent_class)->dispose (object);
@@ -189,6 +237,9 @@ awra_window_get_property (GObject    *object,
   case PROP_ROOT_SURFACE:
     g_value_set_object (value, priv->root_surface);
     break;
+  case PROP_CHROME:
+    g_value_set_object (value, priv->chrome);
+    break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -203,6 +254,9 @@ awra_window_set_property (GObject      *object,
   switch (property_id) {
   case PROP_CONTENT:
     awra_window_set_content (AWRA_WINDOW (object), g_value_get_object (value));
+    break;
+  case PROP_CHROME:
+    awra_window_set_chrome (AWRA_WINDOW (object), g_value_get_object (value));
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -228,49 +282,47 @@ awra_window_class_init (AwraWindowClass *klass)
   properties[PROP_ROOT_SURFACE] =
     g_param_spec_object ("root-surface", NULL, NULL, AWRA_TYPE_SURFACE,
                          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+  properties[PROP_CHROME] =
+    g_param_spec_object ("chrome", NULL, NULL, GTK_TYPE_WIDGET,
+                         G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY |
+                         G_PARAM_STATIC_STRINGS);
   g_object_class_install_properties (object_class, N_PROPS, properties);
 }
 
 static GtkWidget *
-create_titlebar (AwraWindow *self,
-                 GtkWidget **title_label)
+create_titlebar (AwraWindow *self)
 {
-  GtkWidget *handle = gtk_window_handle_new ();
-  GtkWidget *bar = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 8);
-  GtkWidget *start = gtk_window_controls_new (GTK_PACK_START);
-  GtkWidget *label = gtk_label_new (NULL);
-  GtkWidget *end = gtk_window_controls_new (GTK_PACK_END);
+  GtkWidget *header = awra_header_new ();
 
-  gtk_widget_add_css_class (bar, "awra-titlebar");
-  gtk_widget_add_css_class (label, "awra-title");
-  gtk_widget_set_hexpand (label, TRUE);
-  gtk_widget_set_halign (label, GTK_ALIGN_CENTER);
-  gtk_label_set_ellipsize (GTK_LABEL (label), PANGO_ELLIPSIZE_END);
-  gtk_box_append (GTK_BOX (bar), start);
-  gtk_box_append (GTK_BOX (bar), label);
-  gtk_box_append (GTK_BOX (bar), end);
-  gtk_window_handle_set_child (GTK_WINDOW_HANDLE (handle), bar);
+  awra_header_set_blend_with_window (AWRA_HEADER (header), TRUE);
+  awra_header_set_drag_enabled (AWRA_HEADER (header), TRUE);
+  awra_header_set_show_window_controls (AWRA_HEADER (header), TRUE);
   g_object_bind_property (self,
                           "title",
-                          label,
-                          "label",
+                          header,
+                          "title",
                           G_BINDING_SYNC_CREATE);
-  *title_label = label;
-
-  return handle;
+  return header;
 }
 
 static void
 awra_window_init (AwraWindow *self)
 {
   AwraWindowPrivate *priv = get_priv (self);
-  g_autoptr (AwraMaterial) frosted = awra_material_new_frosted ();
 
   priv->root_surface = AWRA_SURFACE (awra_surface_new_with_role (AWRA_SURFACE_ROLE_WINDOW));
-  awra_surface_set_material (priv->root_surface, frosted);
-  awra_surface_set_radius (priv->root_surface, 18.0);
+  awra_surface_set_corner_mask (
+    priv->root_surface,
+    AWRA_SURFACE_CORNER_BOTTOM_START | AWRA_SURFACE_CORNER_BOTTOM_END);
+  awra_surface_set_edge_mask (
+    priv->root_surface,
+    AWRA_SURFACE_EDGE_BOTTOM | AWRA_SURFACE_EDGE_START | AWRA_SURFACE_EDGE_END);
   gtk_window_set_child (GTK_WINDOW (self), GTK_WIDGET (priv->root_surface));
-  gtk_window_set_titlebar (GTK_WINDOW (self), create_titlebar (self, &priv->title_label));
+  priv->default_chrome = g_object_ref_sink (
+    create_titlebar (self));
+  priv->chrome = priv->default_chrome;
+  sync_header_material (self, priv->chrome);
+  gtk_window_set_titlebar (GTK_WINDOW (self), priv->default_chrome);
   gtk_widget_add_css_class (GTK_WIDGET (self), "awra-window");
   gtk_window_set_default_size (GTK_WINDOW (self), 900, 620);
 
@@ -316,6 +368,32 @@ awra_window_get_root_surface (AwraWindow *self)
 {
   g_return_val_if_fail (AWRA_IS_WINDOW (self), NULL);
   return get_priv (self)->root_surface;
+}
+
+GtkWidget *
+awra_window_get_chrome (AwraWindow *self)
+{
+  g_return_val_if_fail (AWRA_IS_WINDOW (self), NULL);
+  return get_priv (self)->chrome;
+}
+
+void
+awra_window_set_chrome (AwraWindow *self,
+                        GtkWidget  *chrome)
+{
+  AwraWindowPrivate *priv;
+
+  g_return_if_fail (AWRA_IS_WINDOW (self));
+  g_return_if_fail (chrome == NULL || GTK_IS_WIDGET (chrome));
+  priv = get_priv (self);
+  if (chrome == NULL)
+    chrome = priv->default_chrome;
+  if (priv->chrome == chrome)
+    return;
+  sync_header_material (self, chrome);
+  gtk_window_set_titlebar (GTK_WINDOW (self), chrome);
+  priv->chrome = chrome;
+  g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_CHROME]);
 }
 
 gboolean

@@ -6,7 +6,7 @@ guint
 awra_motion_get_duration (AwraStyleManager *manager,
                           AwraMotionPreset  preset)
 {
-  static const guint durations[] = { 0, 120, 220, 360 };
+  static const guint durations[] = { 0, 110, 180, 260 };
 
   g_return_val_if_fail (AWRA_IS_STYLE_MANAGER (manager), 0);
   g_return_val_if_fail (preset >= AWRA_MOTION_PRESET_INSTANT &&

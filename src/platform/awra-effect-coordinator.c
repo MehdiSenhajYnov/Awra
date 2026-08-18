@@ -12,6 +12,11 @@ typedef struct {
   double radius;
   gpointer backend_handle;
   gboolean applied;
+  gboolean geometry_valid;
+  gboolean wants_blur;
+  int width;
+  int height;
+  int radius_pixels;
   char *error;
 } TrackedNative;
 
@@ -21,7 +26,10 @@ struct _AwraEffectCoordinator {
   AwraDiagnostics *diagnostics;
   AwraEffectBackend *backend;
   GHashTable *tracked;
-  gulong style_handler;
+  gulong transparency_handler;
+  gulong blur_handler;
+  gulong material_handler;
+  guint64 region_updates;
 };
 
 static void sync_tracked (AwraEffectCoordinator *self,
@@ -35,6 +43,8 @@ fallback_reason (AwraEffectCoordinator *self)
 
   if (g_getenv ("AWRA_FORCE_FALLBACK") != NULL)
     return "forced by AWRA_FORCE_FALLBACK";
+  if (!awra_style_manager_get_native_blur_enabled (self->style_manager))
+    return "native blur is disabled by the application";
   if (!self->backend->interface_announced)
     return "ext-background-effect-v1 is not announced";
   if (!(self->backend->capabilities & AWRA_EFFECT_CAPABILITY_BLUR))
@@ -57,12 +67,21 @@ update_diagnostics (AwraEffectCoordinator *self)
   GHashTableIter iter;
   gpointer value;
   guint effects = 0;
+  g_autoptr (GString) regions = g_string_new (NULL);
 
   g_hash_table_iter_init (&iter, self->tracked);
   while (g_hash_table_iter_next (&iter, NULL, &value)) {
     TrackedNative *tracked = value;
     if (tracked->applied)
       effects++;
+    if (regions->len > 0)
+      g_string_append_c (regions, '\n');
+    g_string_append_printf (regions, "%s: %dx%d radius=%d request=%s applied=%s",
+                            G_OBJECT_TYPE_NAME (tracked->native),
+                            tracked->width, tracked->height,
+                            tracked->radius_pixels,
+                            tracked->wants_blur ? "yes" : "no",
+                            tracked->applied ? "yes" : "no");
   }
 
   awra_diagnostics_set_backend (self->diagnostics,
@@ -73,6 +92,9 @@ update_diagnostics (AwraEffectCoordinator *self)
   awra_diagnostics_set_counts (self->diagnostics,
                                g_hash_table_size (self->tracked),
                                effects);
+  awra_diagnostics_set_region_details (
+    self->diagnostics, self->region_updates,
+    regions->len > 0 ? regions->str : "none");
 }
 
 static void
@@ -119,6 +141,7 @@ sync_tracked (AwraEffectCoordinator *self,
 {
   GdkSurface *surface;
   gboolean wants_blur;
+  gboolean geometry_changed;
   int width;
   int height;
   g_autoptr (GError) error = NULL;
@@ -131,7 +154,21 @@ sync_tracked (AwraEffectCoordinator *self,
   height = gdk_surface_get_height (surface);
   wants_blur = awra_material_requests_blur (tracked->material) &&
                awra_effect_coordinator_has_blur (self) &&
+               awra_style_manager_get_native_blur_enabled (
+                 self->style_manager) &&
+               awra_style_manager_get_material_blur_enabled (
+                 self->style_manager, tracked->material) &&
                !awra_style_manager_get_reduced_transparency (self->style_manager);
+
+  geometry_changed = !tracked->geometry_valid ||
+                     tracked->width != width ||
+                     tracked->height != height ||
+                     tracked->radius_pixels != (int) tracked->radius;
+
+  tracked->width = width;
+  tracked->height = height;
+  tracked->radius_pixels = (int) tracked->radius;
+  tracked->wants_blur = wants_blur;
 
   if (!wants_blur) {
     if (tracked->backend_handle != NULL) {
@@ -139,6 +176,7 @@ sync_tracked (AwraEffectCoordinator *self,
       tracked->backend_handle = NULL;
     }
     tracked->applied = FALSE;
+    tracked->geometry_valid = TRUE;
     g_clear_pointer (&tracked->error, g_free);
     return;
   }
@@ -151,7 +189,11 @@ sync_tracked (AwraEffectCoordinator *self,
                                                     (int) tracked->radius,
                                                     &error);
     tracked->applied = tracked->backend_handle != NULL;
+    if (tracked->applied)
+      self->region_updates++;
   } else {
+    if (!geometry_changed && tracked->applied)
+      return;
     tracked->applied = self->backend->update (self->backend,
                                               tracked->backend_handle,
                                               surface,
@@ -159,10 +201,13 @@ sync_tracked (AwraEffectCoordinator *self,
                                               height,
                                               (int) tracked->radius,
                                               &error);
+    if (tracked->applied)
+      self->region_updates++;
   }
+  tracked->geometry_valid = TRUE;
 
   if (error != NULL) {
-    g_warning ("Native background effect failed: %s; using solid fallback",
+    g_message ("Native background effect failed: %s; using solid fallback",
                error->message);
     if (tracked->backend_handle != NULL) {
       self->backend->clear (self->backend, tracked->backend_handle, surface);
@@ -238,10 +283,21 @@ awra_effect_coordinator_new (GdkDisplay       *display,
 
   self->backend->capabilities_changed = capabilities_changed_cb;
   self->backend->capabilities_changed_data = self;
-  self->style_handler = g_signal_connect (style_manager,
-                                          "notify::reduced-transparency",
-                                          G_CALLBACK (style_changed_cb),
-                                          self);
+  self->transparency_handler = g_signal_connect (
+    style_manager,
+    "notify::reduced-transparency",
+    G_CALLBACK (style_changed_cb),
+    self);
+  self->blur_handler = g_signal_connect (
+    style_manager,
+    "notify::native-blur-enabled",
+    G_CALLBACK (style_changed_cb),
+    self);
+  self->material_handler = g_signal_connect (
+    style_manager,
+    "notify::token-set",
+    G_CALLBACK (style_changed_cb),
+    self);
   update_diagnostics (self);
   g_message ("Effect backend: %s (interface=%s, blur=%s)",
              self->backend->name,
@@ -260,7 +316,10 @@ awra_effect_coordinator_free (AwraEffectCoordinator *self)
   if (self == NULL)
     return;
 
-  g_signal_handler_disconnect (self->style_manager, self->style_handler);
+  g_signal_handler_disconnect (self->style_manager,
+                               self->transparency_handler);
+  g_signal_handler_disconnect (self->style_manager, self->blur_handler);
+  g_signal_handler_disconnect (self->style_manager, self->material_handler);
   g_hash_table_iter_init (&iter, self->tracked);
   while (g_hash_table_iter_next (&iter, NULL, &value)) {
     TrackedNative *tracked = value;

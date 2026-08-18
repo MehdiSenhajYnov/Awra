@@ -3,6 +3,10 @@
 <gresources>
   <gresource prefix="/org/awra">
     <file compressed="true">awra.css</file>
+    <file compressed="true">awra-data-app.css</file>
+    <file compressed="true">icons/check-symbolic.svg</file>
+    <file compressed="true">icons/radio-symbolic.svg</file>
+    <file compressed="true">icons/mixed-symbolic.svg</file>
+    <file compressed="true">icons/chevron-down-symbolic.svg</file>
   </gresource>
 </gresources>
-

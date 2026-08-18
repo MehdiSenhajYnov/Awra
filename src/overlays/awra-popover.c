@@ -4,14 +4,17 @@
 #include <awra/awra-button.h>
 #include <awra/awra-menu-button.h>
 #include <awra/awra-popover.h>
+#include <awra/awra-layout.h>
 
 #include "core/awra-context-private.h"
+#include "awra-i18n-private.h"
 
 struct _AwraPopover {
   GtkPopover parent_instance;
   AwraSurface *surface;
   AwraContext *context;
   gulong material_handler;
+  gulong style_handler;
   GMenuModel *menu_model;
 };
 
@@ -27,6 +30,30 @@ static GParamSpec *properties[N_PROPS];
 
 G_DEFINE_FINAL_TYPE (AwraPopover, awra_popover, GTK_TYPE_POPOVER)
 
+static double
+get_effect_radius (AwraPopover *self)
+{
+  double radius = awra_surface_get_radius (self->surface);
+
+  if (radius >= 0.0)
+    return radius;
+  if (self->context != NULL) {
+    g_autoptr (AwraMaterialResolution) resolved = NULL;
+    GtkRoot *root = gtk_widget_get_root (GTK_WIDGET (self));
+    gboolean active = !GTK_IS_WINDOW (root) ||
+                      gtk_window_is_active (GTK_WINDOW (root));
+
+    resolved = awra_context_resolve_material (
+      self->context,
+      awra_surface_get_material (self->surface),
+      awra_surface_get_role (self->surface),
+      active,
+      awra_surface_get_elevation (self->surface));
+    return awra_material_resolution_get_radius (resolved);
+  }
+  return 16.0;
+}
+
 static void
 sync_native_effect (AwraPopover *self)
 {
@@ -37,7 +64,7 @@ sync_native_effect (AwraPopover *self)
     awra_context_get_effect_coordinator (self->context),
     GTK_NATIVE (self),
     awra_surface_get_material (self->surface),
-    awra_surface_get_radius (self->surface));
+    get_effect_radius (self));
 }
 
 static void
@@ -51,17 +78,34 @@ material_changed_cb (AwraSurface *surface,
 }
 
 static void
+style_changed_cb (AwraStyleManager *manager,
+                  GParamSpec       *pspec,
+                  AwraPopover      *self)
+{
+  (void) manager;
+  (void) pspec;
+  sync_native_effect (self);
+}
+
+static void
 awra_popover_map (GtkWidget *widget)
 {
   AwraPopover *self = AWRA_POPOVER (widget);
 
   GTK_WIDGET_CLASS (awra_popover_parent_class)->map (widget);
   self->context = awra_context_get_for_display (gtk_widget_get_display (widget));
+  if (self->style_handler == 0) {
+    self->style_handler = g_signal_connect (
+      awra_context_get_style_manager (self->context),
+      "notify::token-set",
+      G_CALLBACK (style_changed_cb),
+      self);
+  }
   awra_effect_coordinator_attach (
     awra_context_get_effect_coordinator (self->context),
     GTK_NATIVE (self),
     awra_surface_get_material (self->surface),
-    awra_surface_get_radius (self->surface));
+    get_effect_radius (self));
 }
 
 static void
@@ -73,6 +117,11 @@ awra_popover_unmap (GtkWidget *widget)
     awra_effect_coordinator_detach (
       awra_context_get_effect_coordinator (self->context),
       GTK_NATIVE (self));
+  }
+  if (self->style_handler != 0) {
+    g_signal_handler_disconnect (
+      awra_context_get_style_manager (self->context), self->style_handler);
+    self->style_handler = 0;
   }
   GTK_WIDGET_CLASS (awra_popover_parent_class)->unmap (widget);
 }
@@ -98,6 +147,11 @@ awra_popover_dispose (GObject *object)
   if (self->material_handler != 0) {
     g_signal_handler_disconnect (self->surface, self->material_handler);
     self->material_handler = 0;
+  }
+  if (self->style_handler != 0 && self->context != NULL) {
+    g_signal_handler_disconnect (
+      awra_context_get_style_manager (self->context), self->style_handler);
+    self->style_handler = 0;
   }
   self->surface = NULL;
   self->context = NULL;
@@ -175,12 +229,9 @@ awra_popover_class_init (AwraPopoverClass *klass)
 static void
 awra_popover_init (AwraPopover *self)
 {
-  g_autoptr (AwraMaterial) frosted = awra_material_new_frosted ();
-
   self->surface = AWRA_SURFACE (awra_surface_new_with_role (AWRA_SURFACE_ROLE_POPOVER));
-  awra_surface_set_material (self->surface, frosted);
-  awra_surface_set_radius (self->surface, 18.0);
-  awra_surface_set_elevation (self->surface, 6);
+  awra_surface_set_elevation_level (self->surface,
+                                    AWRA_ELEVATION_FLOATING);
   gtk_popover_set_child (GTK_POPOVER (self), GTK_WIDGET (self->surface));
   gtk_popover_set_has_arrow (GTK_POPOVER (self), FALSE);
   gtk_popover_set_autohide (GTK_POPOVER (self), TRUE);
@@ -217,6 +268,7 @@ awra_popover_set_child (AwraPopover *self,
     g_clear_object (&self->menu_model);
     g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_MENU_MODEL]);
   }
+  gtk_popover_set_cascade_popdown (GTK_POPOVER (self), FALSE);
   awra_surface_set_child (self->surface, child);
   g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_CHILD]);
 }
@@ -229,8 +281,104 @@ awra_popover_get_surface (AwraPopover *self)
 }
 
 static void
-append_menu_model (GtkBox     *box,
-                   GMenuModel *model)
+submenu_chevron_draw_cb (GtkDrawingArea *area,
+                          cairo_t        *cr,
+                          int             width,
+                          int             height,
+                          gpointer        user_data)
+{
+  AwraContext *context = awra_context_get_for_display (
+    gtk_widget_get_display (GTK_WIDGET (area)));
+  const GdkRGBA *color = awra_token_set_get_muted_foreground (
+    awra_style_manager_get_token_set (
+      awra_context_get_style_manager (context)));
+  double center_x = width / 2.0;
+  double center_y = height / 2.0;
+
+  (void) user_data;
+  gdk_cairo_set_source_rgba (cr, color);
+  cairo_set_line_width (cr, 1.7);
+  cairo_set_line_cap (cr, CAIRO_LINE_CAP_ROUND);
+  cairo_set_line_join (cr, CAIRO_LINE_JOIN_ROUND);
+  cairo_move_to (cr, center_x - 1.5, center_y - 3.0);
+  cairo_line_to (cr, center_x + 1.8, center_y);
+  cairo_line_to (cr, center_x - 1.5, center_y + 3.0);
+  cairo_stroke (cr);
+}
+
+static GtkWidget *
+make_submenu_chevron (void)
+{
+  GtkWidget *chevron = gtk_drawing_area_new ();
+
+  gtk_widget_set_size_request (chevron, 10, 10);
+  gtk_widget_add_css_class (chevron, "awra-menu-item-chevron");
+  gtk_drawing_area_set_draw_func (
+    GTK_DRAWING_AREA (chevron),
+    submenu_chevron_draw_cb, NULL, NULL);
+  return chevron;
+}
+
+static GtkWidget *
+make_menu_item_content (GMenuModel *model,
+                        int         position,
+                        const char *label,
+                        gboolean    submenu)
+{
+  g_autoptr (GVariant) serialized_icon = NULL;
+  g_autoptr (GIcon) icon = NULL;
+  GtkWidget *box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+  GtkWidget *text = gtk_label_new (label != NULL ? label : _("Action"));
+
+  awra_box_set_spacing (GTK_BOX (box), AWRA_SPACING_SM);
+  serialized_icon = g_menu_model_get_item_attribute_value (
+    model, position, G_MENU_ATTRIBUTE_ICON, NULL);
+  if (serialized_icon != NULL)
+    icon = g_icon_deserialize (serialized_icon);
+  if (icon != NULL) {
+    GtkWidget *image = gtk_image_new_from_gicon (icon);
+
+    gtk_widget_add_css_class (image, "awra-menu-item-icon");
+    gtk_box_append (GTK_BOX (box), image);
+  }
+  gtk_widget_set_hexpand (text, TRUE);
+  gtk_label_set_xalign (GTK_LABEL (text), 0.0f);
+  gtk_label_set_ellipsize (GTK_LABEL (text), PANGO_ELLIPSIZE_END);
+  gtk_widget_add_css_class (text, "awra-menu-item-label");
+  gtk_box_append (GTK_BOX (box), text);
+  if (submenu)
+    gtk_box_append (GTK_BOX (box), make_submenu_chevron ());
+  gtk_widget_add_css_class (box, "awra-menu-item-content");
+  return box;
+}
+
+static void
+popdown_menu_chain (AwraPopover *self)
+{
+  g_autoptr (GPtrArray) chain = g_ptr_array_new_with_free_func (g_object_unref);
+  GtkWidget *cursor = GTK_WIDGET (self);
+
+  while (cursor != NULL) {
+    if (AWRA_IS_POPOVER (cursor))
+      g_ptr_array_add (chain, g_object_ref (cursor));
+    cursor = gtk_widget_get_parent (cursor);
+  }
+  for (guint i = 0; i < chain->len; i++)
+    gtk_popover_popdown (GTK_POPOVER (g_ptr_array_index (chain, i)));
+}
+
+static void
+menu_item_clicked_cb (GtkButton    *button,
+                      AwraPopover *self)
+{
+  (void) button;
+  popdown_menu_chain (self);
+}
+
+static void
+append_menu_model (AwraPopover *self,
+                   GtkBox      *box,
+                   GMenuModel  *model)
 {
   int n_items = g_menu_model_get_n_items (model);
 
@@ -243,7 +391,13 @@ append_menu_model (GtkBox     *box,
 
     section = g_menu_model_get_item_link (model, i, G_MENU_LINK_SECTION);
     if (section != NULL) {
-      append_menu_model (box, section);
+      if (gtk_widget_get_first_child (GTK_WIDGET (box)) != NULL) {
+        GtkWidget *separator = gtk_separator_new (GTK_ORIENTATION_HORIZONTAL);
+
+        gtk_widget_add_css_class (separator, "awra-menu-separator");
+        gtk_box_append (box, separator);
+      }
+      append_menu_model (self, box, section);
       continue;
     }
 
@@ -256,15 +410,20 @@ append_menu_model (GtkBox     *box,
     if (submenu != NULL) {
       GtkWidget *button = awra_menu_button_new ();
       GtkWidget *popover = awra_popover_new ();
-      awra_menu_button_set_label (AWRA_MENU_BUTTON (button),
-                                  label != NULL ? label : "Menu");
+      awra_menu_button_set_child (
+        AWRA_MENU_BUTTON (button),
+        make_menu_item_content (model, i, label, TRUE));
       awra_popover_set_menu_model (AWRA_POPOVER (popover), submenu);
+      gtk_popover_set_position (GTK_POPOVER (popover), GTK_POS_RIGHT);
       awra_menu_button_set_popover (AWRA_MENU_BUTTON (button), AWRA_POPOVER (popover));
+      gtk_widget_add_css_class (button, "awra-menu-item");
       gtk_box_append (box, button);
       continue;
     }
 
-    GtkWidget *button = awra_button_new_with_label (label != NULL ? label : "Action");
+    GtkWidget *button = awra_button_new ();
+    gtk_button_set_child (GTK_BUTTON (button),
+                          make_menu_item_content (model, i, label, FALSE));
     if (g_menu_model_get_item_attribute (model,
                                          i,
                                          G_MENU_ATTRIBUTE_ACTION,
@@ -279,6 +438,8 @@ append_menu_model (GtkBox     *box,
         gtk_actionable_set_action_target_value (GTK_ACTIONABLE (button), target);
     }
     gtk_widget_add_css_class (button, "awra-menu-item");
+    g_signal_connect (button, "clicked",
+                      G_CALLBACK (menu_item_clicked_cb), self);
     gtk_box_append (box, button);
   }
 }
@@ -303,11 +464,17 @@ awra_popover_set_menu_model (AwraPopover *self,
     return;
 
   if (model == NULL) {
+    gtk_popover_set_cascade_popdown (GTK_POPOVER (self), FALSE);
     awra_surface_set_child (self->surface, NULL);
   } else {
-    box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 4);
+    /* Menu popovers form one modal chain. When a submenu is dismissed by an
+     * outside click, GTK also closes its parent instead of leaving a detached
+     * menu behind. Arbitrary-content popovers keep the GTK default. */
+    gtk_popover_set_cascade_popdown (GTK_POPOVER (self), TRUE);
+    box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
+    awra_box_set_spacing (GTK_BOX (box), AWRA_SPACING_XS);
     gtk_widget_add_css_class (box, "awra-menu");
-    append_menu_model (GTK_BOX (box), model);
+    append_menu_model (self, GTK_BOX (box), model);
     awra_surface_set_child (self->surface, box);
   }
   g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_CHILD]);

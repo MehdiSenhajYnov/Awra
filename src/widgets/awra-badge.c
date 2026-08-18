@@ -5,15 +5,51 @@
 struct _AwraBadge {
   GtkWidget parent_instance;
   GtkLabel *label;
+  AwraBadgeAppearance appearance;
+  GdkRGBA custom_color;
+  gboolean custom_color_set;
 };
 
 enum {
   PROP_0,
   PROP_TEXT,
+  PROP_APPEARANCE,
+  PROP_CUSTOM_COLOR,
   N_PROPS,
 };
 
 static GParamSpec *properties[N_PROPS];
+static const char *appearance_classes[] = {
+  "awra-badge-neutral",
+  "awra-badge-accent",
+  "awra-badge-info",
+  "awra-badge-success",
+  "awra-badge-warning",
+  "awra-badge-danger",
+};
+
+static void
+update_custom_color_classes (AwraBadge *self)
+{
+  double luminance;
+
+  if (!self->custom_color_set) {
+    gtk_widget_remove_css_class (GTK_WIDGET (self), "awra-badge-custom");
+    gtk_widget_remove_css_class (GTK_WIDGET (self),
+                                 "awra-badge-custom-dark-text");
+    return;
+  }
+  luminance = 0.2126 * self->custom_color.red +
+              0.7152 * self->custom_color.green +
+              0.0722 * self->custom_color.blue;
+  gtk_widget_add_css_class (GTK_WIDGET (self), "awra-badge-custom");
+  if (luminance > 0.56)
+    gtk_widget_add_css_class (GTK_WIDGET (self),
+                              "awra-badge-custom-dark-text");
+  else
+    gtk_widget_remove_css_class (GTK_WIDGET (self),
+                                 "awra-badge-custom-dark-text");
+}
 
 G_DEFINE_FINAL_TYPE (AwraBadge, awra_badge, GTK_TYPE_WIDGET)
 
@@ -35,6 +71,26 @@ awra_badge_snapshot (GtkWidget   *widget,
 {
   AwraBadge *self = AWRA_BADGE (widget);
 
+  if (self->custom_color_set &&
+      gtk_widget_get_width (widget) > 0 &&
+      gtk_widget_get_height (widget) > 0) {
+    graphene_rect_t bounds = GRAPHENE_RECT_INIT (
+      0, 0, gtk_widget_get_width (widget), gtk_widget_get_height (widget));
+    GskRoundedRect rounded;
+    GdkRGBA fill = self->custom_color;
+    GdkRGBA rim = { 1.0, 1.0, 1.0, 0.16 };
+    float widths[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    GdkRGBA colors[4] = { rim, rim, rim, rim };
+
+    fill.alpha = CLAMP (fill.alpha, 0.0, 1.0);
+    gsk_rounded_rect_init_from_rect (&rounded, &bounds,
+                                     gtk_widget_get_height (widget) / 2.0f);
+    gtk_snapshot_push_rounded_clip (snapshot, &rounded);
+    gtk_snapshot_append_color (snapshot, &fill, &bounds);
+    gtk_snapshot_pop (snapshot);
+    gtk_snapshot_append_border (snapshot, &rounded, widths, colors);
+  }
+
   if (self->label != NULL)
     gtk_widget_snapshot_child (widget, GTK_WIDGET (self->label), snapshot);
 }
@@ -47,6 +103,11 @@ awra_badge_get_property (GObject    *object,
 {
   if (property_id == PROP_TEXT)
     g_value_set_string (value, awra_badge_get_text (AWRA_BADGE (object)));
+  else if (property_id == PROP_APPEARANCE)
+    g_value_set_enum (value, awra_badge_get_appearance (AWRA_BADGE (object)));
+  else if (property_id == PROP_CUSTOM_COLOR)
+    g_value_set_boxed (value,
+                       awra_badge_get_custom_color (AWRA_BADGE (object)));
   else
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 }
@@ -59,6 +120,11 @@ awra_badge_set_property (GObject      *object,
 {
   if (property_id == PROP_TEXT)
     awra_badge_set_text (AWRA_BADGE (object), g_value_get_string (value));
+  else if (property_id == PROP_APPEARANCE)
+    awra_badge_set_appearance (AWRA_BADGE (object), g_value_get_enum (value));
+  else if (property_id == PROP_CUSTOM_COLOR)
+    awra_badge_set_custom_color (AWRA_BADGE (object),
+                                 g_value_get_boxed (value));
   else
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 }
@@ -78,6 +144,18 @@ awra_badge_class_init (AwraBadgeClass *klass)
                          G_PARAM_READWRITE |
                          G_PARAM_EXPLICIT_NOTIFY |
                          G_PARAM_STATIC_STRINGS);
+  properties[PROP_APPEARANCE] =
+    g_param_spec_enum ("appearance", NULL, NULL,
+                       AWRA_TYPE_BADGE_APPEARANCE,
+                       AWRA_BADGE_APPEARANCE_ACCENT,
+                       G_PARAM_READWRITE |
+                       G_PARAM_EXPLICIT_NOTIFY |
+                       G_PARAM_STATIC_STRINGS);
+  properties[PROP_CUSTOM_COLOR] =
+    g_param_spec_boxed ("custom-color", NULL, NULL, GDK_TYPE_RGBA,
+                        G_PARAM_READWRITE |
+                        G_PARAM_EXPLICIT_NOTIFY |
+                        G_PARAM_STATIC_STRINGS);
   g_object_class_install_properties (object_class, N_PROPS, properties);
   gtk_widget_class_set_layout_manager_type (widget_class, GTK_TYPE_BIN_LAYOUT);
   gtk_widget_class_set_css_name (widget_class, "awrabadge");
@@ -89,6 +167,10 @@ static void
 awra_badge_init (AwraBadge *self)
 {
   self->label = GTK_LABEL (gtk_label_new (NULL));
+  self->appearance = AWRA_BADGE_APPEARANCE_ACCENT;
+  gtk_widget_set_halign (GTK_WIDGET (self), GTK_ALIGN_START);
+  gtk_widget_add_css_class (GTK_WIDGET (self),
+                            appearance_classes[self->appearance]);
   gtk_widget_set_parent (GTK_WIDGET (self->label), GTK_WIDGET (self));
 }
 
@@ -119,4 +201,56 @@ awra_badge_set_text (AwraBadge  *self,
                                   text != NULL ? text : "",
                                   -1);
   g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_TEXT]);
+}
+
+AwraBadgeAppearance
+awra_badge_get_appearance (AwraBadge *self)
+{
+  g_return_val_if_fail (AWRA_IS_BADGE (self),
+                        AWRA_BADGE_APPEARANCE_NEUTRAL);
+  return self->appearance;
+}
+
+void
+awra_badge_set_appearance (AwraBadge           *self,
+                           AwraBadgeAppearance  appearance)
+{
+  g_return_if_fail (AWRA_IS_BADGE (self));
+  g_return_if_fail (appearance >= AWRA_BADGE_APPEARANCE_NEUTRAL &&
+                    appearance <= AWRA_BADGE_APPEARANCE_DANGER);
+  if (self->appearance == appearance)
+    return;
+  gtk_widget_remove_css_class (GTK_WIDGET (self),
+                               appearance_classes[self->appearance]);
+  self->appearance = appearance;
+  gtk_widget_add_css_class (GTK_WIDGET (self),
+                            appearance_classes[self->appearance]);
+  g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_APPEARANCE]);
+}
+
+const GdkRGBA *
+awra_badge_get_custom_color (AwraBadge *self)
+{
+  g_return_val_if_fail (AWRA_IS_BADGE (self), NULL);
+  return self->custom_color_set ? &self->custom_color : NULL;
+}
+
+void
+awra_badge_set_custom_color (AwraBadge     *self,
+                             const GdkRGBA *color)
+{
+  g_return_if_fail (AWRA_IS_BADGE (self));
+  if ((color == NULL && !self->custom_color_set) ||
+      (color != NULL && self->custom_color_set &&
+       gdk_rgba_equal (color, &self->custom_color)))
+    return;
+  if (color != NULL) {
+    self->custom_color = *color;
+    self->custom_color_set = TRUE;
+  } else {
+    self->custom_color_set = FALSE;
+  }
+  update_custom_color_classes (self);
+  gtk_widget_queue_draw (GTK_WIDGET (self));
+  g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_CUSTOM_COLOR]);
 }

@@ -13,6 +13,8 @@ struct _AwraDiagnostics {
   AwraEffectCapability capabilities;
   guint native_surfaces;
   guint effects_applied;
+  guint64 effect_region_updates;
+  char *effect_region_summary;
   char *fallback_reason;
 };
 
@@ -25,6 +27,8 @@ enum {
   PROP_CAPABILITIES,
   PROP_NATIVE_SURFACES,
   PROP_EFFECTS_APPLIED,
+  PROP_EFFECT_REGION_UPDATES,
+  PROP_EFFECT_REGION_SUMMARY,
   PROP_FALLBACK_REASON,
   N_PROPS,
 };
@@ -41,6 +45,7 @@ awra_diagnostics_finalize (GObject *object)
   g_free (self->session_type);
   g_free (self->gdk_backend);
   g_free (self->effect_backend);
+  g_free (self->effect_region_summary);
   g_free (self->fallback_reason);
 
   G_OBJECT_CLASS (awra_diagnostics_parent_class)->finalize (object);
@@ -75,6 +80,12 @@ awra_diagnostics_get_property (GObject    *object,
     break;
   case PROP_EFFECTS_APPLIED:
     g_value_set_uint (value, self->effects_applied);
+    break;
+  case PROP_EFFECT_REGION_UPDATES:
+    g_value_set_uint64 (value, self->effect_region_updates);
+    break;
+  case PROP_EFFECT_REGION_SUMMARY:
+    g_value_set_string (value, self->effect_region_summary);
     break;
   case PROP_FALLBACK_REASON:
     g_value_set_string (value, self->fallback_reason);
@@ -115,6 +126,13 @@ awra_diagnostics_class_init (AwraDiagnosticsClass *klass)
   properties[PROP_EFFECTS_APPLIED] =
     g_param_spec_uint ("effects-applied", NULL, NULL, 0, G_MAXUINT, 0,
                        G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+  properties[PROP_EFFECT_REGION_UPDATES] =
+    g_param_spec_uint64 ("effect-region-updates", NULL, NULL,
+                         0, G_MAXUINT64, 0,
+                         G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+  properties[PROP_EFFECT_REGION_SUMMARY] =
+    g_param_spec_string ("effect-region-summary", NULL, NULL, "none",
+                         G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
   properties[PROP_FALLBACK_REASON] =
     g_param_spec_string ("fallback-reason", NULL, NULL, "not initialized",
                          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
@@ -128,6 +146,7 @@ awra_diagnostics_init (AwraDiagnostics *self)
   self->session_type = g_strdup ("unknown");
   self->gdk_backend = g_strdup ("unknown");
   self->effect_backend = g_strdup ("generic-fallback");
+  self->effect_region_summary = g_strdup ("none");
   self->fallback_reason = g_strdup ("not initialized");
 }
 
@@ -191,6 +210,26 @@ awra_diagnostics_set_counts (AwraDiagnostics *self,
   }
 }
 
+void
+awra_diagnostics_set_region_details (AwraDiagnostics *self,
+                                     guint64          update_count,
+                                     const char      *summary)
+{
+  g_return_if_fail (AWRA_IS_DIAGNOSTICS (self));
+
+  if (self->effect_region_updates != update_count) {
+    self->effect_region_updates = update_count;
+    g_object_notify_by_pspec (G_OBJECT (self),
+                              properties[PROP_EFFECT_REGION_UPDATES]);
+  }
+  if (g_strcmp0 (self->effect_region_summary, summary) != 0) {
+    g_free (self->effect_region_summary);
+    self->effect_region_summary = g_strdup (summary != NULL ? summary : "none");
+    g_object_notify_by_pspec (G_OBJECT (self),
+                              properties[PROP_EFFECT_REGION_SUMMARY]);
+  }
+}
+
 #define DEFINE_STRING_GETTER(name, field) \
   const char * \
   awra_diagnostics_get_##name (AwraDiagnostics *self) \
@@ -203,6 +242,7 @@ DEFINE_STRING_GETTER (session_type, session_type)
 DEFINE_STRING_GETTER (gdk_backend, gdk_backend)
 DEFINE_STRING_GETTER (effect_backend, effect_backend)
 DEFINE_STRING_GETTER (fallback_reason, fallback_reason)
+DEFINE_STRING_GETTER (effect_region_summary, effect_region_summary)
 
 gboolean
 awra_diagnostics_get_interface_announced (AwraDiagnostics *self)
@@ -232,3 +272,38 @@ awra_diagnostics_get_effects_applied (AwraDiagnostics *self)
   return self->effects_applied;
 }
 
+guint64
+awra_diagnostics_get_effect_region_updates (AwraDiagnostics *self)
+{
+  g_return_val_if_fail (AWRA_IS_DIAGNOSTICS (self), 0);
+  return self->effect_region_updates;
+}
+
+char *
+awra_diagnostics_dup_report (AwraDiagnostics *self)
+{
+  g_return_val_if_fail (AWRA_IS_DIAGNOSTICS (self), NULL);
+
+  return g_strdup_printf (
+    "Awra diagnostics\n"
+    "session: %s\n"
+    "gdk-backend: %s\n"
+    "effect-backend: %s\n"
+    "interface-announced: %s\n"
+    "blur-capable: %s\n"
+    "native-surfaces: %u\n"
+    "effects-applied: %u\n"
+    "effect-region-updates: %" G_GUINT64_FORMAT "\n"
+    "effect-regions:\n%s\n"
+    "fallback: %s\n",
+    self->session_type,
+    self->gdk_backend,
+    self->effect_backend,
+    self->interface_announced ? "yes" : "no",
+    (self->capabilities & AWRA_EFFECT_CAPABILITY_BLUR) != 0 ? "yes" : "no",
+    self->native_surfaces,
+    self->effects_applied,
+    self->effect_region_updates,
+    self->effect_region_summary,
+    self->fallback_reason != NULL ? self->fallback_reason : "none");
+}

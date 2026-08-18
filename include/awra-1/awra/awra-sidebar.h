@@ -31,4 +31,32 @@ void         awra_sidebar_set_child   (AwraSidebar *self,
  */
 AwraSurface *awra_sidebar_get_surface (AwraSidebar *self);
 
+/**
+ * awra_sidebar_get_inset:
+ * @self: an Awra sidebar
+ *
+ * Returns: the space between the sidebar surface and its allocation
+ */
+guint        awra_sidebar_get_inset   (AwraSidebar *self);
+/**
+ * awra_sidebar_set_inset:
+ * @self: an Awra sidebar
+ * @inset: uniform inset in logical pixels
+ *
+ * Makes the semantic Chrome surface float inside the layout allocation while
+ * preserving the sidebar's structural role. Set to zero for a docked sidebar.
+ */
+void         awra_sidebar_set_inset   (AwraSidebar *self,
+                                       guint        inset);
+/**
+ * awra_sidebar_set_inset_spacing:
+ * @self: an Awra sidebar
+ * @spacing: a semantic spacing token
+ *
+ * Applies a token-based inset. New sidebars use %AWRA_SPACING_MD by default;
+ * use %AWRA_SPACING_NONE for a flush docked rail.
+ */
+void         awra_sidebar_set_inset_spacing (AwraSidebar *self,
+                                              AwraSpacing  spacing);
+
 G_END_DECLS

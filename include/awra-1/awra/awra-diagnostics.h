@@ -15,7 +15,17 @@ gboolean              awra_diagnostics_get_interface_announced (AwraDiagnostics 
 AwraEffectCapability  awra_diagnostics_get_capabilities        (AwraDiagnostics *self);
 guint                 awra_diagnostics_get_native_surfaces     (AwraDiagnostics *self);
 guint                 awra_diagnostics_get_effects_applied     (AwraDiagnostics *self);
+guint64               awra_diagnostics_get_effect_region_updates
+                                                               (AwraDiagnostics *self);
+const char           *awra_diagnostics_get_effect_region_summary
+                                                               (AwraDiagnostics *self);
 const char           *awra_diagnostics_get_fallback_reason     (AwraDiagnostics *self);
+/**
+ * awra_diagnostics_dup_report:
+ * @self: live diagnostics for an Awra context
+ *
+ * Returns: (transfer full): a compositor-neutral diagnostic report
+ */
+char                 *awra_diagnostics_dup_report              (AwraDiagnostics *self);
 
 G_END_DECLS
-

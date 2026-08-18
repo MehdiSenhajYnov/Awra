@@ -3,21 +3,49 @@
 using Gtk 4.0;
 using Awra 1.0;
 
-Awra.Surface example_surface {
-  role: card;
-  radius: 20;
-  elevation: 2;
+Awra.Page example_page {
+  max-content-width: 880;
 
-  child: Box {
+  child: Box page_content {
     orientation: vertical;
-    spacing: 8;
+    spacing: 24;
 
-    Label {
-      label: "Built with Awra and Blueprint";
+    Awra.PageHeader {
+      title: "Built with Awra and Blueprint";
+      subtitle: "Typed page structure with framework-owned spacing";
     }
 
-    Awra.Button {
-      label: "Accessible GTK action";
+    Awra.Section {
+      title: "Actions";
+      description: "Sections separate content without manufacturing cards";
+
+      child: Awra.Button {
+        label: "Accessible GTK action";
+      };
+    }
+
+    Awra.FilterBar {
+      search: Awra.SearchEntry {
+        placeholder-text: "Search documents";
+      };
+
+      [filter]
+      Awra.Button {
+        label: "All types";
+      }
+
+      summary: Label {
+        label: "12 results";
+      };
+    }
+
+    Awra.Form {
+      [row]
+      Awra.FormRow {
+        label: "Workspace name";
+        help-text: "Shown to collaborators";
+        control: Awra.Entry {};
+      }
     }
   };
 }

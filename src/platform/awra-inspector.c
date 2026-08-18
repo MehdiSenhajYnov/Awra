@@ -10,6 +10,7 @@ struct _AwraInspector {
   gulong target_handler;
   char *details;
   gboolean effect_region_visible;
+  gboolean overdraw_visible;
 };
 
 enum {
@@ -17,6 +18,7 @@ enum {
   PROP_TARGET,
   PROP_DETAILS,
   PROP_EFFECT_REGION_VISIBLE,
+  PROP_OVERDRAW_VISIBLE,
   N_PROPS,
 };
 
@@ -37,6 +39,11 @@ target_surface (GtkWidget *target)
     return awra_card_get_surface (AWRA_CARD (target));
   if (AWRA_IS_SIDEBAR (target))
     return awra_sidebar_get_surface (AWRA_SIDEBAR (target));
+  for (GtkWidget *parent = gtk_widget_get_parent (target);
+       parent != NULL;
+       parent = gtk_widget_get_parent (parent))
+    if (AWRA_IS_SURFACE (parent))
+      return AWRA_SURFACE (parent);
   return NULL;
 }
 
@@ -54,19 +61,18 @@ enum_nick (GType enum_type,
 }
 
 static void
-set_debug_class (GtkWidget *target,
-                 gboolean   visible)
+set_debug_class (GtkWidget  *target,
+                 const char *css_class,
+                 gboolean    visible)
 {
   AwraSurface *surface = target_surface (target);
 
   if (surface == NULL)
     return;
   if (visible)
-    gtk_widget_add_css_class (GTK_WIDGET (surface),
-                              "awra-effect-region-debug");
+    gtk_widget_add_css_class (GTK_WIDGET (surface), css_class);
   else
-    gtk_widget_remove_css_class (GTK_WIDGET (surface),
-                                 "awra-effect-region-debug");
+    gtk_widget_remove_css_class (GTK_WIDGET (surface), css_class);
   gtk_widget_queue_draw (GTK_WIDGET (surface));
 }
 
@@ -89,7 +95,8 @@ awra_inspector_dispose (GObject *object)
   if (target != NULL) {
     if (self->target_handler != 0)
       g_signal_handler_disconnect (target, self->target_handler);
-    set_debug_class (target, FALSE);
+    set_debug_class (target, "awra-effect-region-debug", FALSE);
+    set_debug_class (target, "awra-overdraw-debug", FALSE);
   }
   self->target_handler = 0;
   g_weak_ref_set (&self->target, NULL);
@@ -139,6 +146,9 @@ awra_inspector_get_property (GObject    *object,
   case PROP_EFFECT_REGION_VISIBLE:
     g_value_set_boolean (value, self->effect_region_visible);
     break;
+  case PROP_OVERDRAW_VISIBLE:
+    g_value_set_boolean (value, self->overdraw_visible);
+    break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -156,6 +166,9 @@ awra_inspector_set_property (GObject      *object,
   else if (property_id == PROP_EFFECT_REGION_VISIBLE)
     awra_inspector_set_effect_region_visible (AWRA_INSPECTOR (object),
                                               g_value_get_boolean (value));
+  else if (property_id == PROP_OVERDRAW_VISIBLE)
+    awra_inspector_set_overdraw_visible (AWRA_INSPECTOR (object),
+                                         g_value_get_boolean (value));
   else
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 }
@@ -181,6 +194,11 @@ awra_inspector_class_init (AwraInspectorClass *klass)
                          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
   properties[PROP_EFFECT_REGION_VISIBLE] =
     g_param_spec_boolean ("effect-region-visible", NULL, NULL, FALSE,
+                          G_PARAM_READWRITE |
+                          G_PARAM_EXPLICIT_NOTIFY |
+                          G_PARAM_STATIC_STRINGS);
+  properties[PROP_OVERDRAW_VISIBLE] =
+    g_param_spec_boolean ("overdraw-visible", NULL, NULL, FALSE,
                           G_PARAM_READWRITE |
                           G_PARAM_EXPLICIT_NOTIFY |
                           G_PARAM_STATIC_STRINGS);
@@ -234,7 +252,8 @@ awra_inspector_set_target (AwraInspector *self,
   if (previous != NULL) {
     if (self->target_handler != 0)
       g_signal_handler_disconnect (previous, self->target_handler);
-    set_debug_class (previous, FALSE);
+    set_debug_class (previous, "awra-effect-region-debug", FALSE);
+    set_debug_class (previous, "awra-overdraw-debug", FALSE);
   }
   self->target_handler = 0;
   g_weak_ref_set (&self->target, target);
@@ -243,7 +262,10 @@ awra_inspector_set_target (AwraInspector *self,
                                              "notify",
                                              G_CALLBACK (target_notify_cb),
                                              self);
-    set_debug_class (target, self->effect_region_visible);
+    set_debug_class (target, "awra-effect-region-debug",
+                     self->effect_region_visible);
+    set_debug_class (target, "awra-overdraw-debug",
+                     self->overdraw_visible);
   }
   awra_inspector_refresh (self);
   g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_TARGET]);
@@ -271,31 +293,141 @@ awra_inspector_refresh (AwraInspector *self)
   } else {
     GtkAccessibleRole accessible_role =
       gtk_accessible_get_accessible_role (GTK_ACCESSIBLE (target));
+    char **classes = gtk_widget_get_css_classes (target);
+    GtkWidget *parent = gtk_widget_get_parent (target);
+    graphene_rect_t allocation = GRAPHENE_RECT_INIT (
+      0, 0, gtk_widget_get_width (target), gtk_widget_get_height (target));
+    GtkNative *native = gtk_widget_get_native (target);
 
     details = g_string_new (NULL);
+    if (parent != NULL &&
+        !gtk_widget_compute_bounds (target, parent, &allocation))
+      allocation = (graphene_rect_t) GRAPHENE_RECT_INIT (
+        0, 0, gtk_widget_get_width (target), gtk_widget_get_height (target));
     g_string_append_printf (details,
-                            "Type: %s\nSize: %d × %d\nMapped: %s\nAccessible: %s",
+                            "Widget\n"
+                            "  type: %s\n"
+                            "  css-name: %s\n"
+                            "  classes:",
                             G_OBJECT_TYPE_NAME (target),
-                            gtk_widget_get_width (target),
-                            gtk_widget_get_height (target),
-                            gtk_widget_get_mapped (target) ? "yes" : "no",
-                            enum_nick (GTK_TYPE_ACCESSIBLE_ROLE, accessible_role));
+                            gtk_widget_class_get_css_name (
+                              GTK_WIDGET_GET_CLASS (target)));
+    if (classes == NULL || classes[0] == NULL)
+      g_string_append (details, " none");
+    else
+      for (guint i = 0; classes[i] != NULL; i++)
+        g_string_append_printf (details, " %s", classes[i]);
+    g_string_append_printf (
+      details,
+      "\n  allocation: %.0f,%.0f %.0f×%.0f"
+      "\n  scale-factor: %d"
+      "\n  mapped: %s"
+      "\n  sensitive: %s"
+      "\n  direction: %s"
+      "\n  accessible-role: %s"
+      "\n  native: %s"
+      "\n  native-surface: %s",
+      allocation.origin.x, allocation.origin.y,
+      allocation.size.width, allocation.size.height,
+      gtk_widget_get_scale_factor (target),
+      gtk_widget_get_mapped (target) ? "yes" : "no",
+      gtk_widget_get_sensitive (target) ? "yes" : "no",
+      gtk_widget_get_direction (target) == GTK_TEXT_DIR_RTL ? "rtl" : "ltr",
+      enum_nick (GTK_TYPE_ACCESSIBLE_ROLE, accessible_role),
+      native != NULL ? G_OBJECT_TYPE_NAME (native) : "none",
+      native != NULL && gtk_native_get_surface (native) != NULL
+        ? G_OBJECT_TYPE_NAME (gtk_native_get_surface (native)) : "none");
     surface = target_surface (target);
     if (surface != NULL) {
+      AwraContext *context = awra_context_get_for_display (
+        gtk_widget_get_display (target));
+      AwraStyleManager *manager = awra_context_get_style_manager (context);
+      AwraTokenSet *tokens = awra_style_manager_get_token_set (manager);
+      g_autoptr (AwraMaterialResolution) active = NULL;
+      g_autoptr (AwraMaterialResolution) inactive = NULL;
+      g_autofree char *active_fill = NULL;
+      g_autofree char *inactive_fill = NULL;
+      g_autofree char *accent = NULL;
+
+      active = awra_context_resolve_material (
+        context, awra_surface_get_material (surface),
+        awra_surface_get_role (surface), TRUE,
+        awra_surface_get_elevation (surface));
+      inactive = awra_context_resolve_material (
+        context, awra_surface_get_material (surface),
+        awra_surface_get_role (surface), FALSE,
+        awra_surface_get_elevation (surface));
+      active_fill = gdk_rgba_to_string (
+        awra_material_resolution_get_fill (active));
+      inactive_fill = gdk_rgba_to_string (
+        awra_material_resolution_get_fill (inactive));
+      accent = gdk_rgba_to_string (awra_token_set_get_accent (tokens));
       g_string_append_printf (
         details,
-        "\nSurface role: %s\nMaterial: %s\nRadius: %.1f\nElevation: %u",
+        "\n\nResolved surface"
+        "\n  role: %s"
+        "\n  material: %s"
+        "\n  material-kind: %s"
+        "\n  radius: %s"
+        "\n  elevation: %s"
+        "\n  active-fill: %s"
+        "\n  inactive-fill: %s"
+        "\n  fill-stable: %s"
+        "\n  active-blur-request: %s"
+        "\n  inactive-blur-request: %s"
+        "\n\nTokens"
+        "\n  appearance: %s"
+        "\n  high-contrast: %s"
+        "\n  reduced-motion: %s"
+        "\n  reduced-transparency: %s"
+        "\n  accent: %s",
         enum_nick (AWRA_TYPE_SURFACE_ROLE, awra_surface_get_role (surface)),
+        awra_material_get_name (awra_surface_get_material (surface)),
         enum_nick (AWRA_TYPE_MATERIAL_KIND,
                    awra_material_get_kind (awra_surface_get_material (surface))),
-        awra_surface_get_radius (surface),
-        awra_surface_get_elevation (surface));
+        awra_surface_get_radius (surface) < 0.0 ? "automatic" : "custom",
+        enum_nick (AWRA_TYPE_ELEVATION,
+                   awra_surface_get_elevation_level (surface)),
+        active_fill,
+        inactive_fill,
+        gdk_rgba_equal (awra_material_resolution_get_fill (active),
+                        awra_material_resolution_get_fill (inactive))
+          ? "yes" : "NO",
+        awra_material_resolution_get_request_blur (active) ? "yes" : "no",
+        awra_material_resolution_get_request_blur (inactive) ? "yes" : "no",
+        awra_token_set_get_dark (tokens) ? "dark" : "light",
+        awra_style_manager_get_high_contrast (manager) ? "yes" : "no",
+        awra_style_manager_get_reduced_motion (manager) ? "yes" : "no",
+        awra_style_manager_get_reduced_transparency (manager) ? "yes" : "no",
+        accent);
+      {
+        g_autofree char *platform = awra_diagnostics_dup_report (
+          awra_context_get_diagnostics (context));
+        g_string_append_printf (details, "\n\n%s", platform);
+      }
     }
     g_free (self->details);
     self->details = g_string_free (g_steal_pointer (&details), FALSE);
   }
   gtk_label_set_text (self->label, self->details);
   g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_DETAILS]);
+}
+
+char *
+awra_inspector_dup_report (AwraInspector *self)
+{
+  g_return_val_if_fail (AWRA_IS_INSPECTOR (self), NULL);
+  return g_strdup (self->details);
+}
+
+gboolean
+awra_inspector_export_report (AwraInspector *self,
+                              const char    *path,
+                              GError       **error)
+{
+  g_return_val_if_fail (AWRA_IS_INSPECTOR (self), FALSE);
+  g_return_val_if_fail (path != NULL && *path != '\0', FALSE);
+  return g_file_set_contents (path, self->details, -1, error);
 }
 
 gboolean
@@ -318,7 +450,32 @@ awra_inspector_set_effect_region_visible (AwraInspector *self,
   self->effect_region_visible = visible;
   target = g_weak_ref_get (&self->target);
   if (target != NULL)
-    set_debug_class (target, visible);
+    set_debug_class (target, "awra-effect-region-debug", visible);
   g_object_notify_by_pspec (G_OBJECT (self),
                             properties[PROP_EFFECT_REGION_VISIBLE]);
+}
+
+gboolean
+awra_inspector_get_overdraw_visible (AwraInspector *self)
+{
+  g_return_val_if_fail (AWRA_IS_INSPECTOR (self), FALSE);
+  return self->overdraw_visible;
+}
+
+void
+awra_inspector_set_overdraw_visible (AwraInspector *self,
+                                     gboolean       visible)
+{
+  g_autoptr (GtkWidget) target = NULL;
+
+  g_return_if_fail (AWRA_IS_INSPECTOR (self));
+  visible = !!visible;
+  if (self->overdraw_visible == visible)
+    return;
+  self->overdraw_visible = visible;
+  target = g_weak_ref_get (&self->target);
+  if (target != NULL)
+    set_debug_class (target, "awra-overdraw-debug", visible);
+  g_object_notify_by_pspec (G_OBJECT (self),
+                            properties[PROP_OVERDRAW_VISIBLE]);
 }

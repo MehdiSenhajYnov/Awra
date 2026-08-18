@@ -30,6 +30,24 @@ GtkWidget   *awra_window_get_content      (AwraWindow     *self);
 void         awra_window_set_content      (AwraWindow     *self,
                                            GtkWidget      *content);
 /**
+ * awra_window_get_chrome:
+ * @self: an Awra window
+ *
+ * Returns: (transfer none): the current titlebar/chrome widget
+ */
+GtkWidget   *awra_window_get_chrome       (AwraWindow     *self);
+/**
+ * awra_window_set_chrome:
+ * @self: an Awra window
+ * @chrome: (nullable): a custom titlebar, or %NULL to restore Awra's default
+ *
+ * Installs application-defined window chrome without imposing a content or
+ * sidebar composition. An #AwraHeader can be used here with drag enabled, but
+ * any suitable GTK widget is accepted.
+ */
+void         awra_window_set_chrome       (AwraWindow     *self,
+                                           GtkWidget      *chrome);
+/**
  * awra_window_get_root_surface:
  * @self: an Awra window
  *

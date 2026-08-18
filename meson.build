@@ -3,7 +3,7 @@
 project(
   'awra',
   'c',
-  version: '0.1.0',
+  version: '1.0.0',
   license: 'LGPL-2.1-or-later',
   meson_version: '>= 1.3.0',
   default_options: [
@@ -14,9 +14,12 @@ project(
 )
 
 gnome = import('gnome')
+i18n = import('i18n')
 pkgconfig = import('pkgconfig')
+vala_available = add_languages('vala', native: false, required: false)
 
 cc = meson.get_compiler('c')
+python = find_program('python3')
 gtk_dep = dependency('gtk4', version: '>= 4.22.0')
 gio_dep = dependency('gio-2.0', version: '>= 2.80')
 wayland_dep = dependency(
@@ -47,8 +50,12 @@ public_headers = files(
   'include/awra-1/awra/awra-version.h',
   'include/awra-1/awra/awra-enums.h',
   'include/awra-1/awra/awra-token-set.h',
+  'include/awra-1/awra/awra-typography.h',
+  'include/awra-1/awra/awra-layout.h',
   'include/awra-1/awra/awra-style-manager.h',
+  'include/awra-1/awra/awra-style-role.h',
   'include/awra-1/awra/awra-material.h',
+  'include/awra-1/awra/awra-material-resolution.h',
   'include/awra-1/awra/awra-diagnostics.h',
   'include/awra-1/awra/awra-context.h',
   'include/awra-1/awra/awra-surface.h',
@@ -56,10 +63,38 @@ public_headers = files(
   'include/awra-1/awra/awra-window.h',
   'include/awra-1/awra/awra-popover.h',
   'include/awra-1/awra/awra-menu-button.h',
+  'include/awra-1/awra/awra-context-menu.h',
   'include/awra-1/awra/awra-card.h',
+  'include/awra-1/awra/awra-page.h',
+  'include/awra-1/awra/awra-page-header.h',
+  'include/awra-1/awra/awra-section.h',
+  'include/awra-1/awra/awra-toolbar.h',
+  'include/awra-1/awra/awra-form-row.h',
+  'include/awra-1/awra/awra-form.h',
+  'include/awra-1/awra/awra-empty-state.h',
+  'include/awra-1/awra/awra-loading-state.h',
+  'include/awra-1/awra/awra-error-state.h',
+  'include/awra-1/awra/awra-filter-bar.h',
+  'include/awra-1/awra/awra-master-detail.h',
+  'include/awra-1/awra/awra-detail-pane.h',
+  'include/awra-1/awra/awra-data-column.h',
+  'include/awra-1/awra/awra-data-view.h',
+  'include/awra-1/awra/awra-selection-toolbar.h',
+  'include/awra-1/awra/awra-metric-row.h',
+  'include/awra-1/awra/awra-stat-bar.h',
+  'include/awra-1/awra/awra-badge-group.h',
+  'include/awra-1/awra/awra-metadata-group.h',
+  'include/awra-1/awra/awra-text-area.h',
+  'include/awra-1/awra/awra-password-entry.h',
+  'include/awra-1/awra/awra-tag-entry.h',
+  'include/awra-1/awra/awra-choice-group.h',
+  'include/awra-1/awra/awra-status-banner.h',
+  'include/awra-1/awra/awra-skeleton.h',
   'include/awra-1/awra/awra-header.h',
   'include/awra-1/awra/awra-sidebar.h',
   'include/awra-1/awra/awra-split-view.h',
+  'include/awra-1/awra/awra-responsive-bin.h',
+  'include/awra-1/awra/awra-edge-panel.h',
   'include/awra-1/awra/awra-toggle-button.h',
   'include/awra-1/awra/awra-entry.h',
   'include/awra-1/awra/awra-search-entry.h',
@@ -69,14 +104,19 @@ public_headers = files(
   'include/awra-1/awra/awra-spin-button.h',
   'include/awra-1/awra/awra-dropdown.h',
   'include/awra-1/awra/awra-dialog.h',
+  'include/awra-1/awra/awra-command-palette.h',
   'include/awra-1/awra/awra-toast-overlay.h',
   'include/awra-1/awra/awra-navigation-view.h',
+  'include/awra-1/awra/awra-breadcrumb-item.h',
+  'include/awra-1/awra/awra-breadcrumb-bar.h',
+  'include/awra-1/awra/awra-navigation-item.h',
   'include/awra-1/awra/awra-motion.h',
   'include/awra-1/awra/awra-badge.h',
   'include/awra-1/awra/awra-progress-bar.h',
   'include/awra-1/awra/awra-segmented-control.h',
   'include/awra-1/awra/awra-tab-view.h',
   'include/awra-1/awra/awra-list-view.h',
+  'include/awra-1/awra/awra-action-row.h',
   'include/awra-1/awra/awra-inspector.h',
 )
 
@@ -85,8 +125,12 @@ awra_sources = files(
   'src/awra-enums.c',
   'src/core/awra-context.c',
   'src/core/awra-style-manager.c',
+  'src/core/awra-style-role.c',
   'src/tokens/awra-token-set.c',
+  'src/tokens/awra-typography.c',
+  'src/layout/awra-layout.c',
   'src/material/awra-material.c',
+  'src/material/awra-material-resolution.c',
   'src/material/awra-material-resolver.c',
   'src/platform/awra-diagnostics.c',
   'src/platform/awra-effect-coordinator.c',
@@ -96,21 +140,46 @@ awra_sources = files(
   'src/application/awra-window.c',
   'src/overlays/awra-popover.c',
   'src/overlays/awra-menu-button.c',
+  'src/overlays/awra-context-menu.c',
   'src/layout/awra-card.c',
+  'src/layout/awra-page.c',
+  'src/layout/awra-page-header.c',
+  'src/layout/awra-section.c',
+  'src/layout/awra-toolbar.c',
+  'src/layout/awra-form-row.c',
+  'src/layout/awra-form.c',
+  'src/layout/awra-state-views.c',
+  'src/layout/awra-filter-bar.c',
+  'src/layout/awra-master-detail.c',
+  'src/layout/awra-detail-pane.c',
+  'src/widgets/awra-data-column.c',
+  'src/widgets/awra-data-view.c',
+  'src/widgets/awra-selection-toolbar.c',
+  'src/widgets/awra-data-components.c',
+  'src/widgets/awra-advanced-inputs.c',
+  'src/widgets/awra-choice-group.c',
+  'src/widgets/awra-status-banner.c',
+  'src/widgets/awra-skeleton.c',
   'src/layout/awra-header.c',
   'src/layout/awra-sidebar.c',
   'src/layout/awra-split-view.c',
+  'src/layout/awra-responsive-bin.c',
+  'src/layout/awra-edge-panel.c',
   'src/widgets/awra-controls.c',
   'src/widgets/awra-dropdown.c',
   'src/overlays/awra-dialog.c',
+  'src/overlays/awra-command-palette.c',
   'src/overlays/awra-toast-overlay.c',
   'src/navigation/awra-navigation-view.c',
+  'src/navigation/awra-breadcrumb-bar.c',
+  'src/navigation/awra-navigation-item.c',
   'src/motion/awra-motion.c',
   'src/widgets/awra-badge.c',
   'src/widgets/awra-progress-bar.c',
   'src/widgets/awra-segmented-control.c',
   'src/navigation/awra-tab-view.c',
   'src/widgets/awra-list-view.c',
+  'src/widgets/awra-action-row.c',
   'src/platform/awra-inspector.c',
 )
 
@@ -119,6 +188,18 @@ awra_resources = gnome.compile_resources(
   'resources/awra.gresource.xml',
   source_dir: 'resources',
   c_name: 'awra',
+)
+
+awra_symbol_map = custom_target(
+  'awra-symbol-map',
+  input: public_headers,
+  output: 'awra.map',
+  command: [
+    python,
+    files('build-aux/generate-version-script.py'),
+    '@OUTPUT@',
+    '@INPUT@',
+  ],
 )
 
 awra_deps = [gtk_dep, gio_dep]
@@ -146,9 +227,13 @@ libawra = library(
   awra_sources,
   awra_resources,
   version: meson.project_version(),
-  soversion: '0',
+  soversion: '1',
   dependencies: awra_deps,
   include_directories: [inc_public, inc_private],
+  link_args: [
+    '-Wl,--version-script=' + meson.project_build_root() / 'awra.map',
+  ],
+  link_depends: awra_symbol_map,
   install: true,
 )
 
@@ -170,6 +255,8 @@ pkgconfig.generate(
 )
 
 gir = []
+awra_vapi = []
+have_awra_vapi = false
 if not get_option('introspection').disabled()
   gir_dep = dependency(
     'gobject-introspection-1.0',
@@ -191,20 +278,32 @@ if not get_option('introspection').disabled()
     )
     vapigen = find_program('vapigen', required: false)
     if vapigen.found()
-      gnome.generate_vapi(
+      awra_vapi = gnome.generate_vapi(
         'awra-1',
         sources: gir[0],
         packages: ['gtk4'],
         install: true,
       )
+      have_awra_vapi = true
     endif
   endif
 endif
 
-subdir('docs/guides')
+subdir('docs')
+subdir('po')
+
+meson.add_dist_script(
+  python,
+  files('build-aux/normalize-dist-mtime.py'),
+)
 
 if get_option('showcase')
   subdir('showcase')
   subdir('packaging')
 endif
-subdir('tests')
+if get_option('examples')
+  subdir('examples')
+endif
+if get_option('tests')
+  subdir('tests')
+endif

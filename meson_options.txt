@@ -25,6 +25,18 @@ option(
   description: 'Build the Awra Showcase application',
 )
 option(
+  'tests',
+  type: 'boolean',
+  value: true,
+  description: 'Build Awra validation and consumer tests',
+)
+option(
+  'examples',
+  type: 'boolean',
+  value: true,
+  description: 'Build multi-language Awra example applications',
+)
+option(
   'blueprint',
   type: 'feature',
   value: 'auto',

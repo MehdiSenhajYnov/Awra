@@ -2,6 +2,7 @@
 #pragma once
 
 #include <gtk/gtk.h>
+#include <awra/awra-material.h>
 
 G_BEGIN_DECLS
 
@@ -43,5 +44,32 @@ GtkWidget  *awra_header_get_end_widget (AwraHeader *self);
  */
 void        awra_header_set_end_widget (AwraHeader *self,
                                         GtkWidget  *widget);
+/**
+ * awra_header_get_center_widget:
+ * @self: an Awra header
+ *
+ * Returns: (transfer none) (nullable): the centered widget
+ */
+GtkWidget  *awra_header_get_center_widget (AwraHeader *self);
+void        awra_header_set_center_widget (AwraHeader *self,
+                                           GtkWidget  *widget);
+gboolean    awra_header_get_show_window_controls (AwraHeader *self);
+void        awra_header_set_show_window_controls (AwraHeader *self,
+                                                  gboolean    show_controls);
+gboolean    awra_header_get_drag_enabled (AwraHeader *self);
+void        awra_header_set_drag_enabled (AwraHeader *self,
+                                          gboolean    drag_enabled);
+/**
+ * awra_header_get_material:
+ * @self: an Awra header
+ *
+ * Returns: (transfer none): the header material
+ */
+AwraMaterial *awra_header_get_material (AwraHeader *self);
+void          awra_header_set_material (AwraHeader   *self,
+                                        AwraMaterial *material);
+gboolean      awra_header_get_blend_with_window (AwraHeader *self);
+void          awra_header_set_blend_with_window (AwraHeader *self,
+                                                  gboolean    blend);
 
 G_END_DECLS

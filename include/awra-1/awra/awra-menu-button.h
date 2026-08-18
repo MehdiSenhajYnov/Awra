@@ -3,6 +3,7 @@
 
 #include <gtk/gtk.h>
 #include <awra/awra-popover.h>
+#include <awra/awra-enums.h>
 
 G_BEGIN_DECLS
 
@@ -11,8 +12,37 @@ G_DECLARE_FINAL_TYPE (AwraMenuButton, awra_menu_button, AWRA, MENU_BUTTON, GtkWi
 
 GtkWidget    *awra_menu_button_new         (void);
 const char   *awra_menu_button_get_label   (AwraMenuButton *self);
+/**
+ * awra_menu_button_set_label:
+ * @self: an Awra menu button
+ * @label: (nullable): the label, or %NULL
+ */
 void          awra_menu_button_set_label   (AwraMenuButton *self,
                                              const char     *label);
+/**
+ * awra_menu_button_set_icon_name:
+ * @self: an Awra menu button
+ * @icon_name: (nullable): an icon name, or %NULL
+ */
+void          awra_menu_button_set_icon_name (AwraMenuButton *self,
+                                               const char     *icon_name);
+/**
+ * awra_menu_button_get_child:
+ * @self: an Awra menu button
+ *
+ * Returns: (transfer none) (nullable): the custom button content
+ */
+GtkWidget    *awra_menu_button_get_child      (AwraMenuButton *self);
+/**
+ * awra_menu_button_set_child:
+ * @self: an Awra menu button
+ * @child: (nullable): custom button content, or %NULL
+ */
+void          awra_menu_button_set_child      (AwraMenuButton *self,
+                                                GtkWidget      *child);
+AwraButtonAppearance awra_menu_button_get_appearance (AwraMenuButton *self);
+void          awra_menu_button_set_appearance (AwraMenuButton       *self,
+                                                AwraButtonAppearance  appearance);
 /**
  * awra_menu_button_get_popover:
  * @self: an Awra menu button

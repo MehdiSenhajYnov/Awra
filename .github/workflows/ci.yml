@@ -1,0 +1,66 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+
+name: Awra CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-test-install:
+    runs-on: ubuntu-latest
+    container: fedora:rawhide
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependencies
+        run: >-
+          dnf install -y gcc clang meson ninja-build pkgconf-pkg-config
+          gtk4-devel glib2-devel gobject-introspection-devel vala
+          wayland-devel wayland-protocols-devel wayland-utils
+          python3 python3-gobject xvfb-run dbus-x11 git rust cargo
+          gi-docgen gettext graphviz
+      - name: Configure and compile
+        run: meson setup _build --prefix=/opt/awra -Ddeveloper=true && meson compile -C _build
+      - name: Test
+        run: xvfb-run -a meson test -C _build --print-errorlogs
+      - name: Clean install consumers
+        run: ./build-aux/validate-install.sh _build
+      - name: Distribution archive
+        run: |
+          export SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)"
+          meson dist -C _build --no-tests
+          sha256sum _build/meson-dist/awra-*.tar.xz > /tmp/awra-dist.sha256
+          meson dist -C _build --no-tests
+          sha256sum --check /tmp/awra-dist.sha256
+      - name: Meson subproject consumer
+        run: ./build-aux/validate-subproject.sh
+
+  generic-backend:
+    runs-on: ubuntu-latest
+    container: fedora:rawhide
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependencies
+        run: >-
+          dnf install -y gcc meson ninja-build pkgconf-pkg-config
+          gtk4-devel glib2-devel gobject-introspection-devel vala
+          python3 python3-gobject xvfb-run dbus-x11
+      - name: Build without Wayland effects
+        run: >-
+          meson setup _build-generic -Dwayland-effects=disabled
+          -Ddeveloper=false && meson compile -C _build-generic
+      - name: Generic fallback suite
+        run: xvfb-run -a meson test -C _build-generic --print-errorlogs
+
+  sanitizers:
+    runs-on: ubuntu-latest
+    container: fedora:rawhide
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependencies
+        run: >-
+          dnf install -y clang meson ninja-build pkgconf-pkg-config
+          gtk4-devel glib2-devel wayland-devel wayland-protocols-devel
+          wayland-utils xvfb-run dbus-x11
+      - name: ASan and UBSan
+        run: xvfb-run -a ./build-aux/run-sanitizers.sh _build-sanitize

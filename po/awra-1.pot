@@ -1,0 +1,91 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the awra-1 package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: awra-1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-19 00:49+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/layout/awra-edge-panel.c:380
+msgid "Reveal side panel"
+msgstr ""
+
+#: src/navigation/awra-tab-view.c:206
+msgid "Close tab"
+msgstr ""
+
+#: src/navigation/awra-tab-view.c:414 src/navigation/awra-tab-view.c:498
+#: src/navigation/awra-tab-view.c:501
+msgid "Untitled"
+msgstr ""
+
+#: src/overlays/awra-command-palette.c:221
+#: src/overlays/awra-command-palette.c:267
+msgid "Commands"
+msgstr ""
+
+#: src/overlays/awra-command-palette.c:222
+msgid "Type a command…"
+msgstr ""
+
+#: src/overlays/awra-command-palette.c:223
+#: src/overlays/awra-command-palette.c:273
+msgid "No matching command"
+msgstr ""
+
+#: src/overlays/awra-popover.c:331
+msgid "Action"
+msgstr ""
+
+#: src/widgets/awra-advanced-inputs.c:198
+msgid "Add a tag…"
+msgstr ""
+
+#: src/widgets/awra-data-view.c:220
+msgid "Loading more…"
+msgstr ""
+
+#: src/widgets/awra-data-view.c:240
+msgid "No results"
+msgstr ""
+
+#: src/widgets/awra-data-view.c:241
+msgid "Loading"
+msgstr ""
+
+#: src/widgets/awra-data-view.c:243
+msgid "Could not load data"
+msgstr ""
+
+#: src/widgets/awra-dropdown.c:43
+msgid "Select…"
+msgstr ""
+
+#: src/widgets/awra-dropdown.c:54
+msgid "Item"
+msgstr ""
+
+#: src/widgets/awra-selection-toolbar.c:202
+#: src/widgets/awra-selection-toolbar.c:277
+msgid "item"
+msgstr ""
+
+#: src/widgets/awra-selection-toolbar.c:203
+#: src/widgets/awra-selection-toolbar.c:296
+msgid "items"
+msgstr ""
+
+#: src/widgets/awra-selection-toolbar.c:211
+msgid "Clear"
+msgstr ""

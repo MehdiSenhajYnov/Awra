@@ -12,7 +12,9 @@ typedef struct {
   AwraEffectBackend parent;
   struct wl_display *wl_display;
   struct wl_compositor *compositor;
+  struct wl_registry *registry;
   struct ext_background_effect_manager_v1 *manager;
+  uint32_t manager_name;
 } WaylandBackend;
 
 typedef struct {
@@ -54,8 +56,11 @@ registry_global (void               *data,
 
   if (g_strcmp0 (interface, ext_background_effect_manager_v1_interface.name) != 0)
     return;
+  if (self->manager != NULL)
+    return;
 
   self->parent.interface_announced = TRUE;
+  self->manager_name = name;
   self->manager = wl_registry_bind (registry,
                                     name,
                                     &ext_background_effect_manager_v1_interface,
@@ -70,9 +75,24 @@ registry_global_remove (void               *data,
                         struct wl_registry *registry,
                         uint32_t            name)
 {
-  (void) data;
+  WaylandBackend *self = data;
+
   (void) registry;
-  (void) name;
+  if (name != self->manager_name)
+    return;
+
+  if (self->manager != NULL) {
+    ext_background_effect_manager_v1_destroy (self->manager);
+    self->manager = NULL;
+  }
+  self->manager_name = 0;
+  self->parent.interface_announced = FALSE;
+  self->parent.capabilities = AWRA_EFFECT_CAPABILITY_NONE;
+  if (self->parent.capabilities_changed != NULL)
+    self->parent.capabilities_changed (
+      &self->parent,
+      AWRA_EFFECT_CAPABILITY_NONE,
+      self->parent.capabilities_changed_data);
 }
 
 static const struct wl_registry_listener registry_listener = {
@@ -224,6 +244,8 @@ wayland_destroy (AwraEffectBackend *backend)
 
   if (self->manager != NULL)
     ext_background_effect_manager_v1_destroy (self->manager);
+  if (self->registry != NULL)
+    wl_registry_destroy (self->registry);
   g_free (self);
 }
 
@@ -250,6 +272,7 @@ awra_wayland_effect_backend_new (GdkDisplay *display,
 
   queue = wl_display_create_queue (self->wl_display);
   registry = wl_display_get_registry (self->wl_display);
+  self->registry = registry;
   wl_proxy_set_queue ((struct wl_proxy *) registry, queue);
   wl_registry_add_listener (registry, &registry_listener, self);
 
@@ -257,9 +280,12 @@ awra_wayland_effect_backend_new (GdkDisplay *display,
   if (result >= 0 && self->manager != NULL)
     result = wl_display_roundtrip_queue (self->wl_display, queue);
 
+  /* GDK remains the sole dispatcher after the synchronous discovery phase.
+   * Keeping the registry on GDK's default queue lets us observe removal and
+   * re-announcement without introducing a second reader for the display fd. */
+  wl_proxy_set_queue ((struct wl_proxy *) registry, NULL);
   if (self->manager != NULL)
     wl_proxy_set_queue ((struct wl_proxy *) self->manager, NULL);
-  wl_registry_destroy (registry);
   wl_event_queue_destroy (queue);
 
   if (result < 0) {
@@ -282,4 +308,3 @@ awra_wayland_effect_backend_new (GdkDisplay *display,
 
   return &self->parent;
 }
-

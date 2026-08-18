@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+
+[library]
+version = "1.0"
+authors = "Awra contributors"
+license = "LGPL-2.1-or-later"
+description = "A visually independent GTK 4 application framework"
+dependencies = ["GObject-2.0", "Gio-2.0", "Gdk-4.0", "Gtk-4.0"]
+devhelp = true
+search_index = true
+
+[dependencies."GObject-2.0"]
+name = "GObject"
+description = "The GLib object system"
+docs_url = "https://docs.gtk.org/gobject/"
+
+[dependencies."Gio-2.0"]
+name = "Gio"
+description = "GLib application and I/O APIs"
+docs_url = "https://docs.gtk.org/gio/"
+
+[dependencies."Gdk-4.0"]
+name = "GDK"
+description = "GTK display and surface APIs"
+docs_url = "https://docs.gtk.org/gdk4/"
+
+[dependencies."Gtk-4.0"]
+name = "GTK"
+description = "The GTK widget toolkit"
+docs_url = "https://docs.gtk.org/gtk4/"
+
+[theme]
+name = "basic"
+show_index_summary = true
+show_class_hierarchy = true

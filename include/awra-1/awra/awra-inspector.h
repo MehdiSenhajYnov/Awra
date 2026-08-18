@@ -16,12 +16,30 @@ GtkWidget  *awra_inspector_new                       (void);
  * Returns: (transfer full) (nullable): the inspected widget
  */
 GtkWidget  *awra_inspector_get_target                (AwraInspector *self);
+/**
+ * awra_inspector_set_target:
+ * @self: an Awra inspector
+ * @target: (nullable): the weakly inspected widget, or %NULL
+ */
 void        awra_inspector_set_target                (AwraInspector *self,
                                                       GtkWidget     *target);
 const char *awra_inspector_get_details               (AwraInspector *self);
+/**
+ * awra_inspector_dup_report:
+ * @self: an Awra inspector
+ *
+ * Returns: (transfer full): the current diagnostic report
+ */
+char       *awra_inspector_dup_report                (AwraInspector *self);
+gboolean    awra_inspector_export_report             (AwraInspector *self,
+                                                      const char    *path,
+                                                      GError       **error);
 void        awra_inspector_refresh                   (AwraInspector *self);
 gboolean    awra_inspector_get_effect_region_visible (AwraInspector *self);
 void        awra_inspector_set_effect_region_visible (AwraInspector *self,
+                                                      gboolean       visible);
+gboolean    awra_inspector_get_overdraw_visible      (AwraInspector *self);
+void        awra_inspector_set_overdraw_visible      (AwraInspector *self,
                                                       gboolean       visible);
 
 G_END_DECLS
