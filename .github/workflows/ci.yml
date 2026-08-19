@@ -16,7 +16,6 @@ jobs:
       GDK_DEBUG: no-portals
       GTK_A11Y: none
     steps:
-      - uses: actions/checkout@v4
       - name: Dependencies
         run: >-
           dnf install -y --disablerepo=fedora-cisco-openh264
@@ -26,6 +25,7 @@ jobs:
           python3 python3-gobject xvfb-run dbus-x11 git rust cargo
           dbus-daemon dbus-tools libglvnd-gles
           gi-docgen gettext graphviz
+      - uses: actions/checkout@v4
       - name: Prepare headless runtime
         run: |
           dbus-uuidgen > /etc/machine-id
@@ -59,14 +59,14 @@ jobs:
       GDK_DEBUG: no-portals
       GTK_A11Y: none
     steps:
-      - uses: actions/checkout@v4
       - name: Dependencies
         run: >-
           dnf install -y --disablerepo=fedora-cisco-openh264
           gcc meson ninja-build pkgconf-pkg-config
           gtk4-devel glib2-devel gobject-introspection-devel vala
-          python3 python3-gobject xvfb-run dbus-x11
+          python3 python3-gobject xvfb-run dbus-x11 git
           dbus-daemon dbus-tools libglvnd-gles
+      - uses: actions/checkout@v4
       - name: Prepare headless runtime
         run: |
           dbus-uuidgen > /etc/machine-id
@@ -87,14 +87,14 @@ jobs:
       GDK_DEBUG: no-portals
       GTK_A11Y: none
     steps:
-      - uses: actions/checkout@v4
       - name: Dependencies
         run: >-
           dnf install -y --disablerepo=fedora-cisco-openh264
           clang meson ninja-build pkgconf-pkg-config
           gtk4-devel glib2-devel wayland-devel wayland-protocols-devel
-          wayland-utils xvfb-run dbus-x11
+          wayland-utils xvfb-run dbus-x11 git
           dbus-daemon dbus-tools libglvnd-gles
+      - uses: actions/checkout@v4
       - name: Prepare headless runtime
         run: |
           dbus-uuidgen > /etc/machine-id
