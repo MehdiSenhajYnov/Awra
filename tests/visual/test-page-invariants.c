@@ -161,11 +161,17 @@ test_page_focus_and_material_invariants (void)
   effects_before = awra_diagnostics_get_effects_applied (diagnostics);
   assert_root_invariants (context, material, blur_capable);
 
+  /* X11 delivers the first post-style allocation asynchronously.  Establish
+   * the baseline only after the same settling boundary used for Awra's
+   * longest component transition, otherwise the test can compare the initial
+   * default-size allocation with the final styled allocation. */
+  iterate_for (180);
+  gtk_test_widget_wait_for_draw (window);
   width_before = gtk_widget_get_width (composition);
   height_before = gtk_widget_get_height (composition);
   active = snapshot_checksum (composition);
   gtk_widget_set_state_flags (window, GTK_STATE_FLAG_BACKDROP, FALSE);
-  iterate_for (10);
+  iterate_for (180);
   inactive = snapshot_checksum (composition);
   g_assert_cmpint (gtk_widget_get_width (composition), ==, width_before);
   g_assert_cmpint (gtk_widget_get_height (composition), ==, height_before);
@@ -175,12 +181,12 @@ test_page_focus_and_material_invariants (void)
   gtk_widget_unset_state_flags (window, GTK_STATE_FLAG_BACKDROP);
 
   awra_split_view_set_show_sidebar (split, FALSE);
-  iterate_for (10);
+  iterate_for (180);
   assert_root_invariants (context, material, blur_capable);
   g_assert_cmpuint (awra_diagnostics_get_effects_applied (diagnostics), ==,
                     effects_before);
   awra_split_view_set_show_sidebar (split, TRUE);
-  iterate_for (10);
+  iterate_for (180);
   g_assert_cmpint (gtk_widget_get_width (composition), ==, width_before);
   g_assert_cmpint (gtk_widget_get_height (composition), ==, height_before);
   assert_root_invariants (context, material, blur_capable);

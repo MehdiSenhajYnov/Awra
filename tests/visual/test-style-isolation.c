@@ -2,6 +2,7 @@
 
 #include <awra/awra.h>
 #include <glib/gstdio.h>
+#include <string.h>
 #include <sys/wait.h>
 
 static const char *self_program;
@@ -523,6 +524,10 @@ run_probe (const char *program,
   environment = g_environ_setenv (environment, "AWRA_FORCE_FALLBACK", "1", TRUE);
   environment = g_environ_setenv (environment, "GTK_THEME", theme, TRUE);
   environment = g_environ_setenv (environment, "XDG_CONFIG_HOME", config_home, TRUE);
+  /* GTK 4.23 can emit this warning internally when Xvfb reports a synthetic
+   * frame twice.  Keep criticals fatal in the child and inspect every warning
+   * below, allowing only that exact backend diagnostic. */
+  environment = g_environ_setenv (environment, "G_DEBUG", "fatal-criticals", TRUE);
   if (runtime_provider)
     environment = g_environ_setenv (environment,
                                     "AWRA_PROBE_RUNTIME_USER_PROVIDER",
@@ -536,6 +541,21 @@ run_probe (const char *program,
   g_assert_no_error (error);
   if (status_out != NULL)
     *status_out = status;
+  if (stderr_text != NULL) {
+    g_auto (GStrv) lines = g_strsplit (stderr_text, "\n", -1);
+
+    for (gsize i = 0; lines[i] != NULL; i++) {
+      if (strstr (lines[i], "WARNING") != NULL ||
+          strstr (lines[i], "CRITICAL") != NULL) {
+        g_assert_nonnull (strstr (
+          lines[i],
+          "Gdk-WARNING"));
+        g_assert_nonnull (strstr (
+          lines[i],
+          "gdk_frame_timings_submitted() called on submitted frame."));
+      }
+    }
+  }
   if (status != 0 && stderr_text != NULL)
     g_test_message ("style probe stderr: %s", stderr_text);
   if (status == 0)
@@ -543,6 +563,27 @@ run_probe (const char *program,
       "^AwraButton@-?[0-9]+,-?[0-9]+=[0-9]+x[0-9]+:(empty|[0-9a-f]{64})\\n",
                                         stdout_text, 0, 0));
   return g_steal_pointer (&stdout_text);
+}
+
+static void
+remove_test_tree (const char *path)
+{
+  if (g_file_test (path, G_FILE_TEST_IS_SYMLINK)) {
+    g_assert_cmpint (g_remove (path), ==, 0);
+  } else if (g_file_test (path, G_FILE_TEST_IS_DIR)) {
+    g_autoptr (GDir) directory = g_dir_open (path, 0, NULL);
+    const char *name;
+
+    g_assert_nonnull (directory);
+    while ((name = g_dir_read_name (directory)) != NULL) {
+      g_autofree char *child = g_build_filename (path, name, NULL);
+
+      remove_test_tree (child);
+    }
+    g_assert_cmpint (g_rmdir (path), ==, 0);
+  } else {
+    g_assert_cmpint (g_remove (path), ==, 0);
+  }
 }
 
 static void
@@ -582,10 +623,10 @@ test_theme_and_user_provider_isolation (void)
   g_assert_cmpstr (breeze, ==, runtime_user);
 
 cleanup:
-  if (g_file_test (user_css_path, G_FILE_TEST_EXISTS))
-    g_assert_cmpint (g_remove (user_css_path), ==, 0);
-  g_assert_cmpint (g_rmdir (gtk_dir), ==, 0);
-  g_assert_cmpint (g_rmdir (temporary), ==, 0);
+  /* IM modules and desktop services may legitimately create cache sockets or
+   * directories below an isolated XDG_CONFIG_HOME.  They are part of this
+   * fixture's temporary tree, not evidence of a framework leak. */
+  remove_test_tree (temporary);
 }
 
 int

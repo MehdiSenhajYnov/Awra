@@ -8,6 +8,20 @@
 
 static guint click_count;
 
+static void
+settle_window (GtkWidget *window)
+{
+  g_autoptr (GMainLoop) loop = g_main_loop_new (NULL, FALSE);
+
+  /* A bare Xvfb server has no window manager to synchronously acknowledge the
+   * initial configure request.  Wait through the style/allocation boundary so
+   * responsive assertions observe the requested window size on every GDK
+   * backend, rather than GTK's transient natural allocation. */
+  g_timeout_add_once (180, (GSourceOnceFunc) g_main_loop_quit, loop);
+  g_main_loop_run (loop);
+  gtk_test_widget_wait_for_draw (window);
+}
+
 typedef struct {
   guint requests;
   gboolean veto;
@@ -628,8 +642,12 @@ test_typed_page_components (void)
   window = awra_window_new (app);
   awra_window_set_content (AWRA_WINDOW (window), page);
   gtk_window_set_default_size (GTK_WINDOW (window), 1200, 700);
+  /* default-size is advisory and a bare Xvfb server has no window manager to
+   * honor it.  This fixture needs a genuinely wide allocation to validate the
+   * page's max-content-width and centering contract. */
+  gtk_widget_set_size_request (window, 1200, 700);
   gtk_window_present (GTK_WINDOW (window));
-  gtk_test_widget_wait_for_draw (window);
+  settle_window (window);
 
   page_width = gtk_widget_get_width (page);
   child_width = gtk_widget_get_width (content);
@@ -792,8 +810,9 @@ test_filter_and_master_detail (void)
   window = awra_window_new (app);
   awra_window_set_content (AWRA_WINDOW (window), master_detail);
   gtk_window_set_default_size (GTK_WINDOW (window), 1120, 620);
+  gtk_widget_set_size_request (window, 1120, 620);
   gtk_window_present (GTK_WINDOW (window));
-  gtk_test_widget_wait_for_draw (window);
+  settle_window (window);
   g_assert_cmpint (awra_master_detail_get_layout_mode (
                      AWRA_MASTER_DETAIL (master_detail)), ==,
                    AWRA_LAYOUT_MODE_EXPANDED);
@@ -995,8 +1014,9 @@ test_mapped_inset_sidebar (void)
                                gtk_label_new ("Overview"));
   awra_window_set_content (AWRA_WINDOW (window), split);
   gtk_window_set_default_size (GTK_WINDOW (window), 1180, 780);
+  gtk_widget_set_size_request (window, 1180, 780);
   gtk_window_present (GTK_WINDOW (window));
-  gtk_test_widget_wait_for_draw (window);
+  settle_window (window);
 
   g_assert_cmpint (gtk_widget_get_width (split), >=, 900);
   g_assert_cmpint (awra_split_view_get_layout_mode (AWRA_SPLIT_VIEW (split)),
@@ -1029,8 +1049,9 @@ test_responsive_bin (void)
                                           900);
   awra_window_set_content (AWRA_WINDOW (window), responsive);
   gtk_window_set_default_size (GTK_WINDOW (window), 1100, 600);
+  gtk_widget_set_size_request (window, 1100, 600);
   gtk_window_present (GTK_WINDOW (window));
-  gtk_test_widget_wait_for_draw (window);
+  settle_window (window);
 
   g_assert_cmpint (awra_responsive_bin_get_layout_mode (
                      AWRA_RESPONSIVE_BIN (responsive)), ==,
