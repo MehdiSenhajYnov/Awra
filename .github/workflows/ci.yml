@@ -28,6 +28,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Prepare headless runtime
         run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           dbus-uuidgen > /etc/machine-id
           install -d -m 700 "$XDG_RUNTIME_DIR"
       - name: Configure and compile
@@ -69,6 +70,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Prepare headless runtime
         run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           dbus-uuidgen > /etc/machine-id
           install -d -m 700 "$XDG_RUNTIME_DIR"
       - name: Build without Wayland effects
@@ -97,6 +99,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Prepare headless runtime
         run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           dbus-uuidgen > /etc/machine-id
           install -d -m 700 "$XDG_RUNTIME_DIR"
       - name: ASan and UBSan
