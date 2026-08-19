@@ -53,6 +53,8 @@ cross-cutting improvement plan derived from Showcase and Pokedia is maintained
 in [`docs/architecture/improvement-roadmap.md`](docs/architecture/improvement-roadmap.md),
 with gate evidence in
 [`docs/architecture/roadmap-status.md`](docs/architecture/roadmap-status.md).
+The evolving observations from Showcase, PokediaAwra and future consumers are
+kept in the [`usage journal`](docs/usage-journal/journal.md).
 
 Blueprint validation is optional (`-Dblueprint=auto`) and is performed when
 `blueprint-compiler` is installed. It is a build tool only; Awra has no
