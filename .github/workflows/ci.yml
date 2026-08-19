@@ -28,7 +28,7 @@ jobs:
           gi-docgen gettext graphviz
       - name: Prepare headless runtime
         run: |
-          dbus-uuidgen --ensure=/etc/machine-id
+          dbus-uuidgen > /etc/machine-id
           install -d -m 700 "$XDG_RUNTIME_DIR"
       - name: Configure and compile
         run: meson setup _build --prefix=/opt/awra -Ddeveloper=true && meson compile -C _build
@@ -69,7 +69,7 @@ jobs:
           dbus-daemon dbus-tools libglvnd-gles
       - name: Prepare headless runtime
         run: |
-          dbus-uuidgen --ensure=/etc/machine-id
+          dbus-uuidgen > /etc/machine-id
           install -d -m 700 "$XDG_RUNTIME_DIR"
       - name: Build without Wayland effects
         run: >-
@@ -97,7 +97,7 @@ jobs:
           dbus-daemon dbus-tools libglvnd-gles
       - name: Prepare headless runtime
         run: |
-          dbus-uuidgen --ensure=/etc/machine-id
+          dbus-uuidgen > /etc/machine-id
           install -d -m 700 "$XDG_RUNTIME_DIR"
       - name: ASan and UBSan
         run: dbus-run-session -- xvfb-run -a ./build-aux/run-sanitizers.sh _build-sanitize
