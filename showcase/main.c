@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
 
 #include <awra/awra.h>
+#include <math.h>
 
 #define SHOWCASE_PAGE_COUNT 11
 
@@ -612,6 +613,141 @@ make_pattern_action_row (ShowcaseState *state,
   return row;
 }
 
+
+typedef struct {
+  AwraMediaRow *row;
+  AwraWaveformView *waveform;
+  gint64 last_frame;
+} PlaybackDemo;
+
+static gboolean
+playback_tick_cb (GtkWidget     *widget,
+                  GdkFrameClock *clock,
+                  gpointer       user_data)
+{
+  PlaybackDemo *demo = user_data;
+  gint64 now = gdk_frame_clock_get_frame_time (clock);
+  double duration = awra_media_row_get_duration (demo->row);
+  double position;
+
+  (void) widget;
+  if (!awra_media_row_get_playing (demo->row) || duration <= 0.0) {
+    demo->last_frame = 0;
+    return G_SOURCE_CONTINUE;
+  }
+  if (demo->last_frame == 0 || now - demo->last_frame < 250000) {
+    if (demo->last_frame == 0)
+      demo->last_frame = now;
+    return G_SOURCE_CONTINUE;
+  }
+  position = awra_media_row_get_position (demo->row) +
+             (double) (now - demo->last_frame) / G_USEC_PER_SEC;
+  demo->last_frame = now;
+  if (position >= duration)
+    position = 0.0;
+  awra_media_row_set_position (demo->row, position);
+  if (demo->waveform != NULL)
+    awra_waveform_view_set_position (demo->waveform, position);
+  return G_SOURCE_CONTINUE;
+}
+
+static void
+playback_toggled_cb (AwraMediaRow *row,
+                     gpointer      user_data)
+{
+  (void) user_data;
+  awra_media_row_set_playing (row, !awra_media_row_get_playing (row));
+}
+
+static void
+playback_stop_cb (AwraMediaRow *row,
+                  gpointer      user_data)
+{
+  PlaybackDemo *demo = user_data;
+
+  awra_media_row_set_playing (row, FALSE);
+  awra_media_row_set_position (row, 0.0);
+  if (demo->waveform != NULL)
+    awra_waveform_view_set_position (demo->waveform, 0.0);
+}
+
+static void
+playback_seek_cb (AwraMediaRow *row,
+                  double        position,
+                  gpointer      user_data)
+{
+  PlaybackDemo *demo = user_data;
+
+  awra_media_row_set_position (row, position);
+  if (demo->waveform != NULL)
+    awra_waveform_view_set_position (demo->waveform, position);
+}
+
+static void
+waveform_seek_cb (AwraWaveformView *waveform,
+                  double            position,
+                  gpointer          user_data)
+{
+  PlaybackDemo *demo = user_data;
+
+  awra_waveform_view_set_position (waveform, position);
+  awra_media_row_set_position (demo->row, position);
+}
+
+/* Makes a media row behave like a tiny player so the Showcase exercises
+ * play/pause, stop, seeking and progress without an audio backend. */
+static void
+attach_playback_demo (GtkWidget        *row,
+                      AwraWaveformView *waveform)
+{
+  PlaybackDemo *demo = g_new0 (PlaybackDemo, 1);
+
+  demo->row = AWRA_MEDIA_ROW (row);
+  demo->waveform = waveform;
+  g_object_set_data_full (G_OBJECT (row), "showcase-playback", demo, g_free);
+  g_signal_connect (row, "play-toggled", G_CALLBACK (playback_toggled_cb),
+                    NULL);
+  g_signal_connect (row, "stop-requested", G_CALLBACK (playback_stop_cb),
+                    demo);
+  g_signal_connect (row, "seek-requested", G_CALLBACK (playback_seek_cb),
+                    demo);
+  if (waveform != NULL)
+    g_signal_connect (waveform, "seek-requested",
+                      G_CALLBACK (waveform_seek_cb), demo);
+  gtk_widget_add_tick_callback (row, playback_tick_cb, demo, NULL);
+}
+
+static float *
+make_demo_peaks (guint  count,
+                 double seed)
+{
+  float *peaks = g_new (float, count);
+
+  for (guint i = 0; i < count; i++) {
+    double t = (double) i / (double) count;
+    double envelope = 0.35 + 0.65 * sin (G_PI * MIN (t * 1.4, 1.0));
+    double texture = fabs (sin (i * 0.31 + seed) * cos (i * 0.047 + seed));
+
+    peaks[i] = (float) CLAMP (0.12 + envelope * (0.25 + 0.75 * texture),
+                              0.0, 1.0);
+  }
+  return peaks;
+}
+
+static GtkWidget *
+make_waveform (double duration,
+               double seed,
+               int    height)
+{
+  GtkWidget *waveform = awra_waveform_view_new ();
+  g_autofree float *peaks = make_demo_peaks (240, seed);
+
+  awra_waveform_view_set_peaks (AWRA_WAVEFORM_VIEW (waveform), peaks, 240);
+  awra_waveform_view_set_duration (AWRA_WAVEFORM_VIEW (waveform), duration);
+  gtk_widget_set_size_request (waveform, -1, height);
+  return waveform;
+}
+
 static GtkWidget *
 make_media_workspace (ShowcaseState *state,
                       GMenuModel    *context_menu)
@@ -633,13 +769,17 @@ make_media_workspace (ShowcaseState *state,
   GtkWidget *hero = awra_card_new ();
   GtkWidget *hero_box = make_box (GTK_ORIENTATION_VERTICAL, AWRA_SPACING_SM);
   GtkWidget *hero_actions = make_box (GTK_ORIENTATION_HORIZONTAL, AWRA_SPACING_SM);
-  GtkWidget *progress = awra_progress_bar_new ();
+  GtkWidget *waveform = make_waveform (222.0, 0.7, 44);
+  GtkWidget *now_playing = awra_media_row_new ("La Lune");
   GtkWidget *queue = make_box (GTK_ORIENTATION_VERTICAL, AWRA_SPACING_XS);
+  GdkRGBA swatch = { 0.42, 0.30, 0.86, 1.0 };
 
+  (void) state;
   awra_card_set_appearance (AWRA_CARD (frame), AWRA_CARD_APPEARANCE_RAISED);
   awra_card_set_content_inset (AWRA_CARD (frame), AWRA_SPACING_NONE);
   awra_card_set_child (AWRA_CARD (frame), root);
-  gtk_widget_set_size_request (frame, -1, 510);
+  gtk_widget_set_size_request (frame, -1, 640);
+  awra_widget_set_margin (now_playing, AWRA_SPACING_SM);
 
   awra_search_entry_set_placeholder_text (AWRA_SEARCH_ENTRY (search),
                                           "Search songs, artists and albums");
@@ -701,22 +841,317 @@ make_media_workspace (ShowcaseState *state,
   gtk_box_append (GTK_BOX (hero_actions), make_button (
     "Add to library", AWRA_BUTTON_APPEARANCE_SECONDARY));
   gtk_box_append (GTK_BOX (hero_box), hero_actions);
-  awra_progress_bar_set_fraction (AWRA_PROGRESS_BAR (progress), 0.43);
-  gtk_box_append (GTK_BOX (hero_box), progress);
+  awra_media_row_set_subtitle (AWRA_MEDIA_ROW (now_playing), "Noirmate · La Lune");
+  awra_media_row_set_duration (AWRA_MEDIA_ROW (now_playing), 222.0);
+  awra_media_row_set_position (AWRA_MEDIA_ROW (now_playing), 96.0);
+  awra_media_row_set_playing (AWRA_MEDIA_ROW (now_playing), TRUE);
+  awra_media_row_set_show_volume (AWRA_MEDIA_ROW (now_playing), TRUE);
+  awra_media_row_set_volume (AWRA_MEDIA_ROW (now_playing), 0.72);
+  awra_media_row_set_icon_name (AWRA_MEDIA_ROW (now_playing),
+                                "audio-x-generic-symbolic");
+  awra_media_row_set_accent_color (AWRA_MEDIA_ROW (now_playing), &swatch);
+  awra_waveform_view_set_position (AWRA_WAVEFORM_VIEW (waveform), 96.0);
+  attach_playback_demo (now_playing, AWRA_WAVEFORM_VIEW (waveform));
+  gtk_box_append (GTK_BOX (hero_box), waveform);
   awra_card_set_child (AWRA_CARD (hero), hero_box);
   awra_widget_set_context_menu_model (hero, context_menu);
   gtk_box_append (GTK_BOX (content), hero);
-  gtk_box_append (GTK_BOX (queue), make_pattern_action_row (
-    state, "Afterglow", "Noirmate · 3:42", "audio-x-generic-symbolic",
-    "PLAYING", context_menu));
-  gtk_box_append (GTK_BOX (queue), make_pattern_action_row (
-    state, "Silver Lines", "Mira · 4:08", "audio-x-generic-symbolic",
-    NULL, context_menu));
+  gtk_box_append (GTK_BOX (queue), make_label ("UP NEXT",
+                                              AWRA_TYPOGRAPHY_EYEBROW));
+  {
+    static const struct {
+      const char *title;
+      const char *subtitle;
+      double duration;
+    } tracks[] = {
+      { "Silver Lines", "Mira", 248.0 },
+      { "Afterglow", "Noirmate", 222.0 },
+    };
+
+    for (guint i = 0; i < G_N_ELEMENTS (tracks); i++) {
+      GtkWidget *row = awra_media_row_new (tracks[i].title);
+
+      awra_media_row_set_subtitle (AWRA_MEDIA_ROW (row), tracks[i].subtitle);
+      awra_media_row_set_duration (AWRA_MEDIA_ROW (row), tracks[i].duration);
+      awra_media_row_set_icon_name (AWRA_MEDIA_ROW (row),
+                                    "audio-x-generic-symbolic");
+      awra_media_row_set_show_stop_button (AWRA_MEDIA_ROW (row), FALSE);
+      attach_playback_demo (row, NULL);
+      awra_widget_set_context_menu_model (row, context_menu);
+      gtk_box_append (GTK_BOX (queue), row);
+    }
+  }
   gtk_box_append (GTK_BOX (content), queue);
   awra_split_view_set_sidebar (AWRA_SPLIT_VIEW (split), sidebar);
   awra_split_view_set_content (AWRA_SPLIT_VIEW (split), content);
   gtk_widget_set_vexpand (split, TRUE);
   gtk_box_append (GTK_BOX (root), split);
+  /* The transport docks below the workspace, like a desktop player bar. */
+  gtk_box_append (GTK_BOX (root), now_playing);
+  return frame;
+}
+
+
+typedef struct {
+  ShowcaseState *showcase;
+  AwraKeyboardView *keyboard;
+  AwraMediaRow *row;
+  AwraWaveformView *waveform;
+  GtkLabel *selection_label;
+} SoundboardDemo;
+
+typedef struct {
+  const char *code;
+  const char *sound;
+  double duration;
+  GdkRGBA track;
+  gboolean has_mood;
+  GdkRGBA mood;
+  const char *badge;
+} SoundboardBinding;
+
+static const SoundboardBinding soundboard_bindings[] = {
+  { "KeyA", "Thunder", 6.0, { 0.25, 0.42, 0.86, 1.0 }, TRUE, { 0.55, 0.36, 0.92, 1.0 }, NULL },
+  { "KeyS", "Battle theme", 214.0, { 0.72, 0.20, 0.26, 1.0 }, TRUE, { 0.96, 0.42, 0.20, 1.0 }, "2" },
+  { "KeyD", "Footsteps", 3.5, { 0.25, 0.42, 0.86, 1.0 }, FALSE, { 0, 0, 0, 0 }, NULL },
+  { "KeyF", "Sword clash", 1.8, { 0.25, 0.42, 0.86, 1.0 }, TRUE, { 0.96, 0.42, 0.20, 1.0 }, NULL },
+  { "KeyJ", "Rain loop", 95.0, { 0.16, 0.56, 0.48, 1.0 }, TRUE, { 0.36, 0.72, 0.90, 1.0 }, NULL },
+  { "KeyK", "Village", 180.0, { 0.16, 0.56, 0.48, 1.0 }, FALSE, { 0, 0, 0, 0 }, "3" },
+  { "Space", "Silence the room", 2.0, { 0.48, 0.46, 0.52, 1.0 }, FALSE, { 0, 0, 0, 0 }, NULL },
+  { "Digit1", "Opening", 132.0, { 0.72, 0.20, 0.26, 1.0 }, FALSE, { 0, 0, 0, 0 }, NULL },
+  { "Numpad5", "Heartbeat", 12.0, { 0.84, 0.66, 0.22, 1.0 }, TRUE, { 0.86, 0.22, 0.30, 1.0 }, NULL },
+};
+
+static const SoundboardBinding *
+soundboard_binding (const char *code)
+{
+  for (guint i = 0; code != NULL && i < G_N_ELEMENTS (soundboard_bindings); i++) {
+    if (g_str_equal (soundboard_bindings[i].code, code))
+      return &soundboard_bindings[i];
+  }
+  return NULL;
+}
+
+static gboolean
+soundboard_stop_active_cb (gpointer user_data)
+{
+  AwraKeyCap *cap = user_data;
+
+  awra_key_cap_set_active (cap, FALSE);
+  return G_SOURCE_REMOVE;
+}
+
+static void
+soundboard_selection_changed_cb (AwraKeyboardView *keyboard,
+                                 SoundboardDemo   *demo)
+{
+  g_auto (GStrv) codes = awra_keyboard_view_get_selected_codes (keyboard);
+  const SoundboardBinding *binding = codes[0] != NULL
+                                       ? soundboard_binding (codes[0]) : NULL;
+  g_autofree char *summary = NULL;
+
+  if (codes[0] == NULL) {
+    summary = g_strdup ("No key selected");
+  } else if (codes[1] != NULL) {
+    summary = g_strdup_printf ("%u keys selected", g_strv_length (codes));
+  } else {
+    AwraKeyCap *cap = awra_keyboard_view_get_key_cap (keyboard, codes[0]);
+
+    summary = g_strdup_printf ("Key %s · %s", awra_key_cap_get_label (cap),
+                               binding != NULL ? binding->sound : "free");
+  }
+  gtk_label_set_text (demo->selection_label, summary);
+  awra_media_row_set_title (demo->row, binding != NULL ? binding->sound
+                                                       : "Nothing assigned");
+  awra_media_row_set_subtitle (demo->row, binding != NULL ? codes[0] : NULL);
+  awra_media_row_set_duration (demo->row, binding != NULL ? binding->duration
+                                                          : 0.0);
+  awra_media_row_set_position (demo->row, 0.0);
+  awra_media_row_set_playing (demo->row, FALSE);
+  awra_media_row_set_accent_color (demo->row,
+                                   binding != NULL ? &binding->track : NULL);
+  awra_waveform_view_set_duration (demo->waveform,
+                                   binding != NULL ? binding->duration : 0.0);
+  awra_waveform_view_set_marker_position (demo->waveform,
+                                          binding != NULL
+                                            ? binding->duration * 0.12 : -1.0);
+  awra_waveform_view_set_hint_position (demo->waveform,
+                                        binding != NULL
+                                          ? binding->duration * 0.31 : -1.0);
+  awra_waveform_view_set_position (demo->waveform, -1.0);
+  if (binding != NULL) {
+    g_autofree float *peaks = make_demo_peaks (240, binding->duration);
+
+    awra_waveform_view_set_peaks (demo->waveform, peaks, 240);
+  } else {
+    awra_waveform_view_set_peaks (demo->waveform, NULL, 0);
+  }
+}
+
+static void
+soundboard_key_activated_cb (AwraKeyboardView *keyboard,
+                             const char       *code,
+                             GdkModifierType   modifiers,
+                             SoundboardDemo   *demo)
+{
+  AwraKeyCap *cap = awra_keyboard_view_get_key_cap (keyboard, code);
+
+  (void) modifiers;
+  if (soundboard_binding (code) == NULL)
+    return;
+  awra_key_cap_flash (cap);
+  awra_key_cap_set_active (cap, TRUE);
+  g_timeout_add_full (G_PRIORITY_DEFAULT, 1600, soundboard_stop_active_cb,
+                      g_object_ref (cap), g_object_unref);
+  awra_media_row_set_playing (demo->row, TRUE);
+}
+
+static void
+soundboard_files_dropped_cb (AwraKeyboardView *keyboard,
+                             const char       *code,
+                             GdkFileList      *files,
+                             SoundboardDemo   *demo)
+{
+  g_autoptr (GSList) list = gdk_file_list_get_files (files);
+  AwraKeyCap *cap = awra_keyboard_view_get_key_cap (keyboard, code);
+  g_autofree char *message = g_strdup_printf ("%u file(s) assigned to %s",
+                                              g_slist_length (list),
+                                              awra_key_cap_get_label (cap));
+
+  awra_key_cap_set_bound (cap, TRUE);
+  awra_key_cap_set_secondary_label (cap, "Dropped sound");
+  awra_toast_overlay_show_with_action (demo->showcase->toast, message, "Undo",
+                                       "showcase.undo", 4000);
+}
+
+static void
+soundboard_layout_cb (AwraSegmentedControl *control,
+                      GParamSpec           *pspec,
+                      SoundboardDemo       *demo)
+{
+  (void) pspec;
+  awra_keyboard_view_set_physical_layout (
+    demo->keyboard,
+    awra_segmented_control_get_selected (control) == 1
+      ? AWRA_KEYBOARD_PHYSICAL_LAYOUT_ISO
+      : AWRA_KEYBOARD_PHYSICAL_LAYOUT_ANSI);
+}
+
+static void
+soundboard_numpad_cb (AwraSwitch     *switcher,
+                      GParamSpec     *pspec,
+                      SoundboardDemo *demo)
+{
+  (void) pspec;
+  awra_keyboard_view_set_show_numpad (demo->keyboard,
+                                      awra_switch_get_active (switcher));
+}
+
+static void
+soundboard_shortcut_captured_cb (AwraShortcutCapture *capture,
+                                 SoundboardDemo      *demo)
+{
+  g_auto (GStrv) codes = awra_shortcut_capture_get_codes (capture);
+  g_autofree char *joined = g_strjoinv (" + ", codes);
+  g_autofree char *message = g_strdup_printf ("Stop-all shortcut: %s", joined);
+
+  show_toast (demo->showcase, message);
+}
+
+static GtkWidget *
+make_soundboard_workspace (ShowcaseState *state,
+                           GMenuModel    *context_menu)
+{
+  SoundboardDemo *demo = g_new0 (SoundboardDemo, 1);
+  GtkWidget *frame = awra_card_new ();
+  GtkWidget *root = make_box (GTK_ORIENTATION_VERTICAL, AWRA_SPACING_LG);
+  GtkWidget *toolbar = awra_toolbar_new ();
+  GtkWidget *tools = make_box (GTK_ORIENTATION_HORIZONTAL, AWRA_SPACING_SM);
+  GtkWidget *layout = awra_segmented_control_new ();
+  GtkWidget *numpad = awra_switch_new ();
+  GtkWidget *stop_all = awra_shortcut_capture_new ();
+  GtkWidget *keyboard = awra_keyboard_view_new ();
+  GtkWidget *details = make_box (GTK_ORIENTATION_VERTICAL, AWRA_SPACING_SM);
+  GtkWidget *waveform = make_waveform (0.0, 0.0, 52);
+  GtkWidget *row = awra_media_row_new (NULL);
+  const guint stop_keys[] = { 37, 9 }; /* Left Ctrl + Escape */
+  AwraKeyboardView *view = AWRA_KEYBOARD_VIEW (keyboard);
+
+  demo->showcase = state;
+  demo->keyboard = view;
+  demo->row = AWRA_MEDIA_ROW (row);
+  demo->waveform = AWRA_WAVEFORM_VIEW (waveform);
+  demo->selection_label = GTK_LABEL (make_label ("No key selected",
+                                                 AWRA_TYPOGRAPHY_MUTED));
+  g_object_set_data_full (G_OBJECT (frame), "showcase-soundboard", demo,
+                          g_free);
+
+  awra_card_set_appearance (AWRA_CARD (frame), AWRA_CARD_APPEARANCE_RAISED);
+  awra_toolbar_set_start_widget (AWRA_TOOLBAR (toolbar),
+                                 make_label ("Soundboard",
+                                             AWRA_TYPOGRAPHY_TITLE_2));
+  awra_segmented_control_append (AWRA_SEGMENTED_CONTROL (layout), "ANSI");
+  awra_segmented_control_append (AWRA_SEGMENTED_CONTROL (layout), "ISO");
+  awra_segmented_control_set_selected (AWRA_SEGMENTED_CONTROL (layout), 0);
+  awra_widget_set_tooltip_text (numpad, "Show the numeric keypad");
+  awra_shortcut_capture_set_placeholder (AWRA_SHORTCUT_CAPTURE (stop_all),
+                                         "Stop all…");
+  awra_shortcut_capture_set_shortcut (AWRA_SHORTCUT_CAPTURE (stop_all),
+                                      stop_keys, G_N_ELEMENTS (stop_keys),
+                                      GDK_CONTROL_MASK);
+  awra_widget_set_tooltip_text (stop_all,
+                                "Click, then press a new stop-all shortcut");
+  gtk_box_append (GTK_BOX (tools), layout);
+  gtk_box_append (GTK_BOX (tools), make_label ("Numpad",
+                                              AWRA_TYPOGRAPHY_MUTED));
+  gtk_box_append (GTK_BOX (tools), numpad);
+  gtk_box_append (GTK_BOX (tools), stop_all);
+  awra_toolbar_set_end_widget (AWRA_TOOLBAR (toolbar), tools);
+  gtk_box_append (GTK_BOX (root), toolbar);
+
+  awra_keyboard_view_set_selection_mode (view, GTK_SELECTION_MULTIPLE);
+  awra_keyboard_view_set_accepts_file_drops (view, TRUE);
+  /* Configure every bound cap, including the hidden numpad section. */
+  awra_keyboard_view_set_show_numpad (view, TRUE);
+  for (guint i = 0; i < G_N_ELEMENTS (soundboard_bindings); i++) {
+    const SoundboardBinding *binding = &soundboard_bindings[i];
+    AwraKeyCap *cap = awra_keyboard_view_get_key_cap (view, binding->code);
+
+    awra_key_cap_set_bound (cap, TRUE);
+    awra_key_cap_set_secondary_label (cap, binding->sound);
+    awra_key_cap_set_tint (cap, &binding->track);
+    if (binding->has_mood)
+      awra_key_cap_set_edge_color (cap, &binding->mood);
+    awra_key_cap_set_badge (cap, binding->badge);
+    awra_widget_set_context_menu_model (GTK_WIDGET (cap), context_menu);
+  }
+  awra_keyboard_view_set_show_numpad (view, FALSE);
+  awra_key_cap_set_dimmed (awra_keyboard_view_get_key_cap (view, "F12"), TRUE);
+  gtk_box_append (GTK_BOX (root), keyboard);
+
+  gtk_box_append (GTK_BOX (details), GTK_WIDGET (demo->selection_label));
+  awra_waveform_view_set_marker_editable (AWRA_WAVEFORM_VIEW (waveform), TRUE);
+  awra_media_row_set_show_volume (AWRA_MEDIA_ROW (row), TRUE);
+  attach_playback_demo (row, AWRA_WAVEFORM_VIEW (waveform));
+  gtk_box_append (GTK_BOX (details), waveform);
+  gtk_box_append (GTK_BOX (details), row);
+  gtk_box_append (GTK_BOX (root), details);
+  awra_card_set_child (AWRA_CARD (frame), root);
+
+  g_signal_connect (keyboard, "selection-changed",
+                    G_CALLBACK (soundboard_selection_changed_cb), demo);
+  g_signal_connect (keyboard, "key-activated",
+                    G_CALLBACK (soundboard_key_activated_cb), demo);
+  g_signal_connect (keyboard, "files-dropped",
+                    G_CALLBACK (soundboard_files_dropped_cb), demo);
+  g_signal_connect (layout, "notify::selected",
+                    G_CALLBACK (soundboard_layout_cb), demo);
+  g_signal_connect (numpad, "notify::active",
+                    G_CALLBACK (soundboard_numpad_cb), demo);
+  g_signal_connect (stop_all, "captured",
+                    G_CALLBACK (soundboard_shortcut_captured_cb), demo);
+  awra_keyboard_view_set_selected_codes (view,
+                                         (const char *[]) { "KeyS", NULL });
   return frame;
 }
 
@@ -977,6 +1412,12 @@ make_patterns_page (ShowcaseState *state,
                   "A restrained permanent rail, immersive content and one "
                   "raised hero surface. Right-click tracks or artwork.");
   gtk_box_append (GTK_BOX (body), make_media_workspace (state, context_menu));
+  append_section (body, "Soundboard",
+                  "A physical keyboard that follows the active layout: click "
+                  "or use the arrow keys, Ctrl/Shift extend the selection, "
+                  "drop audio files on a key, and press Enter to play it.");
+  gtk_box_append (GTK_BOX (body), make_soundboard_workspace (state,
+                                                             context_menu));
   append_section (body, "Launcher board",
                   "Search, toolbar actions and a denser tile composition with "
                   "selective elevation instead of borders on every region.");
@@ -1448,6 +1889,60 @@ make_controls_page (void)
     gtk_box_append (GTK_BOX (rows), storage);
     gtk_box_append (GTK_BOX (body), make_plain_group (rows));
   }
+  append_section (body, "Key caps and level",
+                  "Free keys recede as wells, bound keys sit on the plane, "
+                  "and domain tints keep legible legends. Activate a cap to "
+                  "replay its press motion.");
+  {
+    GtkWidget *caps = make_box (GTK_ORIENTATION_HORIZONTAL, AWRA_SPACING_SM);
+    GtkWidget *volume = awra_volume_control_new ();
+    static const struct {
+      const char *label;
+      const char *secondary;
+      double units;
+      guint state;
+    } samples[] = {
+      { "Q", NULL, 1.0, 0 },
+      { "W", "Bound", 1.0, 1 },
+      { "E", "Tinted", 1.0, 2 },
+      { "R", "Selected", 1.0, 3 },
+      { "T", "Playing", 1.0, 4 },
+      { "Y", "Filtered", 1.0, 5 },
+      { "Shift", "Wide key", 2.25, 6 },
+    };
+    const GdkRGBA tint = { 0.20, 0.45, 0.82, 1.0 };
+    const GdkRGBA mood = { 0.96, 0.52, 0.22, 1.0 };
+
+    for (guint i = 0; i < G_N_ELEMENTS (samples); i++) {
+      GtkWidget *cap = awra_key_cap_new (NULL, samples[i].label);
+
+      awra_key_cap_set_secondary_label (AWRA_KEY_CAP (cap),
+                                        samples[i].secondary);
+      awra_key_cap_set_width_units (AWRA_KEY_CAP (cap), samples[i].units);
+      awra_key_cap_set_bound (AWRA_KEY_CAP (cap), samples[i].state > 0);
+      if (samples[i].state == 2 || samples[i].state == 6) {
+        awra_key_cap_set_tint (AWRA_KEY_CAP (cap), &tint);
+        awra_key_cap_set_edge_color (AWRA_KEY_CAP (cap), &mood);
+      }
+      awra_key_cap_set_selected (AWRA_KEY_CAP (cap), samples[i].state == 3);
+      awra_key_cap_set_active (AWRA_KEY_CAP (cap), samples[i].state == 4);
+      awra_key_cap_set_dimmed (AWRA_KEY_CAP (cap), samples[i].state == 5);
+      if (samples[i].state == 6)
+        awra_key_cap_set_badge (AWRA_KEY_CAP (cap), "2");
+      g_signal_connect_swapped (cap, "activated",
+                                G_CALLBACK (awra_key_cap_flash), cap);
+      gtk_widget_set_size_request (cap, -1, 56);
+      gtk_widget_set_valign (cap, GTK_ALIGN_CENTER);
+      gtk_box_append (GTK_BOX (caps), cap);
+    }
+    awra_volume_control_set_volume (AWRA_VOLUME_CONTROL (volume), 0.64);
+    gtk_widget_set_size_request (volume, 180, -1);
+    gtk_widget_set_valign (volume, GTK_ALIGN_CENTER);
+    gtk_widget_set_hexpand (volume, TRUE);
+    gtk_widget_set_halign (volume, GTK_ALIGN_END);
+    gtk_box_append (GTK_BOX (caps), volume);
+    gtk_box_append (GTK_BOX (body), make_plain_group (caps));
+  }
   append_section (body, "Keyboard-focus proof",
                   "Use Tab and Shift+Tab: focus-visible rings remain explicit in Light and Dark.");
   gtk_box_append (GTK_BOX (body), awra_badge_new ("GTK behavior · Awra rendering"));
@@ -1466,6 +1961,30 @@ search_changed_cb (GtkSearchEntry *entry,
              ? g_strdup ("Type to filter the fake library.")
              : g_strdup_printf ("3 demo results for “%s”", text);
   gtk_label_set_text (state->search_result, result);
+}
+
+static void
+show_toast_static_cb (const char *message,
+                      GtkWidget  *source)
+{
+  ShowcaseState *state = g_object_get_data (G_OBJECT (source),
+                                            "showcase-state");
+
+  if (state != NULL)
+    show_toast (state, message);
+}
+
+static void
+drop_files_cb (AwraDropZone *drop,
+               GdkFileList  *files,
+               gpointer      user_data)
+{
+  g_autoptr (GSList) list = gdk_file_list_get_files (files);
+  g_autofree char *message = g_strdup_printf ("%u audio file(s) added",
+                                              g_slist_length (list));
+
+  (void) drop;
+  show_toast (user_data, message);
 }
 
 static GtkWidget *
@@ -1577,6 +2096,59 @@ make_inputs_page (ShowcaseState *state)
   awra_status_banner_set_action (AWRA_STATUS_BANNER (banner),
                                  make_button ("Apply", AWRA_BUTTON_APPEARANCE_GHOST));
   gtk_box_append (GTK_BOX (body), banner);
+  append_section (body, "Media inputs",
+                  "Record a shortcut (Escape cancels), drag the start marker "
+                  "or use the arrow keys, and drop audio files on the well.");
+  {
+    GtkWidget *media = make_box (GTK_ORIENTATION_VERTICAL, AWRA_SPACING_MD);
+    GtkWidget *capture_row = awra_form_row_new ();
+    GtkWidget *capture = awra_shortcut_capture_new ();
+    GtkWidget *start_row = awra_form_row_new ();
+    GtkWidget *waveform = make_waveform (184.0, 2.1, 48);
+    GtkWidget *drop = awra_drop_zone_new ();
+    GtkWidget *form_media = awra_form_new ();
+    static const char *audio[] = { "mp3", "ogg", "flac", "wav", "m4a", NULL };
+
+    awra_shortcut_capture_set_placeholder (AWRA_SHORTCUT_CAPTURE (capture),
+                                           "Click to record");
+    awra_shortcut_capture_set_allow_chords (AWRA_SHORTCUT_CAPTURE (capture),
+                                            TRUE);
+    awra_form_row_set_label (AWRA_FORM_ROW (capture_row), "Shortcut");
+    awra_form_row_set_help_text (AWRA_FORM_ROW (capture_row),
+                                 "Chords such as A+Z are allowed");
+    awra_form_row_set_control (AWRA_FORM_ROW (capture_row), capture);
+    awra_waveform_view_set_marker_editable (AWRA_WAVEFORM_VIEW (waveform),
+                                            TRUE);
+    awra_waveform_view_set_marker_position (AWRA_WAVEFORM_VIEW (waveform),
+                                            21.5);
+    awra_waveform_view_set_hint_position (AWRA_WAVEFORM_VIEW (waveform), 34.0);
+    awra_waveform_view_set_position (AWRA_WAVEFORM_VIEW (waveform), 58.0);
+    awra_form_row_set_label (AWRA_FORM_ROW (start_row), "Start point");
+    awra_form_row_set_help_text (AWRA_FORM_ROW (start_row),
+                                 "The dashed line is a suggestion");
+    awra_form_row_set_control (AWRA_FORM_ROW (start_row), waveform);
+    awra_form_append (AWRA_FORM (form_media), AWRA_FORM_ROW (capture_row));
+    awra_form_append (AWRA_FORM (form_media), AWRA_FORM_ROW (start_row));
+    awra_drop_zone_set_title (AWRA_DROP_ZONE (drop), "Drop audio files");
+    awra_drop_zone_set_subtitle (AWRA_DROP_ZONE (drop),
+                                 "MP3, OGG, FLAC, WAV or M4A");
+    awra_drop_zone_set_icon_name (AWRA_DROP_ZONE (drop),
+                                  "folder-music-symbolic");
+    awra_drop_zone_set_show_browse_button (AWRA_DROP_ZONE (drop), TRUE);
+    awra_drop_zone_set_accepted_extensions (AWRA_DROP_ZONE (drop), audio);
+    g_signal_connect_swapped (drop, "browse-requested",
+                              G_CALLBACK (show_toast_static_cb),
+                              (gpointer) "Browse requested");
+    g_signal_connect (drop, "files-dropped",
+                      G_CALLBACK (drop_files_cb), state);
+    g_signal_connect_swapped (drop, "rejected",
+                              G_CALLBACK (show_toast_static_cb),
+                              (gpointer) "Those files are not audio");
+    g_object_set_data (G_OBJECT (drop), "showcase-state", state);
+    gtk_box_append (GTK_BOX (media), make_plain_group (form_media));
+    gtk_box_append (GTK_BOX (media), drop);
+    gtk_box_append (GTK_BOX (body), media);
+  }
   append_section (body, "Page states",
                   "Empty, loading and recoverable error states share the same "
                   "typography and action rhythm without local composition.");
@@ -1739,6 +2311,17 @@ toast_clicked_cb (GtkButton *button,
 }
 
 static void
+undo_toast_clicked_cb (GtkButton *button,
+                       gpointer   user_data)
+{
+  ShowcaseState *state = user_data;
+
+  (void) button;
+  awra_toast_overlay_show_with_action (state->toast, "Sound removed from F5",
+                                       "Undo", "showcase.undo", 5000);
+}
+
+static void
 dialog_clicked_cb (GtkButton *button,
                    gpointer   user_data)
 {
@@ -1787,6 +2370,8 @@ make_overlays_page (ShowcaseState *state,
   GtkWidget *popover_box = make_box (GTK_ORIENTATION_VERTICAL,
                                      AWRA_SPACING_NONE);
   GtkWidget *toast = make_button ("Show toast", AWRA_BUTTON_APPEARANCE_SECONDARY);
+  GtkWidget *undo_toast = make_button ("Toast with Undo",
+                                       AWRA_BUTTON_APPEARANCE_SECONDARY);
   GtkWidget *dialog = make_button ("Open dialog", AWRA_BUTTON_APPEARANCE_PRIMARY);
   GtkWidget *tooltip = make_button ("Hover for tooltip", AWRA_BUTTON_APPEARANCE_GHOST);
   GtkWidget *card;
@@ -1806,6 +2391,8 @@ make_overlays_page (ShowcaseState *state,
   awra_menu_button_set_popover (AWRA_MENU_BUTTON (custom_button),
                                 AWRA_POPOVER (custom_popover));
   g_signal_connect (toast, "clicked", G_CALLBACK (toast_clicked_cb), state);
+  g_signal_connect (undo_toast, "clicked", G_CALLBACK (undo_toast_clicked_cb),
+                    state);
   g_signal_connect (dialog, "clicked", G_CALLBACK (dialog_clicked_cb), state);
   awra_widget_set_tooltip_text (tooltip,
                                 "Tooltip text remains accessible to assistive technology");
@@ -1814,6 +2401,7 @@ make_overlays_page (ShowcaseState *state,
   gtk_box_append (GTK_BOX (actions),
                   awra_dropdown_new_from_strings (choices));
   gtk_box_append (GTK_BOX (actions), toast);
+  gtk_box_append (GTK_BOX (actions), undo_toast);
   gtk_box_append (GTK_BOX (actions), dialog);
   gtk_box_append (GTK_BOX (actions), tooltip);
   card = make_plain_group (actions);
@@ -2555,6 +3143,7 @@ activate_cb (GtkApplication *application,
     { "share", action_activated_cb, NULL, NULL, NULL, { 0 } },
     { "inspect", action_activated_cb, NULL, NULL, NULL, { 0 } },
     { "remove", action_activated_cb, NULL, NULL, NULL, { 0 } },
+    { "undo", action_activated_cb, NULL, NULL, NULL, { 0 } },
   };
   ShowcaseState *state = g_new0 (ShowcaseState, 1);
   g_autoptr (GSimpleActionGroup) action_group = g_simple_action_group_new ();

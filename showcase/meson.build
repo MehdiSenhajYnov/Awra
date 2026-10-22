@@ -3,7 +3,7 @@
 awra_showcase = executable(
   'awra-showcase',
   'main.c',
-  dependencies: awra_dep,
+  dependencies: [awra_dep, cc.find_library('m')],
   install: true,
 )
 
