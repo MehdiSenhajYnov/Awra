@@ -42,7 +42,10 @@ awrametricrow,
 awrastatbar,
 awrabadgegroup,
 awrametadatagroup,
-awraskeleton {
+awraskeleton,
+awrakeycap,
+awrakeyboardview,
+awrashortcutcapture {
   min-width: 0;
   min-height: 0;
   margin: 0;
@@ -238,6 +241,146 @@ awratextarea textview text {
 awratextarea .awra-placeholder {
   margin: 10px 12px;
   color: @awra_muted;
+}
+
+/* Internal nodes of the media and keyboard family are identity-scoped:
+ * theme or user rules on generic nodes never reach their geometry. Key
+ * caps and waveforms paint their matter with GSK from the token snapshot;
+ * CSS only owns legends so the system font and scale stay authoritative. */
+awrakeycap label,
+awrashortcutcapture box,
+awrashortcutcapture label {
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+  outline: 0;
+  text-shadow: none;
+  opacity: 1;
+  filter: none;
+}
+
+awrakeycap label.awra-key-cap-label {
+  color: @awra_muted;
+  font-size: 0.86em;
+  font-weight: 600;
+}
+
+awrakeycap.awra-key-cap-bound label.awra-key-cap-label {
+  color: @awra_foreground;
+  font-weight: 700;
+}
+
+awrakeycap.awra-key-cap-selected label.awra-key-cap-label {
+  color: @awra_accent_content;
+}
+
+awrakeycap label.awra-key-cap-secondary {
+  color: @awra_muted;
+  font-size: 0.70em;
+  font-weight: 500;
+}
+
+awrakeycap label.awra-key-cap-badge {
+  min-width: 8px;
+  padding: 0 4px;
+  color: @awra_on_accent;
+  font-size: 0.62em;
+  font-weight: 800;
+}
+
+awrakeycap.awra-key-cap-on-dark label.awra-key-cap-label,
+awrakeycap.awra-key-cap-on-dark label.awra-key-cap-secondary {
+  color: #ffffff;
+}
+
+awrakeycap.awra-key-cap-on-light label.awra-key-cap-label,
+awrakeycap.awra-key-cap-on-light label.awra-key-cap-secondary {
+  color: #15121a;
+}
+
+awrakeycap.awra-key-cap-on-dark label.awra-key-cap-secondary,
+awrakeycap.awra-key-cap-on-light label.awra-key-cap-secondary {
+  opacity: 0.84;
+}
+
+awrashortcutcapture {
+  min-width: 96px;
+  min-height: 24px;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background-color: @awra_well;
+  color: @awra_foreground;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.20);
+  transition-property: background-color, border-color, box-shadow, outline-color;
+  transition-duration: 110ms;
+  transition-timing-function: ease-out;
+}
+
+awrashortcutcapture:hover {
+  border-color: @awra_border;
+}
+
+awrashortcutcapture:focus-visible {
+  border-color: @awra_focus;
+  outline: 1px solid @awra_selection;
+  outline-offset: 2px;
+}
+
+awrashortcutcapture.awra-shortcut-listening {
+  border-color: @awra_accent;
+  background-color: @awra_accent_soft;
+  outline: 2px solid @awra_selection;
+  outline-offset: 2px;
+}
+
+awrashortcutcapture:disabled {
+  color: @awra_disabled;
+  border-color: transparent;
+}
+
+awrashortcutcapture label.awra-shortcut-status {
+  padding: 0 3px;
+  color: @awra_muted;
+}
+
+awrashortcutcapture.awra-shortcut-listening label.awra-shortcut-status {
+  color: @awra_accent_content;
+  font-weight: 600;
+}
+
+awrashortcutcapture label.awra-shortcut-chip {
+  min-width: 14px;
+  min-height: 0;
+  padding: 1px 7px;
+  border-radius: 6px;
+  background-color: @awra_cap;
+  box-shadow: inset 0 1px @awra_rim, 0 1px 1px rgba(0, 0, 0, 0.22);
+  color: @awra_foreground;
+  font-size: 0.86em;
+  font-weight: 650;
+}
+
+awrashortcutcapture:disabled label.awra-shortcut-chip {
+  color: @awra_disabled;
+}
+
+.awra-high-contrast awrashortcutcapture {
+  border: 2px solid @awra_outline;
+}
+
+.awra-high-contrast awrashortcutcapture label.awra-shortcut-chip {
+  box-shadow: inset 0 0 0 1px @awra_outline;
+}
+
+.awra-reduced-motion awrashortcutcapture {
+  transition-duration: 0s;
 }
 
 awratagentry {

@@ -323,4 +323,22 @@ typedef enum {
 #define AWRA_TYPE_MOTION_PRESET (awra_motion_preset_get_type ())
 GType awra_motion_preset_get_type (void) G_GNUC_CONST;
 
+/**
+ * AwraKeyboardPhysicalLayout:
+ * @AWRA_KEYBOARD_PHYSICAL_LAYOUT_ANSI: the ANSI key arrangement with a wide
+ *   single-row Enter and a long left Shift
+ * @AWRA_KEYBOARD_PHYSICAL_LAYOUT_ISO: the ISO arrangement with a tall Enter
+ *   and an extra key beside the left Shift
+ *
+ * The physical key arrangement presented by #AwraKeyboardView. Key legends
+ * follow the active logical layout independently of this choice.
+ */
+typedef enum {
+  AWRA_KEYBOARD_PHYSICAL_LAYOUT_ANSI,
+  AWRA_KEYBOARD_PHYSICAL_LAYOUT_ISO,
+} AwraKeyboardPhysicalLayout;
+
+#define AWRA_TYPE_KEYBOARD_PHYSICAL_LAYOUT (awra_keyboard_physical_layout_get_type ())
+GType awra_keyboard_physical_layout_get_type (void) G_GNUC_CONST;
+
 G_END_DECLS

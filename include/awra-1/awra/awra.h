@@ -72,6 +72,9 @@
 #include <awra/awra-list-view.h>
 #include <awra/awra-action-row.h>
 #include <awra/awra-inspector.h>
+#include <awra/awra-key-cap.h>
+#include <awra/awra-keyboard-view.h>
+#include <awra/awra-shortcut-capture.h>
 
 G_BEGIN_DECLS
 

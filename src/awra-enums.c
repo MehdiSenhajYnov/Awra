@@ -306,3 +306,8 @@ awra_motion_preset_get_type (void)
 
   return (GType) type_id;
 }
+
+DEFINE_ENUM_TYPE (awra_keyboard_physical_layout_get_type,
+  "AwraKeyboardPhysicalLayout",
+  { AWRA_KEYBOARD_PHYSICAL_LAYOUT_ANSI, "AWRA_KEYBOARD_PHYSICAL_LAYOUT_ANSI", "ansi" },
+  { AWRA_KEYBOARD_PHYSICAL_LAYOUT_ISO, "AWRA_KEYBOARD_PHYSICAL_LAYOUT_ISO", "iso" })

@@ -6,3 +6,6 @@ src/widgets/awra-advanced-inputs.c
 src/widgets/awra-data-view.c
 src/widgets/awra-dropdown.c
 src/widgets/awra-selection-toolbar.c
+src/widgets/awra-key-codes.c
+src/widgets/awra-keyboard-view.c
+src/widgets/awra-shortcut-capture.c
