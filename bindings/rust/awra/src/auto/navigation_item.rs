@@ -76,6 +76,12 @@ impl NavigationItem {
         unsafe { from_glib_none(ffi::awra_navigation_item_get_label(self.to_glib_none().0)) }
     }
 
+    #[doc(alias = "awra_navigation_item_get_suffix")]
+    #[doc(alias = "get_suffix")]
+    pub fn suffix(&self) -> Option<gtk::Widget> {
+        unsafe { from_glib_none(ffi::awra_navigation_item_get_suffix(self.to_glib_none().0)) }
+    }
+
     #[doc(alias = "awra_navigation_item_get_selected")]
     #[doc(alias = "get_selected")]
     #[doc(alias = "selected")]
@@ -118,6 +124,17 @@ impl NavigationItem {
     pub fn set_selected(&self, selected: bool) {
         unsafe {
             ffi::awra_navigation_item_set_selected(self.to_glib_none().0, selected.into_glib());
+        }
+    }
+
+    #[doc(alias = "awra_navigation_item_set_suffix")]
+    #[doc(alias = "suffix")]
+    pub fn set_suffix(&self, suffix: Option<&impl IsA<gtk::Widget>>) {
+        unsafe {
+            ffi::awra_navigation_item_set_suffix(
+                self.to_glib_none().0,
+                suffix.map(|widget| widget.as_ref()).to_glib_none().0,
+            );
         }
     }
 
@@ -184,6 +201,12 @@ impl NavigationItemBuilder {
     pub fn selected(self, selected: bool) -> Self {
         Self {
             builder: self.builder.property("selected", selected),
+        }
+    }
+
+    pub fn suffix(self, suffix: &impl IsA<gtk::Widget>) -> Self {
+        Self {
+            builder: self.builder.property("suffix", suffix.clone().upcast()),
         }
     }
 

@@ -13,7 +13,10 @@ static void awra_dialog_init (AwraDialog *self) {
   awra_surface_set_material (surface, material);
   awra_surface_set_elevation_level (surface, AWRA_ELEVATION_MODAL);
   gtk_window_set_modal (GTK_WINDOW (self), TRUE);
-  gtk_window_set_default_size (GTK_WINDOW (self), 440, 250);
+  /* Dialog width benefits from a calm default measure, but height must remain
+   * content-driven.  A fixed default height leaves short forms with a large
+   * dead band below their actions and forces every application to compensate. */
+  gtk_window_set_default_size (GTK_WINDOW (self), 440, -1);
   gtk_window_set_resizable (GTK_WINDOW (self), FALSE);
   gtk_widget_add_css_class (GTK_WIDGET (self), "awra-dialog");
 }

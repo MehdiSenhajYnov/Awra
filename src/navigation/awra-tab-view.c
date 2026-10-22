@@ -5,28 +5,500 @@
 #include <awra/awra-motion.h>
 #include <awra/awra-tab-view.h>
 
+#include <math.h>
+
 #include "awra-i18n-private.h"
+
+typedef struct {
+  GtkWidget parent_instance;
+  GtkLabel *label;
+  gboolean overflowing;
+} AwraTabTitle;
+
+typedef GtkWidgetClass AwraTabTitleClass;
+
+#define AWRA_TYPE_TAB_TITLE (awra_tab_title_get_type ())
+#define AWRA_TAB_TITLE(obj) ((AwraTabTitle *) (obj))
+
+G_DEFINE_TYPE (AwraTabTitle, awra_tab_title, GTK_TYPE_WIDGET)
+
+static void
+awra_tab_title_measure (GtkWidget      *widget,
+                        GtkOrientation  orientation,
+                        int             for_size,
+                        int            *minimum,
+                        int            *natural,
+                        int            *minimum_baseline,
+                        int            *natural_baseline)
+{
+  AwraTabTitle *self = AWRA_TAB_TITLE (widget);
+
+  gtk_widget_measure (GTK_WIDGET (self->label), orientation, for_size,
+                      minimum, natural,
+                      minimum_baseline, natural_baseline);
+  if (orientation == GTK_ORIENTATION_HORIZONTAL)
+    *minimum = 0;
+}
+
+static void
+awra_tab_title_size_allocate (GtkWidget *widget,
+                              int        width,
+                              int        height,
+                              int        baseline)
+{
+  AwraTabTitle *self = AWRA_TAB_TITLE (widget);
+  int natural_width;
+  int child_width;
+  float x;
+  graphene_point_t offset;
+
+  gtk_widget_measure (GTK_WIDGET (self->label),
+                      GTK_ORIENTATION_HORIZONTAL,
+                      height, NULL, &natural_width, NULL, NULL);
+  self->overflowing = natural_width > width;
+  child_width = MAX (width, natural_width);
+  if (!self->overflowing)
+    x = (width - child_width) / 2.0f;
+  else if (gtk_widget_get_direction (widget) == GTK_TEXT_DIR_RTL)
+    x = width - child_width;
+  else
+    x = 0.0f;
+  offset = GRAPHENE_POINT_INIT (x, 0.0f);
+  gtk_widget_allocate (GTK_WIDGET (self->label), child_width, height,
+                       baseline, gsk_transform_translate (NULL, &offset));
+}
+
+static void
+awra_tab_title_snapshot (GtkWidget   *widget,
+                         GtkSnapshot *snapshot)
+{
+  AwraTabTitle *self = AWRA_TAB_TITLE (widget);
+  float width = gtk_widget_get_width (widget);
+  float height = gtk_widget_get_height (widget);
+  graphene_rect_t bounds = GRAPHENE_RECT_INIT (0, 0, width, height);
+
+  gtk_snapshot_push_clip (snapshot, &bounds);
+  if (self->overflowing && width > 0.0f) {
+    const GdkRGBA opaque = { 1.0, 1.0, 1.0, 1.0 };
+    const GdkRGBA transparent = { 1.0, 1.0, 1.0, 0.0 };
+    float fade_start = MAX (0.0f, (width - 18.0f) / width);
+    GskColorStop stops[] = {
+      { 0.0f, opaque },
+      { fade_start, opaque },
+      { 1.0f, transparent },
+    };
+    graphene_point_t start;
+    graphene_point_t end;
+
+    if (gtk_widget_get_direction (widget) == GTK_TEXT_DIR_RTL) {
+      start = GRAPHENE_POINT_INIT (width, height / 2.0f);
+      end = GRAPHENE_POINT_INIT (0.0f, height / 2.0f);
+    } else {
+      start = GRAPHENE_POINT_INIT (0.0f, height / 2.0f);
+      end = GRAPHENE_POINT_INIT (width, height / 2.0f);
+    }
+    gtk_snapshot_push_mask (snapshot, GSK_MASK_MODE_ALPHA);
+    gtk_snapshot_append_linear_gradient (snapshot, &bounds, &start, &end,
+                                         stops, G_N_ELEMENTS (stops));
+    gtk_snapshot_pop (snapshot);
+    gtk_widget_snapshot_child (widget, GTK_WIDGET (self->label), snapshot);
+    gtk_snapshot_pop (snapshot);
+  } else {
+    gtk_widget_snapshot_child (widget, GTK_WIDGET (self->label), snapshot);
+  }
+  gtk_snapshot_pop (snapshot);
+}
+
+static void
+awra_tab_title_dispose (GObject *object)
+{
+  AwraTabTitle *self = AWRA_TAB_TITLE (object);
+
+  if (self->label != NULL) {
+    gtk_widget_unparent (GTK_WIDGET (self->label));
+    self->label = NULL;
+  }
+  G_OBJECT_CLASS (awra_tab_title_parent_class)->dispose (object);
+}
+
+static void
+awra_tab_title_class_init (AwraTabTitleClass *klass)
+{
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
+
+  object_class->dispose = awra_tab_title_dispose;
+  widget_class->measure = awra_tab_title_measure;
+  widget_class->size_allocate = awra_tab_title_size_allocate;
+  widget_class->snapshot = awra_tab_title_snapshot;
+  gtk_widget_class_set_css_name (widget_class, "awratabtitle");
+}
+
+static void
+awra_tab_title_init (AwraTabTitle *self)
+{
+  self->label = GTK_LABEL (gtk_label_new (NULL));
+  gtk_label_set_single_line_mode (self->label, TRUE);
+  gtk_label_set_xalign (self->label, 0.0f);
+  gtk_widget_set_parent (GTK_WIDGET (self->label), GTK_WIDGET (self));
+}
+
+static GtkWidget *
+awra_tab_title_new (const char *text)
+{
+  AwraTabTitle *self = g_object_new (AWRA_TYPE_TAB_TITLE, NULL);
+
+  gtk_label_set_text (self->label, text);
+  return GTK_WIDGET (self);
+}
+
+/* GtkScrolledWindow clips its child at the viewport boundary. That is the
+ * correct input behaviour, but a highlighted tab then ends on a hard vertical
+ * cut when it is only partly visible. Keep the native scroller and place it in
+ * a tiny rendering wrapper that softens only the overflowing physical edge.
+ * The mask is private implementation detail: applications still interact with
+ * AwraTabView and never need to coordinate scrolling or edge effects. */
+typedef struct {
+  GtkWidget parent_instance;
+  GtkScrolledWindow *scroller;
+} AwraTabViewportMask;
+
+typedef GtkWidgetClass AwraTabViewportMaskClass;
+
+#define AWRA_TYPE_TAB_VIEWPORT_MASK (awra_tab_viewport_mask_get_type ())
+#define AWRA_TAB_VIEWPORT_MASK(obj) ((AwraTabViewportMask *) (obj))
+
+G_DEFINE_TYPE (AwraTabViewportMask,
+               awra_tab_viewport_mask,
+               GTK_TYPE_WIDGET)
+
+static void
+tab_viewport_adjustment_changed_cb (GtkAdjustment       *adjustment,
+                                    AwraTabViewportMask *self)
+{
+  (void) adjustment;
+  gtk_widget_queue_draw (GTK_WIDGET (self));
+}
+
+static void
+awra_tab_viewport_mask_snapshot (GtkWidget   *widget,
+                                 GtkSnapshot *snapshot)
+{
+  AwraTabViewportMask *self = AWRA_TAB_VIEWPORT_MASK (widget);
+  GtkAdjustment *adjustment;
+  double value;
+  double lower;
+  double upper;
+  double page_size;
+  gboolean start_hidden;
+  gboolean end_hidden;
+  gboolean left_hidden;
+  gboolean right_hidden;
+  float width = gtk_widget_get_width (widget);
+  float height = gtk_widget_get_height (widget);
+
+  if (self->scroller == NULL)
+    return;
+
+  adjustment = gtk_scrolled_window_get_hadjustment (self->scroller);
+  value = gtk_adjustment_get_value (adjustment);
+  lower = gtk_adjustment_get_lower (adjustment);
+  upper = gtk_adjustment_get_upper (adjustment);
+  page_size = gtk_adjustment_get_page_size (adjustment);
+  start_hidden = value > lower + 0.5;
+  end_hidden = value + page_size < upper - 0.5;
+  if (gtk_widget_get_direction (widget) == GTK_TEXT_DIR_RTL) {
+    left_hidden = end_hidden;
+    right_hidden = start_hidden;
+  } else {
+    left_hidden = start_hidden;
+    right_hidden = end_hidden;
+  }
+
+  if (width <= 0.0f || height <= 0.0f ||
+      (!left_hidden && !right_hidden)) {
+    gtk_widget_snapshot_child (widget, GTK_WIDGET (self->scroller), snapshot);
+    return;
+  }
+
+  {
+    const GdkRGBA opaque = { 1.0, 1.0, 1.0, 1.0 };
+    const GdkRGBA transparent = { 1.0, 1.0, 1.0, 0.0 };
+    GskColorStop stops[4];
+    guint n_stops = 0;
+    float fade = MIN (0.5f, 20.0f / width);
+    graphene_rect_t bounds = GRAPHENE_RECT_INIT (0, 0, width, height);
+    graphene_point_t from = GRAPHENE_POINT_INIT (0, height / 2.0f);
+    graphene_point_t to = GRAPHENE_POINT_INIT (width, height / 2.0f);
+
+    if (left_hidden) {
+      stops[n_stops++] = (GskColorStop) { 0.0f, transparent };
+      stops[n_stops++] = (GskColorStop) { fade, opaque };
+    } else {
+      stops[n_stops++] = (GskColorStop) { 0.0f, opaque };
+    }
+    if (right_hidden) {
+      stops[n_stops++] = (GskColorStop) { 1.0f - fade, opaque };
+      stops[n_stops++] = (GskColorStop) { 1.0f, transparent };
+    } else {
+      stops[n_stops++] = (GskColorStop) { 1.0f, opaque };
+    }
+
+    gtk_snapshot_push_mask (snapshot, GSK_MASK_MODE_ALPHA);
+    gtk_snapshot_append_linear_gradient (snapshot, &bounds, &from, &to,
+                                         stops, n_stops);
+    gtk_snapshot_pop (snapshot);
+    gtk_widget_snapshot_child (widget, GTK_WIDGET (self->scroller), snapshot);
+    gtk_snapshot_pop (snapshot);
+  }
+}
+
+static void
+awra_tab_viewport_mask_dispose (GObject *object)
+{
+  AwraTabViewportMask *self = AWRA_TAB_VIEWPORT_MASK (object);
+
+  if (self->scroller != NULL) {
+    gtk_widget_unparent (GTK_WIDGET (self->scroller));
+    self->scroller = NULL;
+  }
+  G_OBJECT_CLASS (awra_tab_viewport_mask_parent_class)->dispose (object);
+}
+
+static void
+awra_tab_viewport_mask_class_init (AwraTabViewportMaskClass *klass)
+{
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
+
+  object_class->dispose = awra_tab_viewport_mask_dispose;
+  widget_class->snapshot = awra_tab_viewport_mask_snapshot;
+  gtk_widget_class_set_layout_manager_type (widget_class,
+                                            GTK_TYPE_BIN_LAYOUT);
+  gtk_widget_class_set_css_name (widget_class, "awratabviewportmask");
+}
+
+static void
+awra_tab_viewport_mask_init (AwraTabViewportMask *self)
+{
+  gtk_widget_add_css_class (GTK_WIDGET (self), "awra-tab-viewport-mask");
+}
+
+static GtkWidget *
+awra_tab_viewport_mask_new (GtkScrolledWindow *scroller)
+{
+  AwraTabViewportMask *self;
+  GtkAdjustment *adjustment;
+
+  self = g_object_new (AWRA_TYPE_TAB_VIEWPORT_MASK, NULL);
+  self->scroller = scroller;
+  gtk_widget_set_parent (GTK_WIDGET (scroller), GTK_WIDGET (self));
+  adjustment = gtk_scrolled_window_get_hadjustment (scroller);
+  g_signal_connect_object (adjustment, "value-changed",
+                           G_CALLBACK (tab_viewport_adjustment_changed_cb),
+                           self, 0);
+  g_signal_connect_object (adjustment, "changed",
+                           G_CALLBACK (tab_viewport_adjustment_changed_cb),
+                           self, 0);
+  return GTK_WIDGET (self);
+}
 
 typedef struct {
   AwraTabView *view;
   GtkWidget *page;
   GtkWidget *tab;
+  GtkOverlay *body;
   GtkToggleButton *select_button;
+  GtkBox *select_content;
+  GtkImage *icon;
+  AwraTabTitle *title;
   GtkLabel *label;
+  GtkWidget *close_button;
+  GtkSeparator *separator;
   char *name;
   gboolean pinned;
+  gboolean hovered;
+  gboolean title_visible;
 } AwraTabPage;
 
 struct _AwraTabView {
   GtkWidget parent_instance;
   GtkBox *box;
   GtkBox *tab_bar;
+  GtkBox *pinned_tabs;
+  GtkWidget *tab_viewport_mask;
+  GtkScrolledWindow *tab_scroller;
+  GtkWidget *tab_strip;
   GtkStack *stack;
   GPtrArray *pages;
   guint next_page_id;
+  guint ensure_visible_tick;
   AwraStyleManager *style_manager;
   gulong style_handler;
 };
+
+enum {
+  /* Keep peer destinations calm and legible. 118 px let one extra tab leak
+   * into a typical data window, which made the separators read as a picket
+   * fence and forced ordinary names through the overflow mask. The rail is
+   * deliberately scrollable, so preserving this visual rhythm is preferable
+   * to compressing another destination into view. */
+  TAB_MIN_WIDTH = 132,
+  TAB_MAX_WIDTH = 220,
+  TAB_PINNED_ICON_SIZE = 36,
+  TAB_PINNED_ICON_IMAGE_SIZE = 14,
+  TAB_PAGE_ICON_SIZE = 22,
+  TAB_CLOSE_SIZE = 22,
+};
+
+typedef struct {
+  GtkWidget parent_instance;
+  GPtrArray *children;
+} AwraTabStrip;
+
+typedef GtkWidgetClass AwraTabStripClass;
+
+#define AWRA_TYPE_TAB_STRIP (awra_tab_strip_get_type ())
+#define AWRA_TAB_STRIP(obj) ((AwraTabStrip *) (obj))
+
+G_DEFINE_TYPE (AwraTabStrip, awra_tab_strip, GTK_TYPE_WIDGET)
+
+static void
+awra_tab_strip_measure (GtkWidget      *widget,
+                        GtkOrientation  orientation,
+                        int             for_size,
+                        int            *minimum,
+                        int            *natural,
+                        int            *minimum_baseline,
+                        int            *natural_baseline)
+{
+  AwraTabStrip *self = AWRA_TAB_STRIP (widget);
+
+  *minimum = 0;
+  *natural = 0;
+  if (minimum_baseline != NULL)
+    *minimum_baseline = -1;
+  if (natural_baseline != NULL)
+    *natural_baseline = -1;
+
+  if (orientation == GTK_ORIENTATION_HORIZONTAL) {
+    *minimum = (int) self->children->len * TAB_MIN_WIDTH;
+    *natural = (int) self->children->len * TAB_MAX_WIDTH;
+    return;
+  }
+
+  for (guint i = 0; i < self->children->len; i++) {
+    GtkWidget *child = g_ptr_array_index (self->children, i);
+    int child_minimum;
+    int child_natural;
+
+    gtk_widget_measure (child, orientation, for_size,
+                        &child_minimum, &child_natural, NULL, NULL);
+    *minimum = MAX (*minimum, child_minimum);
+    *natural = MAX (*natural, child_natural);
+  }
+}
+
+static void
+awra_tab_strip_size_allocate (GtkWidget *widget,
+                              int        width,
+                              int        height,
+                              int        baseline)
+{
+  AwraTabStrip *self = AWRA_TAB_STRIP (widget);
+  guint count = self->children->len;
+  int tab_width;
+  float x = 0.0f;
+
+  if (count == 0)
+    return;
+  tab_width = CLAMP (width / (int) count, TAB_MIN_WIDTH, TAB_MAX_WIDTH);
+
+  for (guint i = 0; i < count; i++) {
+    GtkWidget *child = g_ptr_array_index (self->children, i);
+    graphene_point_t offset = GRAPHENE_POINT_INIT (x, 0.0f);
+
+    gtk_widget_allocate (child, tab_width, height, baseline,
+                         gsk_transform_translate (NULL, &offset));
+    x += tab_width;
+  }
+}
+
+static void
+awra_tab_strip_snapshot (GtkWidget   *widget,
+                         GtkSnapshot *snapshot)
+{
+  AwraTabStrip *self = AWRA_TAB_STRIP (widget);
+
+  for (guint i = 0; i < self->children->len; i++)
+    gtk_widget_snapshot_child (widget,
+                               g_ptr_array_index (self->children, i),
+                               snapshot);
+}
+
+static void
+awra_tab_strip_dispose (GObject *object)
+{
+  AwraTabStrip *self = AWRA_TAB_STRIP (object);
+
+  while (self->children != NULL && self->children->len > 0) {
+    GtkWidget *child = g_ptr_array_index (self->children,
+                                         self->children->len - 1);
+
+    gtk_widget_unparent (child);
+    g_ptr_array_remove_index (self->children, self->children->len - 1);
+  }
+  g_clear_pointer (&self->children, g_ptr_array_unref);
+  G_OBJECT_CLASS (awra_tab_strip_parent_class)->dispose (object);
+}
+
+static void
+awra_tab_strip_class_init (AwraTabStripClass *klass)
+{
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
+
+  object_class->dispose = awra_tab_strip_dispose;
+  widget_class->measure = awra_tab_strip_measure;
+  widget_class->size_allocate = awra_tab_strip_size_allocate;
+  widget_class->snapshot = awra_tab_strip_snapshot;
+  gtk_widget_class_set_css_name (widget_class, "awratabstrip");
+}
+
+static void
+awra_tab_strip_init (AwraTabStrip *self)
+{
+  self->children = g_ptr_array_new ();
+}
+
+static GtkWidget *
+awra_tab_strip_new (void)
+{
+  return g_object_new (AWRA_TYPE_TAB_STRIP, NULL);
+}
+
+static void
+awra_tab_strip_append (AwraTabStrip *self,
+                       GtkWidget    *child)
+{
+  g_ptr_array_add (self->children, child);
+  gtk_widget_set_parent (child, GTK_WIDGET (self));
+  gtk_widget_queue_resize (GTK_WIDGET (self));
+}
+
+static void
+awra_tab_strip_remove (AwraTabStrip *self,
+                       GtkWidget    *child)
+{
+  for (guint i = 0; i < self->children->len; i++) {
+    if (g_ptr_array_index (self->children, i) == child) {
+      gtk_widget_unparent (child);
+      g_ptr_array_remove_index (self->children, i);
+      gtk_widget_queue_resize (GTK_WIDGET (self));
+      return;
+    }
+  }
+}
 
 enum {
   PROP_0,
@@ -75,6 +547,75 @@ tab_page_free (gpointer data)
 }
 
 static void
+update_tab_geometry (AwraTabPage *info)
+{
+  gboolean icon_only = info->pinned && !info->title_visible;
+  GtkWidget *select = GTK_WIDGET (info->select_button);
+
+  if (icon_only) {
+    gtk_widget_add_css_class (info->tab, "awra-tab-icon-only");
+    gtk_widget_set_size_request (select,
+                                 TAB_PINNED_ICON_SIZE,
+                                 TAB_PINNED_ICON_SIZE);
+    gtk_widget_set_hexpand (select, FALSE);
+    gtk_widget_set_vexpand (select, FALSE);
+    gtk_widget_set_halign (select, GTK_ALIGN_CENTER);
+    gtk_widget_set_valign (select, GTK_ALIGN_CENTER);
+    gtk_widget_set_hexpand (GTK_WIDGET (info->body), FALSE);
+    gtk_widget_set_hexpand (GTK_WIDGET (info->select_content), TRUE);
+    gtk_widget_set_halign (GTK_WIDGET (info->select_content), GTK_ALIGN_FILL);
+    if (info->icon != NULL) {
+      gtk_image_set_pixel_size (info->icon, TAB_PINNED_ICON_IMAGE_SIZE);
+      gtk_widget_set_hexpand (GTK_WIDGET (info->icon), TRUE);
+    }
+  } else {
+    gtk_widget_remove_css_class (info->tab, "awra-tab-icon-only");
+    gtk_widget_set_size_request (select, -1, -1);
+    gtk_widget_set_hexpand (select, TRUE);
+    gtk_widget_set_vexpand (select, FALSE);
+    gtk_widget_set_halign (select, GTK_ALIGN_FILL);
+    gtk_widget_set_valign (select, GTK_ALIGN_FILL);
+    gtk_widget_set_hexpand (GTK_WIDGET (info->body), TRUE);
+    gtk_widget_set_hexpand (GTK_WIDGET (info->select_content), TRUE);
+    gtk_widget_set_halign (GTK_WIDGET (info->select_content), GTK_ALIGN_FILL);
+    if (info->icon != NULL) {
+      gtk_image_set_pixel_size (info->icon, TAB_PAGE_ICON_SIZE);
+      gtk_widget_set_hexpand (GTK_WIDGET (info->icon), FALSE);
+    }
+  }
+}
+
+static void
+set_page_icon (AwraTabPage *info,
+               GtkImage    *icon)
+{
+  if (info->icon == icon)
+    return;
+
+  g_return_if_fail (icon == NULL ||
+                    gtk_widget_get_parent (GTK_WIDGET (icon)) == NULL);
+
+  if (info->icon != NULL) {
+    GtkWidget *previous = GTK_WIDGET (info->icon);
+
+    info->icon = NULL;
+    gtk_box_remove (info->select_content, previous);
+  }
+
+  info->icon = icon;
+  if (icon != NULL) {
+    gtk_widget_add_css_class (GTK_WIDGET (icon), "awra-tab-icon");
+    gtk_widget_set_halign (GTK_WIDGET (icon), GTK_ALIGN_CENTER);
+    gtk_widget_set_valign (GTK_WIDGET (icon), GTK_ALIGN_CENTER);
+    gtk_widget_set_can_target (GTK_WIDGET (icon), FALSE);
+    gtk_widget_set_focusable (GTK_WIDGET (icon), FALSE);
+    gtk_box_prepend (info->select_content, GTK_WIDGET (icon));
+  }
+
+  update_tab_geometry (info);
+}
+
+static void
 update_motion (AwraTabView *self)
 {
   guint duration = 0;
@@ -100,6 +641,115 @@ motion_changed_cb (AwraStyleManager *manager,
 }
 
 static void
+update_tab_separators (AwraTabView *self)
+{
+  GtkWidget *selected = gtk_stack_get_visible_child (self->stack);
+
+  for (guint i = 0; i < self->pages->len; i++) {
+    AwraTabPage *info = g_ptr_array_index (self->pages, i);
+    gboolean current_emphasized = info->hovered || info->page == selected;
+    gboolean next_emphasized = FALSE;
+
+    /* A pinned destination is a fixed landmark rather than another peer tab.
+     * Keep its boundary stable while contextual separators between dynamic
+     * tabs react to hover and selection. */
+    if (info->pinned) {
+      gtk_widget_remove_css_class (GTK_WIDGET (info->separator),
+                                   "awra-tab-separator-hidden");
+      continue;
+    }
+
+    if (i + 1 < self->pages->len) {
+      AwraTabPage *next = g_ptr_array_index (self->pages, i + 1);
+
+      next_emphasized = next->hovered || next->page == selected;
+    }
+
+    if (i + 1 == self->pages->len ||
+        current_emphasized || next_emphasized)
+      gtk_widget_add_css_class (GTK_WIDGET (info->separator),
+                                "awra-tab-separator-hidden");
+    else
+      gtk_widget_remove_css_class (GTK_WIDGET (info->separator),
+                                   "awra-tab-separator-hidden");
+  }
+}
+
+static void
+ensure_selected_visible (AwraTabView *self)
+{
+  GtkWidget *selected = gtk_stack_get_visible_child (self->stack);
+  AwraTabPage *info;
+  GtkAdjustment *adjustment;
+  graphene_rect_t bounds;
+  double value;
+  double page_size;
+  double target;
+  double upper;
+
+  if (selected == NULL)
+    return;
+  info = find_page (self, selected, NULL);
+  if (info == NULL || info->pinned)
+    return;
+  if (!gtk_widget_compute_bounds (info->tab,
+                                  GTK_WIDGET (self->tab_strip),
+                                  &bounds))
+    return;
+
+  adjustment = gtk_scrolled_window_get_hadjustment (self->tab_scroller);
+  value = gtk_adjustment_get_value (adjustment);
+  page_size = gtk_adjustment_get_page_size (adjustment);
+  upper = gtk_adjustment_get_upper (adjustment);
+  target = value;
+
+  if (bounds.origin.x < value)
+    target = bounds.origin.x;
+  else if (bounds.origin.x + bounds.size.width > value + page_size)
+    target = bounds.origin.x + bounds.size.width - page_size;
+
+  target = CLAMP (target,
+                  gtk_adjustment_get_lower (adjustment),
+                  MAX (gtk_adjustment_get_lower (adjustment),
+                       upper - page_size));
+  if (fabs (target - value) > 0.5)
+    gtk_adjustment_set_value (adjustment, target);
+}
+
+static gboolean
+ensure_selected_visible_tick_cb (GtkWidget     *widget,
+                                 GdkFrameClock *frame_clock,
+                                 gpointer       user_data)
+{
+  AwraTabView *self = AWRA_TAB_VIEW (widget);
+
+  (void) frame_clock;
+  (void) user_data;
+  self->ensure_visible_tick = 0;
+  ensure_selected_visible (self);
+  return G_SOURCE_REMOVE;
+}
+
+static void
+schedule_selected_visible (AwraTabView *self)
+{
+  if (self->ensure_visible_tick == 0 &&
+      gtk_widget_get_mapped (GTK_WIDGET (self)))
+    self->ensure_visible_tick = gtk_widget_add_tick_callback (
+      GTK_WIDGET (self), ensure_selected_visible_tick_cb, NULL, NULL);
+}
+
+static void
+cancel_selected_visible (AwraTabView *self)
+{
+  if (self->ensure_visible_tick == 0)
+    return;
+  gtk_widget_remove_tick_callback (GTK_WIDGET (self),
+                                   self->ensure_visible_tick);
+  self->ensure_visible_tick = 0;
+}
+
+static void
 update_selected_tab (AwraTabView *self)
 {
   GtkWidget *selected = gtk_stack_get_visible_child (self->stack);
@@ -107,13 +757,49 @@ update_selected_tab (AwraTabView *self)
   for (guint i = 0; i < self->pages->len; i++) {
     AwraTabPage *info = g_ptr_array_index (self->pages, i);
 
-    if (info->page == selected)
+    gboolean is_selected = info->page == selected;
+    gboolean show_close = is_selected || info->hovered;
+
+    if (is_selected)
       gtk_widget_add_css_class (info->tab, "awra-tab-selected");
     else
       gtk_widget_remove_css_class (info->tab, "awra-tab-selected");
     gtk_toggle_button_set_active (info->select_button,
-                                  info->page == selected);
+                                  is_selected);
+    if (info->close_button != NULL) {
+      if (show_close)
+        gtk_widget_add_css_class (info->close_button,
+                                  "awra-tab-close-visible");
+      else
+        gtk_widget_remove_css_class (info->close_button,
+                                     "awra-tab-close-visible");
+      gtk_widget_set_can_target (info->close_button, show_close);
+      gtk_widget_set_focusable (info->close_button, show_close);
+    }
   }
+  update_tab_separators (self);
+}
+
+static void
+tab_enter_cb (GtkEventControllerMotion *controller,
+              double                    x,
+              double                    y,
+              AwraTabPage              *info)
+{
+  (void) controller;
+  (void) x;
+  (void) y;
+  info->hovered = TRUE;
+  update_selected_tab (info->view);
+}
+
+static void
+tab_leave_cb (GtkEventControllerMotion *controller,
+              AwraTabPage              *info)
+{
+  (void) controller;
+  info->hovered = FALSE;
+  update_selected_tab (info->view);
 }
 
 static void
@@ -124,6 +810,7 @@ selected_changed_cb (GtkStack    *stack,
   (void) stack;
   (void) pspec;
   update_selected_tab (self);
+  schedule_selected_visible (self);
   g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_SELECTED_NAME]);
   g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_SELECTED_PAGE]);
 }
@@ -163,9 +850,7 @@ append_page (AwraTabView *self,
              gboolean     closable)
 {
   AwraTabPage *info;
-  GtkWidget *select_content;
-  GtkWidget *icon;
-  GtkWidget *close;
+  GtkEventController *motion;
 
   g_return_val_if_fail (find_page (self, page, NULL) == NULL, NULL);
 
@@ -174,49 +859,119 @@ append_page (AwraTabView *self,
   info->page = page;
   info->name = g_strdup (name);
   info->pinned = pinned;
-  info->tab = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
+  info->title_visible = TRUE;
+  info->tab = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+  info->body = GTK_OVERLAY (gtk_overlay_new ());
   info->select_button = GTK_TOGGLE_BUTTON (gtk_toggle_button_new ());
-  select_content = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
-  info->label = GTK_LABEL (gtk_label_new (title));
+  info->select_content = GTK_BOX (
+    gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6));
+  info->title = AWRA_TAB_TITLE (awra_tab_title_new (title));
+  info->label = info->title->label;
+  info->separator = GTK_SEPARATOR (
+    gtk_separator_new (GTK_ORIENTATION_VERTICAL));
 
-  gtk_label_set_ellipsize (info->label, PANGO_ELLIPSIZE_END);
-  gtk_label_set_max_width_chars (info->label, 22);
   gtk_widget_add_css_class (GTK_WIDGET (info->label), "awra-tab-label");
+  gtk_widget_add_css_class (GTK_WIDGET (info->title), "awra-tab-title");
   gtk_widget_add_css_class (info->tab, "awra-tab-item");
+  gtk_widget_add_css_class (GTK_WIDGET (info->body), "awra-tab-pill");
+  gtk_widget_set_hexpand (info->tab, FALSE);
+  gtk_widget_set_hexpand (GTK_WIDGET (info->body), TRUE);
+  gtk_widget_set_valign (GTK_WIDGET (info->body), GTK_ALIGN_CENTER);
   gtk_widget_add_css_class (GTK_WIDGET (info->select_button),
                             "awra-tab-button");
+  gtk_widget_set_hexpand (GTK_WIDGET (info->select_button), TRUE);
   gtk_accessible_update_property (GTK_ACCESSIBLE (info->select_button),
                                   GTK_ACCESSIBLE_PROPERTY_LABEL,
                                   title,
                                   -1);
   if (pinned) {
     gtk_widget_add_css_class (info->tab, "awra-tab-pinned");
-    icon = gtk_image_new_from_icon_name ("go-home-symbolic");
-    gtk_image_set_pixel_size (GTK_IMAGE (icon), 14);
-    gtk_box_append (GTK_BOX (select_content), icon);
   }
-  gtk_box_append (GTK_BOX (select_content), GTK_WIDGET (info->label));
-  gtk_button_set_child (GTK_BUTTON (info->select_button), select_content);
+  update_tab_geometry (info);
+  motion = gtk_event_controller_motion_new ();
+  g_signal_connect (motion, "enter", G_CALLBACK (tab_enter_cb), info);
+  g_signal_connect (motion, "leave", G_CALLBACK (tab_leave_cb), info);
+  gtk_widget_add_controller (info->tab, motion);
+  gtk_widget_set_halign (GTK_WIDGET (info->select_content), GTK_ALIGN_CENTER);
+  gtk_widget_set_valign (GTK_WIDGET (info->select_content), GTK_ALIGN_CENTER);
+  gtk_widget_set_hexpand (GTK_WIDGET (info->title), TRUE);
+  gtk_widget_set_halign (GTK_WIDGET (info->title), GTK_ALIGN_FILL);
+  gtk_box_append (info->select_content, GTK_WIDGET (info->title));
+  gtk_button_set_child (GTK_BUTTON (info->select_button),
+                        GTK_WIDGET (info->select_content));
   g_signal_connect (info->select_button, "clicked",
                     G_CALLBACK (select_clicked_cb), info);
-  gtk_box_append (GTK_BOX (info->tab), GTK_WIDGET (info->select_button));
+  gtk_overlay_set_child (info->body, GTK_WIDGET (info->select_button));
 
   if (closable) {
-    close = gtk_button_new_from_icon_name ("window-close-symbolic");
-    gtk_widget_set_tooltip_text (close, _("Close tab"));
-    gtk_widget_add_css_class (close, "awra-tab-close");
-    g_signal_connect (close, "clicked", G_CALLBACK (close_clicked_cb), info);
-    gtk_box_append (GTK_BOX (info->tab), close);
+    info->close_button = gtk_button_new_from_icon_name (
+      "window-close-symbolic");
+    gtk_widget_set_tooltip_text (info->close_button, _("Close tab"));
+    gtk_widget_add_css_class (info->close_button, "awra-tab-close");
+    gtk_widget_set_size_request (info->close_button,
+                                 TAB_CLOSE_SIZE,
+                                 TAB_CLOSE_SIZE);
+    gtk_widget_set_hexpand (info->close_button, FALSE);
+    gtk_widget_set_vexpand (info->close_button, FALSE);
+    gtk_widget_set_halign (info->close_button, GTK_ALIGN_END);
+    gtk_widget_set_valign (info->close_button, GTK_ALIGN_CENTER);
+    gtk_widget_set_can_target (info->close_button, FALSE);
+    gtk_widget_set_focusable (info->close_button, FALSE);
+    g_signal_connect (info->close_button, "clicked",
+                      G_CALLBACK (close_clicked_cb), info);
+    gtk_overlay_add_overlay (info->body, info->close_button);
   }
+  gtk_box_append (GTK_BOX (info->tab), GTK_WIDGET (info->body));
+  gtk_widget_add_css_class (GTK_WIDGET (info->separator),
+                            "awra-tab-separator");
+  gtk_box_append (GTK_BOX (info->tab), GTK_WIDGET (info->separator));
 
   g_ptr_array_add (self->pages, info);
-  gtk_box_append (self->tab_bar, info->tab);
+  if (pinned)
+    gtk_box_append (self->pinned_tabs, info->tab);
+  else
+    awra_tab_strip_append (AWRA_TAB_STRIP (self->tab_strip), info->tab);
+  gtk_widget_queue_resize (GTK_WIDGET (self));
   gtk_stack_add_named (self->stack, page, name);
   if (self->pages->len == 1)
     gtk_stack_set_visible_child (self->stack, page);
   update_selected_tab (self);
 
   return info;
+}
+
+static gboolean
+tab_scroll_cb (GtkEventControllerScroll *controller,
+               double                    dx,
+               double                    dy,
+               AwraTabView              *self)
+{
+  GtkAdjustment *adjustment;
+  GdkScrollUnit unit;
+  double delta;
+  double value;
+  double upper;
+  double page_size;
+
+  if (fabs (dx) >= 0.01 || fabs (dy) >= 0.01)
+    cancel_selected_visible (self);
+  if (fabs (dx) > fabs (dy) || fabs (dy) < 0.01)
+    return GDK_EVENT_PROPAGATE;
+
+  adjustment = gtk_scrolled_window_get_hadjustment (self->tab_scroller);
+  upper = gtk_adjustment_get_upper (adjustment);
+  page_size = gtk_adjustment_get_page_size (adjustment);
+  if (upper <= page_size + 0.5)
+    return GDK_EVENT_PROPAGATE;
+
+  unit = gtk_event_controller_scroll_get_unit (controller);
+  delta = dy * (unit == GDK_SCROLL_UNIT_WHEEL ? 84.0 : 1.0);
+  value = CLAMP (gtk_adjustment_get_value (adjustment) + delta,
+                 gtk_adjustment_get_lower (adjustment),
+                 MAX (gtk_adjustment_get_lower (adjustment),
+                      upper - page_size));
+  gtk_adjustment_set_value (adjustment, value);
+  return GDK_EVENT_STOP;
 }
 
 static void
@@ -233,6 +988,7 @@ awra_tab_view_map (GtkWidget *widget)
                                           G_CALLBACK (motion_changed_cb),
                                           self);
   update_motion (self);
+  schedule_selected_visible (self);
 }
 
 static void
@@ -240,6 +996,7 @@ awra_tab_view_unmap (GtkWidget *widget)
 {
   AwraTabView *self = AWRA_TAB_VIEW (widget);
 
+  cancel_selected_visible (self);
   if (self->style_handler != 0) {
     g_signal_handler_disconnect (self->style_manager, self->style_handler);
     self->style_handler = 0;
@@ -257,10 +1014,15 @@ awra_tab_view_dispose (GObject *object)
     g_signal_handler_disconnect (self->style_manager, self->style_handler);
     self->style_handler = 0;
   }
+  cancel_selected_visible (self);
   if (self->box != NULL) {
     gtk_widget_unparent (GTK_WIDGET (self->box));
     self->box = NULL;
     self->tab_bar = NULL;
+    self->pinned_tabs = NULL;
+    self->tab_viewport_mask = NULL;
+    self->tab_scroller = NULL;
+    self->tab_strip = NULL;
     self->stack = NULL;
   }
   g_clear_pointer (&self->pages, g_ptr_array_unref);
@@ -319,6 +1081,8 @@ awra_tab_view_class_init (AwraTabViewClass *klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
 
+  gtk_widget_class_set_layout_manager_type (widget_class,
+                                            GTK_TYPE_BIN_LAYOUT);
   object_class->dispose = awra_tab_view_dispose;
   object_class->get_property = awra_tab_view_get_property;
   object_class->set_property = awra_tab_view_set_property;
@@ -355,19 +1119,49 @@ awra_tab_view_class_init (AwraTabViewClass *klass)
                   G_TYPE_BOOLEAN,
                   1,
                   GTK_TYPE_WIDGET);
-  gtk_widget_class_set_layout_manager_type (widget_class, GTK_TYPE_BIN_LAYOUT);
   gtk_widget_class_set_css_name (widget_class, "awratabview");
 }
 
 static void
 awra_tab_view_init (AwraTabView *self)
 {
+  GtkEventController *scroll;
+
   self->pages = g_ptr_array_new_with_free_func (tab_page_free);
   self->box = GTK_BOX (gtk_box_new (GTK_ORIENTATION_VERTICAL, 0));
-  self->tab_bar = GTK_BOX (gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6));
+  self->tab_bar = GTK_BOX (gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0));
+  self->pinned_tabs = GTK_BOX (gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0));
+  self->tab_scroller = GTK_SCROLLED_WINDOW (gtk_scrolled_window_new ());
+  self->tab_viewport_mask = awra_tab_viewport_mask_new (self->tab_scroller);
+  self->tab_strip = awra_tab_strip_new ();
   self->stack = GTK_STACK (gtk_stack_new ());
   gtk_widget_add_css_class (GTK_WIDGET (self->tab_bar), "awra-tab-bar");
-  gtk_widget_set_halign (GTK_WIDGET (self->tab_bar), GTK_ALIGN_START);
+  gtk_widget_add_css_class (GTK_WIDGET (self->pinned_tabs),
+                            "awra-pinned-tabs");
+  gtk_widget_add_css_class (GTK_WIDGET (self->tab_scroller),
+                            "awra-tab-scroller");
+  gtk_widget_add_css_class (self->tab_strip,
+                            "awra-tab-strip");
+  gtk_widget_set_halign (GTK_WIDGET (self->tab_bar), GTK_ALIGN_FILL);
+  gtk_widget_set_hexpand (GTK_WIDGET (self->tab_bar), TRUE);
+  gtk_widget_set_hexpand (self->tab_viewport_mask, TRUE);
+  gtk_widget_set_hexpand (GTK_WIDGET (self->tab_scroller), TRUE);
+  gtk_widget_set_hexpand (self->tab_strip, TRUE);
+  gtk_scrolled_window_set_policy (self->tab_scroller,
+                                  GTK_POLICY_EXTERNAL,
+                                  GTK_POLICY_NEVER);
+  gtk_scrolled_window_set_propagate_natural_width (self->tab_scroller,
+                                                    FALSE);
+  gtk_scrolled_window_set_min_content_width (self->tab_scroller, 0);
+  gtk_scrolled_window_set_has_frame (self->tab_scroller, FALSE);
+  gtk_scrolled_window_set_child (self->tab_scroller, self->tab_strip);
+  scroll = gtk_event_controller_scroll_new (
+    GTK_EVENT_CONTROLLER_SCROLL_BOTH_AXES |
+    GTK_EVENT_CONTROLLER_SCROLL_KINETIC);
+  g_signal_connect (scroll, "scroll", G_CALLBACK (tab_scroll_cb), self);
+  gtk_widget_add_controller (GTK_WIDGET (self->tab_scroller), scroll);
+  gtk_box_append (self->tab_bar, GTK_WIDGET (self->pinned_tabs));
+  gtk_box_append (self->tab_bar, self->tab_viewport_mask);
   gtk_widget_set_hexpand (GTK_WIDGET (self->stack), TRUE);
   gtk_widget_set_vexpand (GTK_WIDGET (self->stack), TRUE);
   gtk_box_append (self->box, GTK_WIDGET (self->tab_bar));
@@ -441,9 +1235,14 @@ awra_tab_view_remove (AwraTabView *self,
     replacement = replacement_info->page;
   }
 
-  gtk_box_remove (self->tab_bar, info->tab);
+  if (info->pinned)
+    gtk_box_remove (self->pinned_tabs, info->tab);
+  else
+    awra_tab_strip_remove (AWRA_TAB_STRIP (self->tab_strip), info->tab);
   gtk_stack_remove (self->stack, page);
   g_ptr_array_remove_index (self->pages, position);
+  gtk_widget_queue_resize (GTK_WIDGET (self));
+  update_tab_separators (self);
 
   if (replacement != NULL)
     gtk_stack_set_visible_child (self->stack, replacement);
@@ -500,6 +1299,57 @@ awra_tab_view_set_page_title (AwraTabView *self,
                                   GTK_ACCESSIBLE_PROPERTY_LABEL,
                                   title != NULL ? title : _("Untitled"),
                                   -1);
+}
+
+void
+awra_tab_view_set_page_icon_name (AwraTabView *self,
+                                  GtkWidget   *page,
+                                  const char  *icon_name)
+{
+  AwraTabPage *info;
+  GtkImage *icon = NULL;
+
+  g_return_if_fail (AWRA_IS_TAB_VIEW (self));
+  g_return_if_fail (GTK_IS_WIDGET (page));
+
+  info = find_page (self, page, NULL);
+  g_return_if_fail (info != NULL);
+  if (icon_name != NULL && *icon_name != '\0')
+    icon = GTK_IMAGE (gtk_image_new_from_icon_name (icon_name));
+  set_page_icon (info, icon);
+}
+
+void
+awra_tab_view_set_page_icon (AwraTabView *self,
+                             GtkWidget   *page,
+                             GtkImage    *icon)
+{
+  AwraTabPage *info;
+
+  g_return_if_fail (AWRA_IS_TAB_VIEW (self));
+  g_return_if_fail (GTK_IS_WIDGET (page));
+  g_return_if_fail (icon == NULL || GTK_IS_IMAGE (icon));
+
+  info = find_page (self, page, NULL);
+  g_return_if_fail (info != NULL);
+  set_page_icon (info, icon);
+}
+
+void
+awra_tab_view_set_page_title_visible (AwraTabView *self,
+                                      GtkWidget   *page,
+                                      gboolean     visible)
+{
+  AwraTabPage *info;
+
+  g_return_if_fail (AWRA_IS_TAB_VIEW (self));
+  g_return_if_fail (GTK_IS_WIDGET (page));
+
+  info = find_page (self, page, NULL);
+  g_return_if_fail (info != NULL);
+  info->title_visible = !!visible;
+  gtk_widget_set_visible (GTK_WIDGET (info->title), info->title_visible);
+  update_tab_geometry (info);
 }
 
 void

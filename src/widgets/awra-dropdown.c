@@ -203,25 +203,6 @@ create_list_factory (AwraDropdown *self)
 }
 
 static void
-selection_changed_cb (GtkSingleSelection *selection,
-                      GParamSpec         *pspec,
-                      AwraDropdown       *self)
-{
-  guint selected;
-
-  (void) pspec;
-  if (self->syncing)
-    return;
-
-  selected = gtk_single_selection_get_selected (selection);
-  self->syncing = TRUE;
-  gtk_drop_down_set_selected (self->delegate, selected);
-  self->syncing = FALSE;
-  update_button_label (self);
-  g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_SELECTED]);
-}
-
-static void
 sync_model_from_delegate (AwraDropdown *self)
 {
   GListModel *model = gtk_drop_down_get_model (self->delegate);
@@ -289,6 +270,13 @@ popover_map_cb (GtkWidget    *popover,
   int width = MAX (gtk_widget_get_width (GTK_WIDGET (self)), 160);
 
   (void) popover;
+  /* The list selection is a transient popup cursor. A mouse press can move it
+   * before GtkListView emits activate, so never publish that intermediate
+   * value to application filters. */
+  self->syncing = TRUE;
+  gtk_single_selection_set_selected (
+    self->selection, gtk_drop_down_get_selected (self->delegate));
+  self->syncing = FALSE;
   gtk_widget_set_size_request (self->scroller, width, -1);
   gtk_widget_grab_focus (GTK_WIDGET (self->list_view));
   gtk_accessible_update_state (
@@ -300,6 +288,10 @@ popover_unmap_cb (GtkWidget    *popover,
                   AwraDropdown *self)
 {
   (void) popover;
+  self->syncing = TRUE;
+  gtk_single_selection_set_selected (
+    self->selection, gtk_drop_down_get_selected (self->delegate));
+  self->syncing = FALSE;
   gtk_accessible_update_state (
     GTK_ACCESSIBLE (self), GTK_ACCESSIBLE_STATE_EXPANDED, FALSE, -1);
 }
@@ -521,8 +513,6 @@ awra_dropdown_init (AwraDropdown *self)
                            G_CALLBACK (delegate_notify_cb), self, 0);
   g_signal_connect_object (self->delegate, "notify::expression",
                            G_CALLBACK (delegate_notify_cb), self, 0);
-  g_signal_connect_object (self->selection, "notify::selected",
-                           G_CALLBACK (selection_changed_cb), self, 0);
   g_signal_connect_object (self->list_view, "activate",
                            G_CALLBACK (list_activate_cb), self, 0);
   g_signal_connect_object (self->popover, "map",

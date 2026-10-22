@@ -161,6 +161,7 @@ pub const AWRA_TYPOGRAPHY_TITLE_2: AwraTypography = 4;
 pub const AWRA_TYPOGRAPHY_TITLE_1: AwraTypography = 5;
 pub const AWRA_TYPOGRAPHY_DISPLAY: AwraTypography = 6;
 pub const AWRA_TYPOGRAPHY_MONOSPACE: AwraTypography = 7;
+pub const AWRA_TYPOGRAPHY_LABEL: AwraTypography = 8;
 
 pub type AwraValidationState = c_int;
 pub const AWRA_VALIDATION_STATE_NONE: AwraValidationState = 0;
@@ -2540,11 +2541,13 @@ unsafe extern "C" {
     ) -> *mut gtk::GtkWidget;
     pub fn awra_list_view_get_delegate(self_: *mut AwraListView) -> *mut gtk::GtkListView;
     pub fn awra_list_view_get_factory(self_: *mut AwraListView) -> *mut gtk::GtkListItemFactory;
+    pub fn awra_list_view_get_header(self_: *mut AwraListView) -> *mut gtk::GtkWidget;
     pub fn awra_list_view_get_model(self_: *mut AwraListView) -> *mut gtk::GtkSelectionModel;
     pub fn awra_list_view_set_factory(
         self_: *mut AwraListView,
         factory: *mut gtk::GtkListItemFactory,
     );
+    pub fn awra_list_view_set_header(self_: *mut AwraListView, header: *mut gtk::GtkWidget);
     pub fn awra_list_view_set_model(self_: *mut AwraListView, model: *mut gtk::GtkSelectionModel);
 
     //=========================================================================
@@ -2687,6 +2690,7 @@ unsafe extern "C" {
     pub fn awra_navigation_item_get_icon_name(self_: *mut AwraNavigationItem) -> *const c_char;
     pub fn awra_navigation_item_get_label(self_: *mut AwraNavigationItem) -> *const c_char;
     pub fn awra_navigation_item_get_selected(self_: *mut AwraNavigationItem) -> gboolean;
+    pub fn awra_navigation_item_get_suffix(self_: *mut AwraNavigationItem) -> *mut gtk::GtkWidget;
     pub fn awra_navigation_item_set_group(
         self_: *mut AwraNavigationItem,
         group: *mut AwraNavigationItem,
@@ -2697,6 +2701,10 @@ unsafe extern "C" {
     );
     pub fn awra_navigation_item_set_label(self_: *mut AwraNavigationItem, label: *const c_char);
     pub fn awra_navigation_item_set_selected(self_: *mut AwraNavigationItem, selected: gboolean);
+    pub fn awra_navigation_item_set_suffix(
+        self_: *mut AwraNavigationItem,
+        suffix: *mut gtk::GtkWidget,
+    );
 
     //=========================================================================
     // AwraNavigationView
@@ -3151,10 +3159,25 @@ unsafe extern "C" {
     pub fn awra_tab_view_get_tab_bar(self_: *mut AwraTabView) -> *mut gtk::GtkWidget;
     pub fn awra_tab_view_remove(self_: *mut AwraTabView, page: *mut gtk::GtkWidget);
     pub fn awra_tab_view_set_content_visible(self_: *mut AwraTabView, visible: gboolean);
+    pub fn awra_tab_view_set_page_icon(
+        self_: *mut AwraTabView,
+        page: *mut gtk::GtkWidget,
+        icon: *mut gtk::GtkImage,
+    );
+    pub fn awra_tab_view_set_page_icon_name(
+        self_: *mut AwraTabView,
+        page: *mut gtk::GtkWidget,
+        icon_name: *const c_char,
+    );
     pub fn awra_tab_view_set_page_title(
         self_: *mut AwraTabView,
         page: *mut gtk::GtkWidget,
         title: *const c_char,
+    );
+    pub fn awra_tab_view_set_page_title_visible(
+        self_: *mut AwraTabView,
+        page: *mut gtk::GtkWidget,
+        visible: gboolean,
     );
     pub fn awra_tab_view_set_page_tooltip(
         self_: *mut AwraTabView,

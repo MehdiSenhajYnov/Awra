@@ -293,3 +293,273 @@ Si Pokedia était recommencé aujourd’hui avec Awra 1.0, les modèles et la lo
 métier resteraient les mêmes, mais la couche UI demanderait moins de FFI, moins
 de compositions manuelles et presque aucun combat contre le thème ou la
 transparence. C’est le signe le plus concret qu’Awra va dans la bonne direction.
+
+## 03:19 — PokediaAwra — La finition d’un vrai produit révèle les petits contrats
+
+La comparaison côte à côte avec Pokedia standard a montré que la matière et le
+blur étaient déjà cohérents, mais que plusieurs petits contrats par défaut
+restaient trop faibles : un widget central de header s’étirait verticalement,
+un dropdown publiait sa sélection avant le clic, une page épinglée imposait une
+icône Home, et une action réversible de tableau se transformait en gros carré
+violet.
+
+Ces défauts ont été corrigés dans Awra. Les widgets de header sont centrés par
+défaut, les dropdowns ne valident qu’à l’activation, les tabs ont une identité
+optionnelle et distribuent l’espace, les actions inline disposent d’un état
+sélectionné discret, et les scrollbars de données se révèlent seulement quand
+elles sont utiles. Pokedia ne contient toujours aucun CSS local.
+
+## 03:19 — PokediaAwra — Densité et couleur de domaine
+
+Les types Pokémon ont servi de test sévère aux badges : une couleur de texte
+qui alternait entre noir et blanc cassait la cohérence du vocabulaire, tandis
+qu’un blanc forcé sur les anciennes teintes jaunes ou cyan ne respectait pas le
+contraste. La solution retenue combine un contenu blanc stable fourni par
+AwraBadge et une palette Pokedia volontairement assombrie ; les dix-huit teintes
+restent reconnaissables et dépassent toutes un ratio de contraste de 4,5:1.
+
+## 03:58 — PokediaAwra — Les métriques peintes ne suffisent pas
+
+La dernière comparaison géométrique a révélé un contrat GTK facile à manquer :
+le padding CSS d’un widget final utilisant `GtkBinLayout` améliorait la peinture
+du badge sans toujours augmenter sa taille mesurée. Les types semblaient donc
+encore comprimés dans une vraie table. `AwraBadge` porte maintenant ses insets
+sur son contenu mesuré, avec un test de taille minimale ; le blanc, le contraste
+et la densité deviennent un contrat du composant plutôt qu’une heureuse
+conséquence du parent.
+
+## 03:58 — PokediaAwra — Une barre d’onglets est une géométrie complète
+
+Partager la largeur entre onglets ne suffisait pas : le bouton interne gardait
+sa taille naturelle et tassait titre et fermeture à gauche. `AwraTabView`
+possède désormais une capsule continue, des séparateurs discrets et une cellule
+interactive qui occupe réellement toute sa part. Pokedia ne règle que son
+contenu et son shell ; les formes, le focus, le hover et la distribution restent
+la responsabilité d’Awra.
+
+Le même passage a clarifié la frontière des responsabilités : Awra fournit les
+métriques stables des badges, onglets, filtres et actions inline ; Pokedia décide
+que sa colonne Type comporte deux emplacements et qu’un type unique les couvre
+pour être centré. C’est une composition métier, pas une règle universelle du
+framework.
+
+## 04:14 — PokediaAwra — Les tests ne remplacent pas la comparaison Dark
+
+Une première correction des onglets passait les tests et paraissait correcte
+dans la capture Xvfb claire, mais restait insuffisante face au rendu Dark réel :
+le puits était trop sombre, le bouton épinglé trop serré et les séparations trop
+longues. La navigation souffrait aussi d’une règle de neutralisation plus
+spécifique qui annulait son hover.
+
+La correction suivante a été validée avec des états de pointeur déterministes :
+capsule translucide, bouton épinglé entièrement contenu, séparateurs verticaux
+courts et hover de navigation visible. Ce cas rappelle que les gates techniques
+prouvent la stabilité, mais qu’une décision esthétique doit aussi être comparée
+dans l’apparence artistique de référence.
+
+## 21:01 — PokediaAwra — Le débordement des onglets est un contrat de layout
+
+Les captures complètes de Pokedia Standard ont montré que la barre ne se
+résumait pas à une capsule et quelques séparateurs. Avec peu de pages, chaque
+onglet grandit jusqu’à une largeur maximale puis laisse respirer la fin du rail.
+Avec davantage de pages, les cellules se contractent uniformément jusqu’à un
+minimum. Au-delà, seul le rail dynamique défile : l’onglet épinglé reste fixe et
+la fenêtre ne change jamais de largeur minimale.
+
+`AwraTabView` possède maintenant un layout privé dédié à cette règle, un
+viewport horizontal sans scrollbar décorative, la conversion de la molette
+verticale en déplacement horizontal et la révélation automatique de la page
+sélectionnée. Les fermetures non pertinentes restent invisibles et non
+cliquables, mais conservent leur espace afin que les titres ne sautent pas. Les
+séparateurs adjacents au hover et à la sélection disparaissent par opacité, sans
+modifier la géométrie.
+
+Le test de sortie ouvre quinze onglets dans une fenêtre de 820 px, prouve que la
+fenêtre reste bornée, que le rail déborde et que la sélection du dernier onglet
+fait défiler le viewport. Cette fois, le comportement observé est devenu un
+invariant mesuré plutôt qu’une simple approximation visuelle.
+
+## 21:21 — PokediaAwra — Un grand rayon ne constitue pas un cercle
+
+La dernière comparaison a isolé une erreur récurrente : appliquer un rayon
+« pill » à un bouton rectangulaire ne le rend pas circulaire. Le Home épinglé
+peignait en plus son fond sur une cellule qui contenait aussi le séparateur ; sa
+surface s’étirait donc même si l’icône seule semblait correctement dimensionnée.
+
+`AwraTabView` distingue maintenant explicitement les formes. Un onglet épinglé
+icon-only reçoit une allocation carrée de 36 px et peint uniquement ce carré ;
+le séparateur reste un sibling stable et visible. Les fermetures contextuelles
+reçoivent une allocation carrée indépendante de 22 px. Les tests mappés
+vérifient largeur égale à hauteur et les tailles exactes, afin qu’une règle GTK
+ou un futur changement de padding ne puisse plus les transformer silencieusement
+en ovales. Les boutons texte restent, eux, des rectangles arrondis.
+
+## 22:02 — PokediaAwra — La capsule ne doit pas posséder le séparateur
+
+La vérification suivante a isolé une seconde erreur structurelle dans la barre
+d’onglets : même avec des tailles carrées correctes, peindre le hover et la
+sélection sur la cellule complète permettait encore à la capsule de consommer
+l’espace du séparateur. Deux onglets accentués côte à côte pouvaient alors
+sembler collés, et les deux extrémités du rail n’obéissaient pas au même inset.
+
+Chaque cellule d’`AwraTabView` sépare désormais trois responsabilités : une
+capsule interactive interne, sa fermeture circulaire éventuelle et un
+séparateur sibling qui ne participe jamais au fond hover/selected. Home reste
+un repère carré de 36 px dans une zone épinglée fixe ; les onglets dynamiques
+gardent une respiration explicite entre capsules ; le dernier onglet supprime
+seulement l’espace de son séparateur terminal. Les tests mappés prouvent le
+centrage de l’icône à un demi-pixel, un espace minimal de 6 px entre deux
+capsules accentuées et des marges gauche/droite symétriques à un pixel près.
+
+Cette passe a aussi révélé un piège de validation : lancer Pokedia avec le même
+identifiant d’application activait l’instance déjà ouverte, laquelle conservait
+l’ancienne bibliothèque Awra en mémoire. Les captures sont maintenant faites
+sur un bus D-Bus privé et les smoke tests utilisent un répertoire de données
+temporaire. Ils ne peuvent donc plus valider une ancienne instance ni modifier
+le workspace réel du développeur.
+
+## 22:25 — PokediaAwra — Le titre et le rail suivent l’intention utilisateur
+
+La barre restait imparfaite sur deux comportements subtils. D’abord, les
+transitions hover déclenchées lorsque les onglets défilaient sous le pointeur
+replanifiaient la révélation de la page sélectionnée. Le rail revenait donc vers
+la sélection et empêchait d’explorer les pages situées après elle. La révélation
+automatique ne se produit maintenant qu’après un vrai changement de sélection ;
+un geste de scroll annule immédiatement toute correction encore en attente.
+
+Ensuite, le titre et la fermeture partageaient un layout horizontal. Même
+invisible, la fermeture réservait de la largeur et décalait le texte. La capsule
+utilise désormais un overlay : le titre possède le centre géométrique complet,
+tandis que la fermeture carrée se superpose à son extrémité. Un renderer privé
+applique un véritable masque alpha de 18 px aux titres trop longs au lieu d’une
+ellipse dure. Le comportement s’inverse également en RTL.
+
+Les tests couvrent maintenant le centre avant/après sélection, le débordement
+du titre, le maintien du rail à son extrémité pendant un hover et l’isolation
+face à un thème hostile. Une capture Dark avec vingt-deux onglets a confirmé
+les mêmes proportions dans Pokedia.
+
+## 23:12 — PokediaAwra — La respiration prime sur le nombre d’onglets visibles
+
+Une comparaison à géométrie de fenêtre comparable avec Pokedia Standard a
+montré pourquoi la nouvelle mécanique, pourtant plus robuste, paraissait encore
+moins premium :
+son pas minimal de 118 px faisait entrer un onglet supplémentaire dans le même
+espace. Les séparateurs formaient alors une palissade, les noms ordinaires
+atteignaient trop tôt leur fondu et la capsule sélectionnée perdait de la
+présence. Le minimum est désormais de 132 px. Le rail défile donc légèrement
+plus tôt, mais la fenêtre reste strictement bornée et l’exploration au-delà de
+la sélection reste libre.
+
+La même comparaison a révélé une réservation fantôme dans `AwraHeader` : le
+groupe `GtkWindowControls` de début occupait de la largeur même lorsqu’il était
+vide, et le conteneur de titres vide ajoutait encore un espacement. Awra retire
+désormais ces groupes de la mesure, centre réellement le widget médian et lui
+donne une largeur confortable qui se contracte sans imposer de nouvelle largeur
+minimale à la fenêtre. Le bouton de workspace a aussi retrouvé la largeur
+compacte de la référence.
+
+Des tests mappés figent à présent le pas des onglets, le centrage du titre malgré
+la fermeture superposée, le scroll libre après sélection et le centrage du
+contrôle de header à un pixel près. Cette passe confirme qu’une sensation
+premium dépend souvent de la quantité d’espace volontairement laissée vide,
+pas d’un effet supplémentaire.
+
+# 2026-08-24
+
+## 02:19 — PokediaAwra — Le bord du viewport fait partie du composant
+
+La comparaison finale avec la barre de Pokedia Standard a mis en évidence trois
+écarts encore liés à la primitive Awra : Home conservait une faible capsule au
+repos, le rail réservait trop d’air vertical autour des onglets et une capsule
+partiellement visible se terminait sur la coupe dure du `GtkScrolledWindow`.
+Ces détails indépendants donnaient ensemble l’impression que les onglets
+étaient posés dans la barre plutôt qu’intégrés à celle-ci.
+
+Home est désormais totalement transparent au repos ; seuls hover et selected
+font apparaître son cercle de 36 px. L’inset interne du rail est ramené à 1 px,
+soit 2 px visibles par bord autour du repère Home une fois la bordure comprise.
+Enfin, un wrapper de rendu privé applique un masque alpha de 20 px uniquement
+aux bords où du contenu reste à parcourir. Une capsule hover ou selected peut
+donc entrer et sortir du viewport sans créer de tranche verticale, y compris en
+RTL, tandis que le scroller GTK conserve son comportement natif.
+
+Le test géométrique échoue maintenant si l’inset vertical dépasse 3 px et
+vérifie la présence du masque autour du scroller. La suite Awra (27 tests), les
+tests et le lint Rust de Pokedia ainsi que la frontière d’API publique restent
+valides. Aucun style local n’a été ajouté à Pokedia pour obtenir ce résultat.
+
+## 02:41 — PokediaAwra — La couleur d’une catégorie se suffit à elle-même
+
+Les badges de types révélaient un liseré clair que `AwraBadge` ajoutait
+systématiquement aux couleurs personnalisées. Sur une suite dense de capsules,
+ce rim fragmentait les aplats et donnait à chaque type l’aspect d’un petit
+bouton. La référence Pokedia montre au contraire que la silhouette, la couleur
+pleine et le texte blanc suffisent à identifier la catégorie.
+
+Le rendu `custom-color` est désormais entièrement borderless. La couleur et
+les métriques restent contrôlées par Awra, le texte reste blanc et stable en
+Light/Dark, mais aucun outline ou highlight décoratif n’est ajouté. Ce choix
+vaut pour tous les vocabulaires de catégories utilisant la primitive publique,
+pas seulement pour les types Pokémon.
+
+## 02:56 — PokediaAwra — Une miniature de domaine reste une primitive d’onglet
+
+Les onglets Pokémon gagnent leur sprite avant le titre pour accélérer le
+repérage visuel. L’ancien contrat d’`AwraTabView` ne savait afficher que des
+icônes nommées du thème. Awra accepte maintenant une `GtkImage` applicative
+optionnelle et garde la maîtrise de sa taille, de son espacement, des états et
+de l’overflow. Pokedia alimente cette image avec son chargeur asynchrone sans
+reconstruire la barre d’onglets.
+
+# 2026-08-25
+
+## 02:04 — PokediaAwra — Un dialogue court doit assumer sa hauteur naturelle
+
+Les dialogues de workspace révélaient deux défauts génériques. Le bloc de
+titres d’`AwraHeader` remplissait verticalement le header : avec un seul titre,
+`GtkBox` le plaçait en haut tandis que le contrôle de fermeture restait centré.
+Le texte et la croix appartenaient donc visiblement à deux lignes différentes.
+Le bloc de titres possède maintenant un alignement vertical central explicite,
+couvert par un test de géométrie mappée.
+
+`AwraDialog` imposait aussi une hauteur initiale de 250 px, puis Pokedia en
+imposait une de 230 px à ses formulaires. Cette valeur laissait une bande vide
+sous les actions dès que le contenu était court. Awra ne fixe désormais que la
+largeur par défaut ; la hauteur provient du contenu. Pokedia applique le preset
+public `OVERLAY` à ses contenus et ne définit plus que la largeur souhaitée.
+Des captures isolées des dialogues New Workspace et Manage Workspaces ont
+confirmé des marges finales symétriques sans toucher aux données utilisateur.
+
+## 02:23 — PokediaAwra — Une action discrète doit quand même répondre
+
+Le formulaire Rename Workspace a révélé un conflit de spécificité dans la
+grammaire des boutons. L'apparence Ghost annulait la couleur de fond après la
+règle générique `:hover` : Cancel restait donc un simple texte, même sous le
+pointeur. Le primaire simulait quant à lui son survol avec une ombre inset de
+999 px, dont le clipping GTK produisait une seconde masse violette peu nette.
+
+Awra définit maintenant explicitement les états hover et pressed de Ghost et
+remplace le voile du primaire par un rim intérieur contenu dans sa silhouette ;
+la couleur d'accent et son contraste restent stables. Dans les dialogues
+Pokedia, Cancel utilise Secondary : l'action est identifiable au repos, puis
+renforce son plan au survol. Ghost reste disponible pour les actions inline
+réellement calmes. La décision appartient donc au vocabulaire public du
+framework et non à un style local du consumer.
+
+## 03:44 — PokediaAwra — Un binding et des composants, pas une couche de traduction
+
+La revue finale du port a isolé deux dettes qui n'étaient plus justifiées : une
+façade Rust locale de 37 appels `unsafe` et des rôles visuels qui remplaçaient
+encore des composants désormais disponibles. Pokedia dépend maintenant du
+crate sûr officiel `awra`; l'apparence, l'accent, les layouts, les widgets et
+les rôles passent par cette projection GIR unique. Une gate interdit tout
+retour de `extern "C"`, `awra-sys` ou d'un module `src/awra.rs` dans le projet.
+
+La même passe remplace les rôles de composition par `AwraCard`, `AwraSection`,
+`AwraFormRow`, `AwraFilterBar`, `AwraStatusBanner`, `AwraEmptyState`,
+`AwraBadge`, `AwraStatBar` et `AwraMetricRow`. Le besoin tabulaire a conduit à
+faire posséder à `AwraListView` son viewport et son header optionnel : Pokedia
+ne reconstruit plus une table avec un scroller, trois rôles et un container.
+Les rôles restants décrivent uniquement le domaine (types, matchups, matrice,
+relations, sprites) ou une ligne GTK dont le comportement doit rester GTK.

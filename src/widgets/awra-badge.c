@@ -31,24 +31,11 @@ static const char *appearance_classes[] = {
 static void
 update_custom_color_classes (AwraBadge *self)
 {
-  double luminance;
-
   if (!self->custom_color_set) {
     gtk_widget_remove_css_class (GTK_WIDGET (self), "awra-badge-custom");
-    gtk_widget_remove_css_class (GTK_WIDGET (self),
-                                 "awra-badge-custom-dark-text");
     return;
   }
-  luminance = 0.2126 * self->custom_color.red +
-              0.7152 * self->custom_color.green +
-              0.0722 * self->custom_color.blue;
   gtk_widget_add_css_class (GTK_WIDGET (self), "awra-badge-custom");
-  if (luminance > 0.56)
-    gtk_widget_add_css_class (GTK_WIDGET (self),
-                              "awra-badge-custom-dark-text");
-  else
-    gtk_widget_remove_css_class (GTK_WIDGET (self),
-                                 "awra-badge-custom-dark-text");
 }
 
 G_DEFINE_FINAL_TYPE (AwraBadge, awra_badge, GTK_TYPE_WIDGET)
@@ -78,9 +65,6 @@ awra_badge_snapshot (GtkWidget   *widget,
       0, 0, gtk_widget_get_width (widget), gtk_widget_get_height (widget));
     GskRoundedRect rounded;
     GdkRGBA fill = self->custom_color;
-    GdkRGBA rim = { 1.0, 1.0, 1.0, 0.16 };
-    float widths[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-    GdkRGBA colors[4] = { rim, rim, rim, rim };
 
     fill.alpha = CLAMP (fill.alpha, 0.0, 1.0);
     gsk_rounded_rect_init_from_rect (&rounded, &bounds,
@@ -88,7 +72,6 @@ awra_badge_snapshot (GtkWidget   *widget,
     gtk_snapshot_push_rounded_clip (snapshot, &rounded);
     gtk_snapshot_append_color (snapshot, &fill, &bounds);
     gtk_snapshot_pop (snapshot);
-    gtk_snapshot_append_border (snapshot, &rounded, widths, colors);
   }
 
   if (self->label != NULL)
@@ -168,6 +151,13 @@ awra_badge_init (AwraBadge *self)
 {
   self->label = GTK_LABEL (gtk_label_new (NULL));
   self->appearance = AWRA_BADGE_APPEARANCE_ACCENT;
+  /* GtkBinLayout does not use the custom widget's CSS padding as content
+   * insets. Keep the badge's breathing room on its internal label so the
+   * advertised metrics are also its measured metrics. */
+  gtk_widget_set_margin_start (GTK_WIDGET (self->label), 10);
+  gtk_widget_set_margin_end (GTK_WIDGET (self->label), 10);
+  gtk_widget_set_margin_top (GTK_WIDGET (self->label), 4);
+  gtk_widget_set_margin_bottom (GTK_WIDGET (self->label), 4);
   gtk_widget_set_halign (GTK_WIDGET (self), GTK_ALIGN_START);
   gtk_widget_add_css_class (GTK_WIDGET (self),
                             appearance_classes[self->appearance]);

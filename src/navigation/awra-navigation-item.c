@@ -7,6 +7,8 @@ struct _AwraNavigationItem {
   GtkToggleButton parent_instance;
   GtkImage *icon;
   GtkLabel *label;
+  GtkBox *box;
+  GtkWidget *suffix;
   char *icon_name;
 };
 
@@ -14,6 +16,7 @@ enum {
   PROP_0,
   PROP_LABEL,
   PROP_ICON_NAME,
+  PROP_SUFFIX,
   PROP_SELECTED,
   N_PROPS,
 };
@@ -55,6 +58,9 @@ awra_navigation_item_get_property (GObject    *object,
   case PROP_ICON_NAME:
     g_value_set_string (value, self->icon_name);
     break;
+  case PROP_SUFFIX:
+    g_value_set_object (value, self->suffix);
+    break;
   case PROP_SELECTED:
     g_value_set_boolean (value, awra_navigation_item_get_selected (self));
     break;
@@ -77,6 +83,9 @@ awra_navigation_item_set_property (GObject      *object,
     break;
   case PROP_ICON_NAME:
     awra_navigation_item_set_icon_name (self, g_value_get_string (value));
+    break;
+  case PROP_SUFFIX:
+    awra_navigation_item_set_suffix (self, g_value_get_object (value));
     break;
   case PROP_SELECTED:
     awra_navigation_item_set_selected (self, g_value_get_boolean (value));
@@ -101,6 +110,9 @@ awra_navigation_item_class_init (AwraNavigationItemClass *klass)
   properties[PROP_ICON_NAME] = g_param_spec_string (
     "icon-name", NULL, NULL, NULL,
     G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+  properties[PROP_SUFFIX] = g_param_spec_object (
+    "suffix", NULL, NULL, GTK_TYPE_WIDGET,
+    G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
   properties[PROP_SELECTED] = g_param_spec_boolean (
     "selected", NULL, NULL, FALSE,
     G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
@@ -116,6 +128,7 @@ awra_navigation_item_init (AwraNavigationItem *self)
   GtkWidget *box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
 
   awra_box_set_spacing (GTK_BOX (box), AWRA_SPACING_MD);
+  self->box = GTK_BOX (box);
   self->icon = GTK_IMAGE (gtk_image_new ());
   self->label = GTK_LABEL (gtk_label_new (NULL));
   gtk_widget_add_css_class (GTK_WIDGET (self), "awra-navigation-item");
@@ -195,6 +208,34 @@ awra_navigation_item_set_icon_name (AwraNavigationItem *self,
     gtk_widget_set_visible (GTK_WIDGET (self->icon), FALSE);
   }
   g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_ICON_NAME]);
+}
+
+GtkWidget *
+awra_navigation_item_get_suffix (AwraNavigationItem *self)
+{
+  g_return_val_if_fail (AWRA_IS_NAVIGATION_ITEM (self), NULL);
+  return self->suffix;
+}
+
+void
+awra_navigation_item_set_suffix (AwraNavigationItem *self,
+                                 GtkWidget          *suffix)
+{
+  g_return_if_fail (AWRA_IS_NAVIGATION_ITEM (self));
+  g_return_if_fail (suffix == NULL || GTK_IS_WIDGET (suffix));
+  g_return_if_fail (suffix == NULL || gtk_widget_get_parent (suffix) == NULL ||
+                    gtk_widget_get_parent (suffix) == GTK_WIDGET (self->box));
+
+  if (self->suffix == suffix)
+    return;
+  if (self->suffix != NULL)
+    gtk_box_remove (self->box, self->suffix);
+  self->suffix = suffix;
+  if (suffix != NULL) {
+    gtk_widget_add_css_class (suffix, "awra-navigation-item-suffix");
+    gtk_box_append (self->box, suffix);
+  }
+  g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_SUFFIX]);
 }
 
 gboolean

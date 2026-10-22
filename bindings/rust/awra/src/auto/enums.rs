@@ -1954,6 +1954,8 @@ pub enum Typography {
     Display,
     #[doc(alias = "AWRA_TYPOGRAPHY_MONOSPACE")]
     Monospace,
+    #[doc(alias = "AWRA_TYPOGRAPHY_LABEL")]
+    Label,
     #[doc(hidden)]
     __Unknown(i32),
 }
@@ -1973,6 +1975,7 @@ impl IntoGlib for Typography {
             Self::Title1 => ffi::AWRA_TYPOGRAPHY_TITLE_1,
             Self::Display => ffi::AWRA_TYPOGRAPHY_DISPLAY,
             Self::Monospace => ffi::AWRA_TYPOGRAPHY_MONOSPACE,
+            Self::Label => ffi::AWRA_TYPOGRAPHY_LABEL,
             Self::__Unknown(value) => value,
         }
     }
@@ -1993,6 +1996,7 @@ impl FromGlib<ffi::AwraTypography> for Typography {
             ffi::AWRA_TYPOGRAPHY_TITLE_1 => Self::Title1,
             ffi::AWRA_TYPOGRAPHY_DISPLAY => Self::Display,
             ffi::AWRA_TYPOGRAPHY_MONOSPACE => Self::Monospace,
+            ffi::AWRA_TYPOGRAPHY_LABEL => Self::Label,
             value => Self::__Unknown(value),
         }
     }

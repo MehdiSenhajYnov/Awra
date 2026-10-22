@@ -29,6 +29,12 @@ main (void)
   void (*tab_close) (AwraTabView *, GtkWidget *) = awra_tab_view_close_page;
   void (*tab_content_visible) (AwraTabView *, gboolean) =
     awra_tab_view_set_content_visible;
+  void (*tab_icon_name) (AwraTabView *, GtkWidget *, const char *) =
+    awra_tab_view_set_page_icon_name;
+  void (*tab_icon) (AwraTabView *, GtkWidget *, GtkImage *) =
+    awra_tab_view_set_page_icon;
+  void (*tab_title_visible) (AwraTabView *, GtkWidget *, gboolean) =
+    awra_tab_view_set_page_title_visible;
   GtkWidget *(*page_new) (void) = awra_page_new;
   void (*page_set_child) (AwraPage *, GtkWidget *) = awra_page_set_child;
   void (*page_header_set_title) (AwraPageHeader *, const char *) =
@@ -124,6 +130,9 @@ main (void)
          tab_append != NULL &&
          tab_close != NULL &&
          tab_content_visible != NULL &&
+         tab_icon_name != NULL &&
+         tab_icon != NULL &&
+         tab_title_visible != NULL &&
          page_new != NULL &&
          page_set_child != NULL &&
          page_header_set_title != NULL &&

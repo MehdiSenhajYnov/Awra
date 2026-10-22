@@ -69,8 +69,9 @@ window.awra-data-window:backdrop row {
 /* Public compatibility roles for native GTK controls used inside data-heavy
  * Awra applications. The provider is installed above GTK USER priority, so
  * these controls keep Awra's identity under GTK_THEME and user CSS. */
-window.awra-data-window button.awra-role-flat,
-window.awra-data-window togglebutton.awra-role-flat {
+.awra-role-flat,
+button.awra-role-flat,
+togglebutton.awra-role-flat {
   min-height: 24px;
   min-width: 24px;
   margin: 0;
@@ -86,28 +87,33 @@ window.awra-data-window togglebutton.awra-role-flat {
   text-shadow: none;
 }
 
-window.awra-data-window button.awra-role-flat:hover,
-window.awra-data-window togglebutton.awra-role-flat:hover {
+.awra-role-flat:hover,
+button.awra-role-flat:hover,
+togglebutton.awra-role-flat:hover {
   background-color: alpha(@awra_foreground, .070);
   color: @awra_foreground;
 }
 
-window.awra-data-window button.awra-role-flat:active,
-window.awra-data-window button.awra-role-flat:checked,
-window.awra-data-window togglebutton.awra-role-flat:active,
-window.awra-data-window togglebutton.awra-role-flat:checked {
+.awra-role-flat:active,
+.awra-role-flat:checked,
+button.awra-role-flat:active,
+button.awra-role-flat:checked,
+togglebutton.awra-role-flat:active,
+togglebutton.awra-role-flat:checked {
   background-color: alpha(@awra_foreground, .105);
   color: @awra_foreground;
 }
 
-window.awra-data-window button.awra-role-flat:focus-visible,
-window.awra-data-window togglebutton.awra-role-flat:focus-visible {
+.awra-role-flat:focus-visible,
+button.awra-role-flat:focus-visible,
+togglebutton.awra-role-flat:focus-visible {
   outline: 3px solid @awra_focus;
   outline-offset: 1px;
 }
 
-window.awra-data-window button.awra-role-suggested-action,
-window.awra-data-window togglebutton.awra-role-suggested-action {
+.awra-role-suggested-action,
+button.awra-role-suggested-action,
+togglebutton.awra-role-suggested-action {
   background-color: @awra_accent;
   background-image: none;
   border-color: transparent;
@@ -115,9 +121,10 @@ window.awra-data-window togglebutton.awra-role-suggested-action {
   color: @awra_on_accent;
 }
 
-window.awra-data-window button.awra-role-circular,
-window.awra-data-window togglebutton.awra-role-circular,
-window.awra-data-window label.awra-role-circular {
+.awra-role-circular,
+button.awra-role-circular,
+togglebutton.awra-role-circular,
+label.awra-role-circular {
   border-radius: 999px;
 }
 
@@ -161,6 +168,12 @@ window.awra-data-window headerbar.awra-role-app-header entry:backdrop {
   opacity: 1;
 }
 
+awraheader.awra-role-app-header .awra-header-content,
+awraheader.awra-role-app-header:backdrop .awra-header-content {
+  min-height: 48px;
+  padding: 4px 12px;
+}
+
 .awra-role-app-brand {
   margin-left: 4px;
   margin-right: 12px;
@@ -177,7 +190,24 @@ window.awra-data-window headerbar.awra-role-app-header entry:backdrop {
   border: 1px solid alpha(@awra_foreground, .065);
   border-radius: 999px;
   color: alpha(@awra_foreground, .92);
-  min-height: 34px;
+  min-height: 30px;
+  padding: 0 12px;
+}
+
+.awra-role-app-search > text,
+.awra-role-app-search > text:backdrop {
+  min-height: 18px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.awra-role-app-search image {
+  min-width: 16px;
+  min-height: 16px;
+  margin: 0 4px;
+  padding: 0;
 }
 
 .awra-role-workspace-button,
@@ -215,7 +245,7 @@ menubutton.awra-role-workspace-button:backdrop button.toggle {
     0 5px 16px rgba(0, 0, 0, .07);
   color: alpha(@awra_foreground, .84);
   min-height: 30px;
-  min-width: 112px;
+  min-width: 92px;
   padding: 0 8px;
 }
 
@@ -295,7 +325,7 @@ menubutton.awra-role-workspace-button button.toggle:checked {
 }
 
 .awra-role-workspace-icon-button {
-  border-radius: 999px;
+  border-radius: 9px;
   min-height: 28px;
   min-width: 28px;
   padding: 0;
@@ -307,7 +337,7 @@ menubutton.awra-role-workspace-button button.toggle:checked {
 }
 
 .awra-role-workspace-dialog-content {
-  margin: 12px;
+  margin: 16px;
   min-width: 340px;
 }
 
@@ -337,13 +367,26 @@ menubutton.awra-role-workspace-button button.toggle:checked {
 }
 
 .awra-role-nav-row:hover {
-  background: alpha(@awra_foreground, .08);
+  background: alpha(@awra_foreground, .10);
+  color: alpha(@awra_foreground, .92);
+}
+
+window.awra-data-window .awra-role-navigation-sidebar row.awra-role-nav-row:hover {
+  background-color: alpha(@awra_foreground, .12);
+  background-image: none;
+  color: alpha(@awra_foreground, .96);
 }
 
 .awra-role-nav-row.awra-role-selected-nav {
   background: alpha(@awra_accent, .18);
   color: @awra_accent_content;
   font-weight: 700;
+}
+
+window.awra-data-window .awra-role-navigation-sidebar row.awra-role-nav-row.awra-role-selected-nav {
+  background-color: alpha(@awra_accent, .18);
+  background-image: none;
+  color: @awra_accent_content;
 }
 
 .awra-role-header-title {
@@ -443,6 +486,78 @@ menubutton.awra-role-workspace-button button.toggle:checked {
 
 .awra-role-table-scroller undershoot {
   background: none;
+}
+
+/* Overlay scrollbars stay out of the visual hierarchy until the pointer is
+ * inside a scrollable data viewport. GTK creates them only when the
+ * adjustment actually overflows. */
+.awra-role-table-scroller scrollbar {
+  min-width: 8px;
+  min-height: 8px;
+  margin: 3px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  opacity: 0;
+}
+
+.awra-role-table-scroller:hover scrollbar,
+.awra-role-table-scroller scrollbar:hover,
+.awra-role-table-scroller scrollbar.dragging {
+  opacity: 1;
+}
+
+.awra-role-table-scroller scrollbar trough {
+  min-width: 7px;
+  min-height: 7px;
+  border-radius: 999px;
+  background: alpha(@awra_foreground, .035);
+}
+
+.awra-role-table-scroller scrollbar slider {
+  min-width: 7px;
+  min-height: 34px;
+  border: 0;
+  border-radius: 999px;
+  background: alpha(@awra_foreground, .28);
+  box-shadow: none;
+}
+
+.awra-role-table-scroller scrollbar slider:hover,
+.awra-role-table-scroller scrollbar slider:active {
+  background: alpha(@awra_foreground, .42);
+}
+
+.awra-role-inline-toggle {
+  min-width: 28px;
+  min-height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  color: alpha(@awra_foreground, .68);
+  background: transparent;
+  box-shadow: none;
+}
+
+.awra-role-inline-toggle:hover {
+  color: @awra_foreground;
+  background: alpha(@awra_foreground, .085);
+}
+
+.awra-role-inline-toggle:checked,
+button.awra-role-inline-toggle:checked,
+togglebutton.awra-role-inline-toggle:checked {
+  color: alpha(@awra_foreground, .82);
+  background: transparent;
+  box-shadow: none;
+}
+
+.awra-role-inline-toggle:checked:hover,
+button.awra-role-inline-toggle:checked:hover,
+togglebutton.awra-role-inline-toggle:checked:hover {
+  color: @awra_foreground;
+  background: alpha(@awra_foreground, .085);
 }
 
 .awra-role-data-list,

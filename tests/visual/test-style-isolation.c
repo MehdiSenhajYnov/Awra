@@ -12,6 +12,8 @@ static const char hostile_css[] =
   ".awra-check, .awra-progress, .awra-segment, .awra-tabs button,"
   ".awra-list row, .awra-navigation-item, .awra-body, .awra-muted,"
   ".awra-action-row, .awra-menu-item, .awra-edge-trigger,"
+  ".awra-tab-bar, .awra-tab-item, .awra-tab-pill, .awra-tab-button,"
+  ".awra-tab-title, .awra-tab-label, .awra-tab-close,"
   ".awra-eyebrow, .awra-title-1, .awra-title-2, .awra-title-3,"
   ".awra-display, .awra-monospace, awrapage, awrapageviewport,"
   "awrapageheader, awrasection, awratoolbar, awraform, awraformrow,"
@@ -133,6 +135,9 @@ make_probe_scene (void)
   GtkWidget *tags = awra_tag_entry_new ();
   GtkWidget *choice_group = awra_choice_group_new ();
   GtkWidget *banner = awra_status_banner_new ();
+  GtkWidget *tabs = awra_tab_view_new ();
+  GtkWidget *tab_home = gtk_label_new ("Home page");
+  GtkWidget *tab_document = gtk_label_new ("Document page");
   GMenu *menu = g_menu_new ();
 
   g_assert_true (awra_widget_add_style_role (grid, "sidebar-pane"));
@@ -200,6 +205,16 @@ make_probe_scene (void)
   awra_choice_group_set_title (AWRA_CHOICE_GROUP (choice_group), "Mode");
   awra_choice_group_append (AWRA_CHOICE_GROUP (choice_group), "Automatic");
   awra_status_banner_set_title (AWRA_STATUS_BANNER (banner), "Ready");
+  awra_tab_view_append (AWRA_TAB_VIEW (tabs), tab_home, "Home", TRUE);
+  awra_tab_view_set_page_icon_name (AWRA_TAB_VIEW (tabs), tab_home,
+                                    "go-home-symbolic");
+  awra_tab_view_set_page_title_visible (AWRA_TAB_VIEW (tabs), tab_home,
+                                        FALSE);
+  awra_tab_view_append (AWRA_TAB_VIEW (tabs), tab_document,
+                        "A deliberately long document title", FALSE);
+  awra_tab_view_set_selected_page (AWRA_TAB_VIEW (tabs), tab_document);
+  awra_tab_view_set_content_visible (AWRA_TAB_VIEW (tabs), FALSE);
+  gtk_widget_set_size_request (tabs, 360, -1);
   awra_filter_bar_set_search (AWRA_FILTER_BAR (filter_bar),
                               awra_search_entry_new ());
   awra_filter_bar_append_filter (AWRA_FILTER_BAR (filter_bar),
@@ -271,6 +286,7 @@ make_probe_scene (void)
   gtk_grid_attach (GTK_GRID (grid), action_row, 0, 10, 3, 1);
   gtk_grid_attach (GTK_GRID (grid), page, 0, 11, 3, 1);
   gtk_grid_attach (GTK_GRID (grid), master_detail, 0, 12, 3, 1);
+  gtk_grid_attach (GTK_GRID (grid), tabs, 0, 13, 3, 1);
   g_object_set_data (G_OBJECT (grid), "awra-probe-dropdown", dropdown);
   g_object_set_data (G_OBJECT (grid), "awra-probe-menu-button", menu_button);
   g_object_set_data (G_OBJECT (grid), "awra-probe-filter-bar", filter_bar);

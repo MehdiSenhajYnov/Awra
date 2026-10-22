@@ -20,9 +20,10 @@ void        awra_tab_view_add               (AwraTabView *self,
  * @title: the visible tab title
  * @pinned: whether the page is permanent and has no close affordance
  *
- * Appends a dynamic page. Non-pinned pages expose an Awra-owned close
- * affordance. Applications can veto a request through the #AwraTabView::close-page
- * signal.
+ * Appends a dynamic page. Non-pinned pages expose an Awra-owned contextual
+ * close affordance and participate in the horizontally scrollable tab rail.
+ * Pinned pages remain fixed while that rail scrolls. Applications can veto a
+ * request through the #AwraTabView::close-page signal.
  *
  * Returns: (transfer none): @page
  */
@@ -54,6 +55,47 @@ void        awra_tab_view_set_selected_page (AwraTabView *self,
 void        awra_tab_view_set_page_title    (AwraTabView *self,
                                              GtkWidget   *page,
                                              const char  *title);
+/**
+ * awra_tab_view_set_page_icon_name:
+ * @self: an Awra tab view
+ * @page: a page contained by @self
+ * @icon_name: (nullable): an icon name, or %NULL to hide the icon
+ *
+ * Sets the optional icon displayed by the page's tab. Pinned pages do not
+ * receive an implicit icon; applications choose whether they represent a
+ * home page, a tool, or another permanent destination.
+ */
+void        awra_tab_view_set_page_icon_name (AwraTabView *self,
+                                              GtkWidget   *page,
+                                              const char  *icon_name);
+/**
+ * awra_tab_view_set_page_icon:
+ * @self: an Awra tab view
+ * @page: a page contained by @self
+ * @icon: (transfer none) (nullable): an unparented image, or %NULL
+ *
+ * Sets an optional application-provided image before the page title. Awra
+ * owns its size, spacing and tab-state integration while @icon remains the
+ * application's content. This is suitable for thumbnails, avatars and other
+ * domain imagery which cannot be represented by a themed icon name.
+ *
+ * @icon must be unparented. It is parented by the tab until it is replaced,
+ * cleared or the page is removed.
+ */
+void        awra_tab_view_set_page_icon      (AwraTabView *self,
+                                              GtkWidget   *page,
+                                              GtkImage    *icon);
+/**
+ * awra_tab_view_set_page_title_visible:
+ * @self: an Awra tab view
+ * @page: a page contained by @self
+ * @visible: whether the tab title is visible
+ *
+ * Controls title visibility without changing the accessible tab label.
+ */
+void        awra_tab_view_set_page_title_visible (AwraTabView *self,
+                                                  GtkWidget   *page,
+                                                  gboolean     visible);
 void        awra_tab_view_set_page_tooltip  (AwraTabView *self,
                                              GtkWidget   *page,
                                              const char  *tooltip);

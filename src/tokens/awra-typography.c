@@ -15,11 +15,12 @@ awra_widget_set_typography (GtkWidget      *widget,
     "awra-title-1",
     "awra-display",
     "awra-monospace",
+    "awra-label",
   };
 
   g_return_if_fail (GTK_IS_WIDGET (widget));
   g_return_if_fail (typography >= AWRA_TYPOGRAPHY_BODY &&
-                    typography <= AWRA_TYPOGRAPHY_MONOSPACE);
+                    typography <= AWRA_TYPOGRAPHY_LABEL);
   for (guint i = 0; i < G_N_ELEMENTS (classes); i++)
     gtk_widget_remove_css_class (widget, classes[i]);
   gtk_widget_add_css_class (widget, classes[typography]);

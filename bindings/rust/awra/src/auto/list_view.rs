@@ -68,6 +68,12 @@ impl ListView {
         unsafe { from_glib_none(ffi::awra_list_view_get_factory(self.to_glib_none().0)) }
     }
 
+    #[doc(alias = "awra_list_view_get_header")]
+    #[doc(alias = "get_header")]
+    pub fn header(&self) -> Option<gtk::Widget> {
+        unsafe { from_glib_none(ffi::awra_list_view_get_header(self.to_glib_none().0)) }
+    }
+
     #[doc(alias = "awra_list_view_get_model")]
     #[doc(alias = "get_model")]
     pub fn model(&self) -> Option<gtk::SelectionModel> {
@@ -81,6 +87,17 @@ impl ListView {
             ffi::awra_list_view_set_factory(
                 self.to_glib_none().0,
                 factory.as_ref().to_glib_none().0,
+            );
+        }
+    }
+
+    #[doc(alias = "awra_list_view_set_header")]
+    #[doc(alias = "header")]
+    pub fn set_header(&self, header: Option<&impl IsA<gtk::Widget>>) {
+        unsafe {
+            ffi::awra_list_view_set_header(
+                self.to_glib_none().0,
+                header.map(|p| p.as_ref()).to_glib_none().0,
             );
         }
     }
@@ -112,6 +129,31 @@ impl ListView {
                 c"notify::factory".as_ptr(),
                 Some(std::mem::transmute::<*const (), unsafe extern "C" fn()>(
                     notify_factory_trampoline::<F> as *const (),
+                )),
+                Box_::into_raw(f),
+            )
+        }
+    }
+
+    #[doc(alias = "header")]
+    pub fn connect_header_notify<F: Fn(&Self) + 'static>(&self, f: F) -> SignalHandlerId {
+        unsafe extern "C" fn notify_header_trampoline<F: Fn(&ListView) + 'static>(
+            this: *mut ffi::AwraListView,
+            _param_spec: glib::ffi::gpointer,
+            f: glib::ffi::gpointer,
+        ) {
+            unsafe {
+                let f: &F = &*(f as *const F);
+                f(&from_glib_borrow(this))
+            }
+        }
+        unsafe {
+            let f: Box_<F> = Box_::new(f);
+            connect_raw(
+                self.as_ptr() as *mut _,
+                c"notify::header".as_ptr(),
+                Some(std::mem::transmute::<*const (), unsafe extern "C" fn()>(
+                    notify_header_trampoline::<F> as *const (),
                 )),
                 Box_::into_raw(f),
             )
@@ -175,6 +217,12 @@ impl ListViewBuilder {
     pub fn model(self, model: &impl IsA<gtk::SelectionModel>) -> Self {
         Self {
             builder: self.builder.property("model", model.clone().upcast()),
+        }
+    }
+
+    pub fn header(self, header: &impl IsA<gtk::Widget>) -> Self {
+        Self {
+            builder: self.builder.property("header", header.clone().upcast()),
         }
     }
 

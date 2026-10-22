@@ -131,6 +131,28 @@ impl TabView {
         }
     }
 
+    #[doc(alias = "awra_tab_view_set_page_icon")]
+    pub fn set_page_icon(&self, page: &impl IsA<gtk::Widget>, icon: Option<&gtk::Image>) {
+        unsafe {
+            ffi::awra_tab_view_set_page_icon(
+                self.to_glib_none().0,
+                page.as_ref().to_glib_none().0,
+                icon.to_glib_none().0,
+            );
+        }
+    }
+
+    #[doc(alias = "awra_tab_view_set_page_icon_name")]
+    pub fn set_page_icon_name(&self, page: &impl IsA<gtk::Widget>, icon_name: Option<&str>) {
+        unsafe {
+            ffi::awra_tab_view_set_page_icon_name(
+                self.to_glib_none().0,
+                page.as_ref().to_glib_none().0,
+                icon_name.to_glib_none().0,
+            );
+        }
+    }
+
     #[doc(alias = "awra_tab_view_set_page_title")]
     pub fn set_page_title(&self, page: &impl IsA<gtk::Widget>, title: &str) {
         unsafe {
@@ -138,6 +160,17 @@ impl TabView {
                 self.to_glib_none().0,
                 page.as_ref().to_glib_none().0,
                 title.to_glib_none().0,
+            );
+        }
+    }
+
+    #[doc(alias = "awra_tab_view_set_page_title_visible")]
+    pub fn set_page_title_visible(&self, page: &impl IsA<gtk::Widget>, visible: bool) {
+        unsafe {
+            ffi::awra_tab_view_set_page_title_visible(
+                self.to_glib_none().0,
+                page.as_ref().to_glib_none().0,
+                visible.into_glib(),
             );
         }
     }

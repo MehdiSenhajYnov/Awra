@@ -152,6 +152,8 @@ def main() -> int:
     assert_nullable("awra_data_view_set_empty_widget", "widget", root)
     assert_nullable("awra_data_view_set_loading_widget", "widget", root)
     assert_nullable("awra_data_view_set_error_widget", "widget", root)
+    assert_nullable("awra_list_view_set_header", "header", root)
+    assert_nullable("awra_navigation_item_set_suffix", "suffix", root)
     assert_nullable("awra_selection_toolbar_new", "model", root)
     assert_nullable("awra_selection_toolbar_set_model", "model", root)
     assert_nullable("awra_selection_toolbar_set_actions", "actions", root)

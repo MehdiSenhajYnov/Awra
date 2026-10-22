@@ -27,6 +27,19 @@ def main() -> int:
     if "gio::ActionMap" not in window:
         failures.append("window.rs (missing Gio.ActionMap projection)")
 
+    list_view = (generated / "list_view.rs").read_text(encoding="utf-8")
+    if "pub fn set_header" not in list_view or "pub fn header" not in list_view:
+        failures.append("list_view.rs (missing safe header projection)")
+
+    navigation_item = (generated / "navigation_item.rs").read_text(encoding="utf-8")
+    if "pub fn set_suffix" not in navigation_item or "pub fn suffix" not in navigation_item:
+        failures.append("navigation_item.rs (missing safe suffix projection)")
+
+    facade = (root / "src" / "lib.rs").read_text(encoding="utf-8")
+    for helper in ("add_style_role", "apply_layout_preset", "set_typography"):
+        if f"pub fn {helper}" not in facade:
+            failures.append(f"lib.rs (missing safe {helper} helper)")
+
     if failures:
         print("incomplete safe Rust projection: " + ", ".join(failures), file=sys.stderr)
         return 1

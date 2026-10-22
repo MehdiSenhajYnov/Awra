@@ -4,13 +4,17 @@
 
 struct _AwraListView {
   GtkWidget parent_instance;
+  GtkBox *root;
+  GtkScrolledWindow *scroller;
   GtkListView *delegate;
+  GtkWidget *header;
 };
 
 enum {
   PROP_0,
   PROP_MODEL,
   PROP_FACTORY,
+  PROP_HEADER,
   N_PROPS,
 };
 
@@ -35,9 +39,12 @@ awra_list_view_dispose (GObject *object)
 {
   AwraListView *self = AWRA_LIST_VIEW (object);
 
-  if (self->delegate != NULL) {
-    gtk_widget_unparent (GTK_WIDGET (self->delegate));
+  if (self->root != NULL) {
+    gtk_widget_unparent (GTK_WIDGET (self->root));
+    self->root = NULL;
+    self->scroller = NULL;
     self->delegate = NULL;
+    self->header = NULL;
   }
   G_OBJECT_CLASS (awra_list_view_parent_class)->dispose (object);
 }
@@ -48,8 +55,8 @@ awra_list_view_snapshot (GtkWidget   *widget,
 {
   AwraListView *self = AWRA_LIST_VIEW (widget);
 
-  if (self->delegate != NULL)
-    gtk_widget_snapshot_child (widget, GTK_WIDGET (self->delegate), snapshot);
+  if (self->root != NULL)
+    gtk_widget_snapshot_child (widget, GTK_WIDGET (self->root), snapshot);
 }
 
 static void
@@ -64,6 +71,8 @@ awra_list_view_get_property (GObject    *object,
     g_value_set_object (value, awra_list_view_get_model (self));
   else if (property_id == PROP_FACTORY)
     g_value_set_object (value, awra_list_view_get_factory (self));
+  else if (property_id == PROP_HEADER)
+    g_value_set_object (value, self->header);
   else
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 }
@@ -80,6 +89,9 @@ awra_list_view_set_property (GObject      *object,
   else if (property_id == PROP_FACTORY)
     awra_list_view_set_factory (AWRA_LIST_VIEW (object),
                                 g_value_get_object (value));
+  else if (property_id == PROP_HEADER)
+    awra_list_view_set_header (AWRA_LIST_VIEW (object),
+                               g_value_get_object (value));
   else
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 }
@@ -104,6 +116,11 @@ awra_list_view_class_init (AwraListViewClass *klass)
                          G_PARAM_READWRITE |
                          G_PARAM_EXPLICIT_NOTIFY |
                          G_PARAM_STATIC_STRINGS);
+  properties[PROP_HEADER] =
+    g_param_spec_object ("header", NULL, NULL, GTK_TYPE_WIDGET,
+                         G_PARAM_READWRITE |
+                         G_PARAM_EXPLICIT_NOTIFY |
+                         G_PARAM_STATIC_STRINGS);
   g_object_class_install_properties (object_class, N_PROPS, properties);
   gtk_widget_class_set_layout_manager_type (widget_class, GTK_TYPE_BIN_LAYOUT);
   gtk_widget_class_set_css_name (widget_class, "awralistview");
@@ -112,9 +129,18 @@ awra_list_view_class_init (AwraListViewClass *klass)
 static void
 awra_list_view_init (AwraListView *self)
 {
+  self->root = GTK_BOX (gtk_box_new (GTK_ORIENTATION_VERTICAL, 0));
   self->delegate = GTK_LIST_VIEW (gtk_list_view_new (NULL, NULL));
+  self->scroller = GTK_SCROLLED_WINDOW (gtk_scrolled_window_new ());
   gtk_widget_add_css_class (GTK_WIDGET (self->delegate), "awra-list");
-  gtk_widget_set_parent (GTK_WIDGET (self->delegate), GTK_WIDGET (self));
+  gtk_scrolled_window_set_policy (self->scroller,
+                                  GTK_POLICY_AUTOMATIC,
+                                  GTK_POLICY_AUTOMATIC);
+  gtk_scrolled_window_set_overlay_scrolling (self->scroller, TRUE);
+  gtk_scrolled_window_set_child (self->scroller, GTK_WIDGET (self->delegate));
+  gtk_widget_set_vexpand (GTK_WIDGET (self->scroller), TRUE);
+  gtk_box_append (self->root, GTK_WIDGET (self->scroller));
+  gtk_widget_set_parent (GTK_WIDGET (self->root), GTK_WIDGET (self));
   g_signal_connect (self->delegate,
                     "notify::model",
                     G_CALLBACK (delegate_notify_cb),
@@ -172,4 +198,41 @@ awra_list_view_get_delegate (AwraListView *self)
 {
   g_return_val_if_fail (AWRA_IS_LIST_VIEW (self), NULL);
   return self->delegate;
+}
+
+GtkWidget *
+awra_list_view_get_header (AwraListView *self)
+{
+  g_return_val_if_fail (AWRA_IS_LIST_VIEW (self), NULL);
+  return self->header;
+}
+
+void
+awra_list_view_set_header (AwraListView *self,
+                           GtkWidget    *header)
+{
+  GtkWidget *old_header;
+
+  g_return_if_fail (AWRA_IS_LIST_VIEW (self));
+  g_return_if_fail (header == NULL || GTK_IS_WIDGET (header));
+
+  if (self->header == header)
+    return;
+
+  g_return_if_fail (header == NULL || gtk_widget_get_parent (header) == NULL);
+
+  old_header = self->header;
+  self->header = NULL;
+  if (old_header != NULL) {
+    gtk_widget_remove_css_class (old_header, "awra-list-header");
+    gtk_box_remove (self->root, old_header);
+  }
+
+  self->header = header;
+  if (header != NULL) {
+    gtk_widget_add_css_class (header, "awra-list-header");
+    gtk_box_prepend (self->root, header);
+  }
+
+  g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_HEADER]);
 }

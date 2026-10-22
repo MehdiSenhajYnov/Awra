@@ -2,11 +2,30 @@
 
 #include <awra/awra.h>
 #include <glib/gstdio.h>
+#include <math.h>
 #include <unistd.h>
 
 #include "layout/awra-split-view-private.h"
 
 static guint click_count;
+
+static gboolean
+render_node_contains_type (GskRenderNode     *node,
+                           GskRenderNodeType  type)
+{
+  GskRenderNode **children;
+  gsize n_children;
+
+  if (gsk_render_node_get_node_type (node) == type)
+    return TRUE;
+
+  children = gsk_render_node_get_children (node, &n_children);
+  for (gsize i = 0; i < n_children; i++) {
+    if (render_node_contains_type (children[i], type))
+      return TRUE;
+  }
+  return FALSE;
+}
 
 static void
 settle_window (GtkWidget *window)
@@ -513,6 +532,9 @@ test_layout_components (void)
   g_assert_true (awra_header_get_start_widget (AWRA_HEADER (header)) == start);
   g_assert_true (awra_header_get_center_widget (AWRA_HEADER (header)) == center);
   g_assert_true (awra_header_get_end_widget (AWRA_HEADER (header)) == end);
+  g_assert_cmpint (gtk_widget_get_valign (start), ==, GTK_ALIGN_CENTER);
+  g_assert_cmpint (gtk_widget_get_valign (center), ==, GTK_ALIGN_CENTER);
+  g_assert_cmpint (gtk_widget_get_valign (end), ==, GTK_ALIGN_CENTER);
   g_assert_true (awra_header_get_show_window_controls (AWRA_HEADER (header)));
   g_assert_true (awra_header_get_drag_enabled (AWRA_HEADER (header)));
   g_assert_true (awra_header_get_blend_with_window (AWRA_HEADER (header)));
@@ -587,6 +609,91 @@ test_public_layout_recipes (void)
   g_assert_cmpuint (gtk_grid_get_column_spacing (GTK_GRID (grid)), ==,
                     (guint) toolbar_gap);
   g_assert_cmpint (awra_spacing_resolve (page, AWRA_SPACING_NONE), ==, 0);
+}
+
+static void
+test_mapped_header_center_geometry (void)
+{
+  GtkWidget *window = gtk_window_new ();
+  GtkWidget *header = awra_header_new ();
+  GtkWidget *start = gtk_button_new_with_label ("Workspace");
+  GtkWidget *center = gtk_search_entry_new ();
+  GtkWidget *end = gtk_button_new_with_label ("Menu");
+  graphene_rect_t bounds;
+  float header_center;
+  float widget_center;
+
+  gtk_widget_set_size_request (start, 180, -1);
+  gtk_widget_set_size_request (center, 120, -1);
+  gtk_widget_set_hexpand (center, TRUE);
+  gtk_widget_set_size_request (end, 72, -1);
+  awra_header_set_start_widget (AWRA_HEADER (header), start);
+  awra_header_set_center_widget (AWRA_HEADER (header), center);
+  awra_header_set_end_widget (AWRA_HEADER (header), end);
+
+  gtk_window_set_child (GTK_WINDOW (window), header);
+  gtk_window_set_default_size (GTK_WINDOW (window), 1000, 100);
+  gtk_widget_set_size_request (window, 1000, 100);
+  gtk_window_present (GTK_WINDOW (window));
+  settle_window (window);
+
+  g_assert_true (gtk_widget_compute_bounds (center, header, &bounds));
+  g_assert_cmpfloat (bounds.size.width, >=, 560.0f);
+  g_assert_cmpfloat (bounds.size.width, <=, 576.0f);
+  header_center = gtk_widget_get_width (header) / 2.0f;
+  widget_center = bounds.origin.x + bounds.size.width / 2.0f;
+  g_assert_cmpfloat (fabsf (widget_center - header_center), <=, 1.0f);
+  gtk_window_destroy (GTK_WINDOW (window));
+}
+
+static GtkWidget *
+find_descendant_with_class (GtkWidget  *root,
+                            const char *css_class)
+{
+  GtkWidget *child;
+
+  if (gtk_widget_has_css_class (root, css_class))
+    return root;
+  for (child = gtk_widget_get_first_child (root);
+       child != NULL;
+       child = gtk_widget_get_next_sibling (child)) {
+    GtkWidget *match = find_descendant_with_class (child, css_class);
+
+    if (match != NULL)
+      return match;
+  }
+  return NULL;
+}
+
+static void
+test_mapped_header_title_alignment (void)
+{
+  GtkWidget *window = gtk_window_new ();
+  GtkWidget *header = awra_header_new ();
+  GtkWidget *end = gtk_button_new_from_icon_name ("window-close-symbolic");
+  GtkWidget *title;
+  graphene_rect_t title_bounds;
+  graphene_rect_t end_bounds;
+  float title_center;
+  float end_center;
+
+  awra_header_set_title (AWRA_HEADER (header), "Compact dialog title");
+  gtk_widget_set_size_request (end, 24, 24);
+  awra_header_set_end_widget (AWRA_HEADER (header), end);
+  gtk_window_set_child (GTK_WINDOW (window), header);
+  gtk_window_set_default_size (GTK_WINDOW (window), 480, 64);
+  gtk_window_present (GTK_WINDOW (window));
+  settle_window (window);
+
+  title = find_descendant_with_class (header, "awra-header-title");
+  g_assert_nonnull (title);
+  g_assert_true (gtk_widget_compute_bounds (title, header, &title_bounds));
+  g_assert_true (gtk_widget_compute_bounds (end, header, &end_bounds));
+  title_center = title_bounds.origin.y + title_bounds.size.height / 2.0f;
+  end_center = end_bounds.origin.y + end_bounds.size.height / 2.0f;
+  g_assert_cmpfloat (fabsf (title_center - end_center), <=, 1.0f);
+
+  gtk_window_destroy (GTK_WINDOW (window));
 }
 
 static void
@@ -1409,11 +1516,18 @@ test_dialog (void)
   g_autoptr (GError) error = NULL;
   GtkWidget *parent;
   GtkWidget *dialog;
+  int default_width;
+  int default_height;
 
   g_assert_true (g_application_register (G_APPLICATION (app), NULL, &error));
   g_assert_no_error (error);
   parent = awra_window_new (app);
   dialog = awra_dialog_new (GTK_WINDOW (parent));
+  gtk_window_get_default_size (GTK_WINDOW (dialog),
+                               &default_width,
+                               &default_height);
+  g_assert_cmpint (default_width, ==, 440);
+  g_assert_cmpint (default_height, ==, -1);
   g_assert_true (gtk_window_get_modal (GTK_WINDOW (dialog)));
   g_assert_false (gtk_window_get_resizable (GTK_WINDOW (dialog)));
   g_assert_true (gtk_window_get_transient_for (GTK_WINDOW (dialog)) ==
@@ -1491,6 +1605,8 @@ test_extended_components (void)
   g_autoptr (GtkListItemFactory) factory = gtk_signal_list_item_factory_new ();
   g_autoptr (GtkWidget) list = g_object_ref_sink (
     awra_list_view_new (GTK_SELECTION_MODEL (selection), factory));
+  g_autoptr (GtkWidget) list_header = g_object_ref_sink (
+    gtk_label_new ("Name"));
   g_autoptr (GtkWidget) card = g_object_ref_sink (awra_card_new ());
   g_autoptr (GtkWidget) inspector = g_object_ref_sink (awra_inspector_new ());
   g_autoptr (GtkWidget) inspected_target = NULL;
@@ -1570,6 +1686,13 @@ test_extended_components (void)
   g_assert_true (awra_list_view_get_model (AWRA_LIST_VIEW (list)) ==
                  GTK_SELECTION_MODEL (selection));
   g_assert_true (awra_list_view_get_factory (AWRA_LIST_VIEW (list)) == factory);
+  awra_list_view_set_header (AWRA_LIST_VIEW (list), list_header);
+  g_assert_true (awra_list_view_get_header (AWRA_LIST_VIEW (list)) ==
+                 list_header);
+  g_assert_true (gtk_widget_has_css_class (list_header, "awra-list-header"));
+  awra_list_view_set_header (AWRA_LIST_VIEW (list), NULL);
+  g_assert_null (awra_list_view_get_header (AWRA_LIST_VIEW (list)));
+  g_assert_false (gtk_widget_has_css_class (list_header, "awra-list-header"));
 
   g_assert_cmpint (awra_card_get_appearance (AWRA_CARD (card)), ==,
                    AWRA_CARD_APPEARANCE_TINTED);
@@ -1619,9 +1742,21 @@ test_dynamic_tabs (void)
   g_autoptr (GtkWidget) tabs = g_object_ref_sink (awra_tab_view_new ());
   GtkWidget *home = gtk_label_new ("Home page");
   GtkWidget *details = gtk_label_new ("Details page");
+  GtkWidget *other = gtk_label_new ("Other page");
   g_autoptr (GtkWidget) details_ref = NULL;
   GtkWidget *bar;
+  GtkWidget *pinned_bar;
+  GtkWidget *viewport_mask;
+  GtkWidget *scroller;
+  GtkWidget *viewport;
+  GtkWidget *strip;
+  GtkWidget *home_tab;
   GtkWidget *details_tab;
+  GtkWidget *other_tab;
+  g_autoptr (GtkWidget) page_icon = g_object_ref_sink (
+    gtk_image_new_from_icon_name ("image-x-generic-symbolic"));
+  GtkPolicyType horizontal_policy;
+  GtkPolicyType vertical_policy;
   TabCloseState state = { 0, TRUE };
 
   g_signal_connect (tabs, "close-page", G_CALLBACK (tab_close_page_cb),
@@ -1630,6 +1765,8 @@ test_dynamic_tabs (void)
                                       "Home", TRUE) == home);
   g_assert_true (awra_tab_view_append (AWRA_TAB_VIEW (tabs), details,
                                       "Bulbasaur", FALSE) == details);
+  g_assert_true (awra_tab_view_append (AWRA_TAB_VIEW (tabs), other,
+                                      "Ivysaur", FALSE) == other);
   details_ref = g_object_ref (details);
   bar = awra_tab_view_get_tab_bar (AWRA_TAB_VIEW (tabs));
   g_assert_true (GTK_IS_BOX (bar));
@@ -1637,12 +1774,70 @@ test_dynamic_tabs (void)
   awra_tab_view_set_content_visible (AWRA_TAB_VIEW (tabs), FALSE);
   g_assert_false (awra_tab_view_get_content_visible (AWRA_TAB_VIEW (tabs)));
   awra_tab_view_set_content_visible (AWRA_TAB_VIEW (tabs), TRUE);
-  g_assert_nonnull (gtk_widget_get_first_child (bar));
-  details_tab = gtk_widget_get_last_child (bar);
+  pinned_bar = gtk_widget_get_first_child (bar);
+  viewport_mask = gtk_widget_get_next_sibling (pinned_bar);
+  scroller = gtk_widget_get_first_child (viewport_mask);
+  viewport = gtk_scrolled_window_get_child (GTK_SCROLLED_WINDOW (scroller));
+  strip = GTK_IS_VIEWPORT (viewport)
+            ? gtk_viewport_get_child (GTK_VIEWPORT (viewport))
+            : viewport;
+  home_tab = gtk_widget_get_first_child (pinned_bar);
+  details_tab = gtk_widget_get_first_child (strip);
+  other_tab = gtk_widget_get_last_child (strip);
+  g_assert_nonnull (home_tab);
   g_assert_nonnull (details_tab);
+  g_assert_nonnull (other_tab);
+  g_assert_true (gtk_widget_has_css_class (viewport_mask,
+                                           "awra-tab-viewport-mask"));
+  g_assert_true (gtk_widget_get_hexpand (viewport_mask));
+  g_assert_true (gtk_widget_get_hexpand (scroller));
+  g_assert_true (gtk_widget_get_hexpand (strip));
+  g_assert_false (gtk_widget_get_hexpand (details_tab));
+  gtk_scrolled_window_get_policy (GTK_SCROLLED_WINDOW (scroller),
+                                  &horizontal_policy, &vertical_policy);
+  g_assert_cmpint (horizontal_policy, ==, GTK_POLICY_EXTERNAL);
+  g_assert_cmpint (vertical_policy, ==, GTK_POLICY_NEVER);
+
+  awra_tab_view_set_page_icon_name (AWRA_TAB_VIEW (tabs), home,
+                                    "go-home-symbolic");
+  awra_tab_view_set_page_title_visible (AWRA_TAB_VIEW (tabs), home, FALSE);
+  {
+    GtkWidget *body = gtk_widget_get_first_child (home_tab);
+    GtkWidget *select = gtk_widget_get_first_child (body);
+    GtkWidget *content = gtk_button_get_child (GTK_BUTTON (select));
+    GtkWidget *icon = gtk_widget_get_first_child (content);
+    GtkWidget *label = gtk_widget_get_next_sibling (icon);
+    GtkWidget *separator = gtk_widget_get_last_child (home_tab);
+
+    g_assert_false (gtk_widget_get_hexpand (select));
+    g_assert_true (gtk_widget_get_visible (icon));
+    g_assert_false (gtk_widget_get_visible (label));
+    g_assert_true (gtk_widget_has_css_class (separator,
+                                            "awra-tab-separator"));
+    g_assert_false (gtk_widget_has_css_class (
+      separator, "awra-tab-separator-hidden"));
+  }
+
+  g_assert_false (gtk_widget_has_css_class (
+    gtk_widget_get_last_child (details_tab),
+    "awra-tab-separator-hidden"));
 
   awra_tab_view_set_page_title (AWRA_TAB_VIEW (tabs), details,
                                 "Ivysaur");
+  awra_tab_view_set_page_icon (AWRA_TAB_VIEW (tabs), details,
+                               GTK_IMAGE (page_icon));
+  {
+    GtkWidget *body = gtk_widget_get_first_child (details_tab);
+    GtkWidget *select = gtk_widget_get_first_child (body);
+    GtkWidget *content = gtk_button_get_child (GTK_BUTTON (select));
+
+    g_assert_true (gtk_widget_get_first_child (content) == page_icon);
+    g_assert_true (gtk_widget_get_parent (page_icon) == content);
+    g_assert_true (gtk_widget_has_css_class (page_icon, "awra-tab-icon"));
+    g_assert_cmpint (gtk_image_get_pixel_size (GTK_IMAGE (page_icon)), ==, 22);
+    g_assert_false (gtk_widget_get_can_target (page_icon));
+    g_assert_false (gtk_widget_get_focusable (page_icon));
+  }
   awra_tab_view_set_page_tooltip (AWRA_TAB_VIEW (tabs), details,
                                   "Pokémon #002");
   g_assert_cmpstr (gtk_widget_get_tooltip_text (details_tab), ==,
@@ -1652,6 +1847,21 @@ test_dynamic_tabs (void)
                  details);
   g_assert_true (gtk_widget_has_css_class (details_tab,
                                            "awra-tab-selected"));
+  {
+    GtkWidget *body = gtk_widget_get_first_child (details_tab);
+    GtkWidget *close = gtk_widget_get_next_sibling (
+      gtk_widget_get_first_child (body));
+
+    g_assert_true (gtk_widget_has_css_class (close,
+                                             "awra-tab-close-visible"));
+    g_assert_true (gtk_widget_get_can_target (close));
+    g_assert_false (gtk_widget_has_css_class (
+      gtk_widget_get_last_child (home_tab),
+      "awra-tab-separator-hidden"));
+    g_assert_true (gtk_widget_has_css_class (
+      gtk_widget_get_last_child (details_tab),
+      "awra-tab-separator-hidden"));
+  }
 
   awra_tab_view_close_page (AWRA_TAB_VIEW (tabs), details);
   g_assert_cmpuint (state.requests, ==, 1);
@@ -1663,6 +1873,268 @@ test_dynamic_tabs (void)
   g_assert_null (gtk_widget_get_parent (details));
   g_assert_true (awra_tab_view_get_selected_page (AWRA_TAB_VIEW (tabs)) ==
                  home);
+}
+
+static void
+test_dropdown_committed_selection (void)
+{
+  static const char *choices[] = { "All", "Grass", "Poison", NULL };
+  g_autoptr (GtkWidget) dropdown = g_object_ref_sink (
+    awra_dropdown_new_from_strings (choices));
+  AwraPopover *popover = awra_dropdown_get_popover (
+    AWRA_DROPDOWN (dropdown));
+  GtkWidget *content = awra_popover_get_child (popover);
+  GtkWidget *scroller = gtk_widget_get_first_child (content);
+  GtkListView *list = GTK_LIST_VIEW (
+    gtk_scrolled_window_get_child (GTK_SCROLLED_WINDOW (scroller)));
+  GtkSelectionModel *popup_selection = gtk_list_view_get_model (list);
+
+  awra_dropdown_set_selected (AWRA_DROPDOWN (dropdown), 0);
+  gtk_selection_model_select_item (popup_selection, 1, TRUE);
+  g_assert_cmpuint (awra_dropdown_get_selected (AWRA_DROPDOWN (dropdown)),
+                    ==, 0);
+
+  g_signal_emit_by_name (list, "activate", 1);
+  g_assert_cmpuint (awra_dropdown_get_selected (AWRA_DROPDOWN (dropdown)),
+                    ==, 1);
+}
+
+static void
+test_tab_overflow_geometry (void)
+{
+  g_autoptr (GtkWidget) tabs = g_object_ref_sink (awra_tab_view_new ());
+  GtkWidget *window = gtk_window_new ();
+  GtkWidget *home = gtk_label_new ("Home");
+  GtkWidget *first_page = NULL;
+  GtkWidget *last_page = NULL;
+  GtkWidget *bar;
+  GtkWidget *pinned_bar;
+  GtkWidget *viewport_mask;
+  GtkWidget *scroller;
+  GtkWidget *viewport;
+  GtkWidget *strip;
+  GtkWidget *first_tab;
+  GtkWidget *second_tab;
+  GtkWidget *last_tab;
+  GtkWidget *home_select;
+  GtkWidget *first_close;
+  GtkWidget *last_close;
+  GtkAdjustment *adjustment;
+  graphene_point_t origin = GRAPHENE_POINT_INIT (0, 0);
+  graphene_point_t first_position;
+  graphene_point_t second_position;
+  graphene_rect_t home_icon_bounds;
+  graphene_rect_t home_select_bounds;
+  graphene_rect_t first_body_bounds;
+  graphene_rect_t second_body_bounds;
+  graphene_rect_t last_body_bounds;
+  graphene_rect_t content_bounds;
+  graphene_rect_t title_bounds;
+  graphene_rect_t label_bounds;
+  graphene_rect_t selected_label_bounds;
+
+  awra_tab_view_append (AWRA_TAB_VIEW (tabs), home, "Home", TRUE);
+  awra_tab_view_set_page_icon_name (AWRA_TAB_VIEW (tabs), home,
+                                    "go-home-symbolic");
+  awra_tab_view_set_page_title_visible (AWRA_TAB_VIEW (tabs), home, FALSE);
+  for (guint i = 0; i < 15; i++) {
+    g_autofree char *title = g_strdup_printf ("Document %u", i + 1);
+    GtkWidget *page = gtk_label_new (title);
+    GtkImage *icon = GTK_IMAGE (gtk_image_new_from_icon_name (
+      "image-x-generic-symbolic"));
+
+    awra_tab_view_append (AWRA_TAB_VIEW (tabs), page, title, FALSE);
+    awra_tab_view_set_page_icon (AWRA_TAB_VIEW (tabs), page, icon);
+    if (first_page == NULL)
+      first_page = page;
+    last_page = page;
+  }
+
+  bar = awra_tab_view_get_tab_bar (AWRA_TAB_VIEW (tabs));
+  pinned_bar = gtk_widget_get_first_child (bar);
+  viewport_mask = gtk_widget_get_next_sibling (pinned_bar);
+  scroller = gtk_widget_get_first_child (viewport_mask);
+  viewport = gtk_scrolled_window_get_child (GTK_SCROLLED_WINDOW (scroller));
+  strip = gtk_viewport_get_child (GTK_VIEWPORT (viewport));
+  first_tab = gtk_widget_get_first_child (strip);
+  second_tab = gtk_widget_get_next_sibling (first_tab);
+  last_tab = gtk_widget_get_last_child (strip);
+
+  gtk_window_set_child (GTK_WINDOW (window), tabs);
+  gtk_window_set_default_size (GTK_WINDOW (window), 820, 300);
+  gtk_widget_set_size_request (window, 820, 300);
+  gtk_window_present (GTK_WINDOW (window));
+  settle_window (window);
+
+  adjustment = gtk_scrolled_window_get_hadjustment (
+    GTK_SCROLLED_WINDOW (scroller));
+  g_assert_cmpint (gtk_widget_get_width (window), <=, 840);
+  g_assert_cmpfloat (gtk_adjustment_get_upper (adjustment), >,
+                     gtk_adjustment_get_page_size (adjustment));
+  g_assert_true (gtk_widget_compute_point (first_tab, strip,
+                                           &origin, &first_position));
+  g_assert_true (gtk_widget_compute_point (second_tab, strip,
+                                           &origin, &second_position));
+  g_assert_cmpfloat (second_position.x - first_position.x, >=, 130.0f);
+  g_assert_cmpfloat (second_position.x - first_position.x, <=, 134.0f);
+  home_select = gtk_widget_get_first_child (gtk_widget_get_first_child (
+    gtk_widget_get_first_child (pinned_bar)));
+  g_assert_cmpint (gtk_widget_get_width (home_select), ==,
+                   gtk_widget_get_height (home_select));
+  g_assert_cmpint (gtk_widget_get_width (home_select), ==, 36);
+  {
+    GtkWidget *content = gtk_button_get_child (GTK_BUTTON (home_select));
+    GtkWidget *icon = gtk_widget_get_first_child (content);
+    float icon_center_x;
+    float icon_center_y;
+
+    g_assert_true (gtk_widget_compute_bounds (icon, home_select,
+                                              &home_icon_bounds));
+    icon_center_x = home_icon_bounds.origin.x + home_icon_bounds.size.width / 2;
+    icon_center_y = home_icon_bounds.origin.y + home_icon_bounds.size.height / 2;
+    g_assert_cmpfloat (ABS (icon_center_x -
+                            gtk_widget_get_width (home_select) / 2.0f), <=,
+                       0.5f);
+    g_assert_cmpfloat (ABS (icon_center_y -
+                            gtk_widget_get_height (home_select) / 2.0f), <=,
+                       0.5f);
+  }
+  g_assert_true (gtk_widget_compute_bounds (home_select, bar,
+                                            &home_select_bounds));
+  g_assert_cmpfloat (home_select_bounds.origin.y, <=, 3.0f);
+  g_assert_cmpfloat (
+    gtk_widget_get_height (bar) -
+      (home_select_bounds.origin.y + home_select_bounds.size.height),
+    <=, 3.0f);
+  {
+    GtkWidget *first_body = gtk_widget_get_first_child (first_tab);
+    GtkWidget *second_body = gtk_widget_get_first_child (second_tab);
+    GtkWidget *first_separator = gtk_widget_get_last_child (first_tab);
+    GtkWidget *first_select = gtk_widget_get_first_child (first_body);
+    GtkWidget *first_content = gtk_button_get_child (GTK_BUTTON (first_select));
+    GtkWidget *first_icon = gtk_widget_get_first_child (first_content);
+    GtkWidget *first_title = gtk_widget_get_next_sibling (first_icon);
+    GtkWidget *first_label = gtk_widget_get_first_child (first_title);
+    g_autoptr (GListModel) controllers = NULL;
+    GtkEventController *motion = NULL;
+    double scroll_end;
+
+    g_assert_true (gtk_widget_has_css_class (first_body,
+                                             "awra-tab-pill"));
+    g_assert_true (gtk_widget_has_css_class (first_separator,
+                                             "awra-tab-separator"));
+    g_assert_true (gtk_widget_get_parent (first_body) == first_tab);
+    g_assert_true (gtk_widget_get_parent (first_separator) == first_tab);
+    g_assert_true (gtk_widget_compute_bounds (first_body, strip,
+                                              &first_body_bounds));
+    g_assert_true (gtk_widget_compute_bounds (second_body, strip,
+                                              &second_body_bounds));
+    g_assert_cmpfloat (
+      second_body_bounds.origin.x -
+        (first_body_bounds.origin.x + first_body_bounds.size.width),
+      >=, 6.0f);
+
+    /* The close affordance is an overlay: revealing it must not move the
+     * title away from the geometric centre of the capsule. */
+    awra_tab_view_set_page_title (AWRA_TAB_VIEW (tabs), first_page, "One");
+    settle_window (window);
+    g_assert_true (gtk_widget_compute_bounds (first_content, first_body,
+                                              &content_bounds));
+    g_assert_true (gtk_widget_compute_bounds (first_label, first_body,
+                                              &label_bounds));
+    g_assert_cmpfloat (
+      ABS ((content_bounds.origin.x + content_bounds.size.width / 2.0f) -
+           gtk_widget_get_width (first_body) / 2.0f), <=, 0.5f);
+
+    /* Hovering the neighbour of the selected tab must never make the two
+     * painted capsules touch or consume the separator's geometry. */
+    awra_tab_view_set_selected_page (AWRA_TAB_VIEW (tabs), first_page);
+    gtk_widget_set_state_flags (second_tab, GTK_STATE_FLAG_PRELIGHT, FALSE);
+    settle_window (window);
+    g_assert_true (gtk_widget_has_css_class (first_tab,
+                                             "awra-tab-selected"));
+    g_assert_true (gtk_widget_compute_bounds (first_label, first_body,
+                                              &selected_label_bounds));
+    g_assert_cmpfloat (ABS (selected_label_bounds.origin.x -
+                            label_bounds.origin.x), <=, 0.5f);
+    g_assert_cmpfloat (ABS (selected_label_bounds.size.width -
+                            label_bounds.size.width), <=, 0.5f);
+    g_assert_true (gtk_widget_compute_bounds (first_body, strip,
+                                              &first_body_bounds));
+    g_assert_true (gtk_widget_compute_bounds (second_body, strip,
+                                              &second_body_bounds));
+    g_assert_cmpfloat (
+      second_body_bounds.origin.x -
+        (first_body_bounds.origin.x + first_body_bounds.size.width),
+      >=, 6.0f);
+    gtk_widget_unset_state_flags (second_tab, GTK_STATE_FLAG_PRELIGHT);
+
+    /* Moving the content beneath a stationary pointer generates enter/leave
+     * transitions. Those hover updates must never pull the rail back to the
+     * selected page after the user has scrolled beyond it. */
+    scroll_end = gtk_adjustment_get_upper (adjustment) -
+                 gtk_adjustment_get_page_size (adjustment);
+    gtk_adjustment_set_value (adjustment, scroll_end);
+    controllers = gtk_widget_observe_controllers (second_tab);
+    for (guint i = 0; i < g_list_model_get_n_items (controllers); i++) {
+      g_autoptr (GObject) controller = g_list_model_get_item (controllers, i);
+
+      if (GTK_IS_EVENT_CONTROLLER_MOTION (controller)) {
+        motion = GTK_EVENT_CONTROLLER (controller);
+        break;
+      }
+    }
+    g_assert_nonnull (motion);
+    g_signal_emit_by_name (motion, "enter", 0.0, 0.0);
+    settle_window (window);
+    g_assert_cmpfloat (ABS (gtk_adjustment_get_value (adjustment) -
+                            scroll_end), <=, 0.5);
+
+    awra_tab_view_set_page_title (
+      AWRA_TAB_VIEW (tabs), first_page,
+      "A deliberately long document title that must fade");
+    settle_window (window);
+    g_assert_true (gtk_widget_compute_bounds (first_title, first_body,
+                                              &title_bounds));
+    g_assert_true (gtk_widget_compute_bounds (first_label, first_title,
+                                              &label_bounds));
+    g_assert_cmpfloat (label_bounds.size.width, >, title_bounds.size.width);
+
+    awra_tab_view_set_selected_page (AWRA_TAB_VIEW (tabs), home);
+    settle_window (window);
+  }
+  first_close = gtk_widget_get_next_sibling (
+    gtk_widget_get_first_child (gtk_widget_get_first_child (first_tab)));
+  g_assert_cmpint (gtk_widget_get_width (first_close), ==,
+                   gtk_widget_get_height (first_close));
+  g_assert_cmpint (gtk_widget_get_width (first_close), ==, 22);
+  g_assert_false (gtk_widget_has_css_class (first_close,
+                                            "awra-tab-close-visible"));
+
+  awra_tab_view_set_selected_page (AWRA_TAB_VIEW (tabs), last_page);
+  settle_window (window);
+  g_assert_cmpfloat (gtk_adjustment_get_value (adjustment), >, 0.0);
+  last_close = gtk_widget_get_next_sibling (
+    gtk_widget_get_first_child (gtk_widget_get_first_child (last_tab)));
+  g_assert_true (gtk_widget_has_css_class (last_close,
+                                           "awra-tab-close-visible"));
+  g_assert_true (gtk_widget_get_can_target (last_close));
+  g_assert_cmpint (gtk_widget_get_width (window), <=, 840);
+  {
+    GtkWidget *last_body = gtk_widget_get_first_child (last_tab);
+    float left_inset;
+    float right_inset;
+
+    g_assert_true (gtk_widget_compute_bounds (last_body, bar,
+                                              &last_body_bounds));
+    left_inset = home_select_bounds.origin.x;
+    right_inset = gtk_widget_get_width (bar) -
+                  (last_body_bounds.origin.x + last_body_bounds.size.width);
+    g_assert_cmpfloat (ABS (left_inset - right_inset), <=, 1.0f);
+  }
+
+  gtk_window_set_child (GTK_WINDOW (window), NULL);
+  gtk_window_destroy (GTK_WINDOW (window));
 }
 
 static void
@@ -1802,8 +2274,13 @@ test_public_typography (void)
 static void
 test_badge_appearances (void)
 {
+  g_autoptr (GtkWidget) window = g_object_ref_sink (gtk_window_new ());
   g_autoptr (GtkWidget) badge = g_object_ref_sink (awra_badge_new ("Fire"));
+  g_autoptr (GtkSnapshot) snapshot = NULL;
+  g_autoptr (GskRenderNode) node = NULL;
   GdkRGBA custom = { 0.20, 0.72, 0.38, 1.0 };
+  int minimum_width;
+  int minimum_height;
 
   g_assert_cmpint (awra_badge_get_appearance (AWRA_BADGE (badge)), ==,
                    AWRA_BADGE_APPEARANCE_ACCENT);
@@ -1817,9 +2294,30 @@ test_badge_appearances (void)
   g_assert_true (gdk_rgba_equal (
     awra_badge_get_custom_color (AWRA_BADGE (badge)), &custom));
   g_assert_true (gtk_widget_has_css_class (badge, "awra-badge-custom"));
+  g_assert_false (gtk_widget_has_css_class (badge,
+                                            "awra-badge-custom-dark-text"));
+  awra_badge_set_text (AWRA_BADGE (badge), "GRASS");
+  gtk_widget_measure (badge, GTK_ORIENTATION_HORIZONTAL, -1,
+                      &minimum_width, NULL, NULL, NULL);
+  gtk_widget_measure (badge, GTK_ORIENTATION_VERTICAL, -1,
+                      &minimum_height, NULL, NULL, NULL);
+  g_assert_cmpint (minimum_width, >=, 48);
+  g_assert_cmpint (minimum_height, >=, 22);
+
+  gtk_window_set_child (GTK_WINDOW (window), badge);
+  gtk_window_present (GTK_WINDOW (window));
+  settle_window (window);
+  snapshot = gtk_snapshot_new ();
+  GTK_WIDGET_GET_CLASS (badge)->snapshot (badge, snapshot);
+  node = gtk_snapshot_to_node (snapshot);
+  g_assert_nonnull (node);
+  g_assert_false (render_node_contains_type (node, GSK_BORDER_NODE));
+
   awra_badge_set_custom_color (AWRA_BADGE (badge), NULL);
   g_assert_null (awra_badge_get_custom_color (AWRA_BADGE (badge)));
   g_assert_false (gtk_widget_has_css_class (badge, "awra-badge-custom"));
+  gtk_window_set_child (GTK_WINDOW (window), NULL);
+  gtk_window_destroy (GTK_WINDOW (window));
 }
 
 static void
@@ -1866,6 +2364,10 @@ main (int   argc,
   g_test_add_func ("/awra/widgets/layout", test_layout_components);
   g_test_add_func ("/awra/widgets/public-layout-recipes",
                    test_public_layout_recipes);
+  g_test_add_func ("/awra/widgets/mapped-header-center-geometry",
+                   test_mapped_header_center_geometry);
+  g_test_add_func ("/awra/widgets/mapped-header-title-alignment",
+                   test_mapped_header_title_alignment);
   g_test_add_func ("/awra/widgets/typed-page-components",
                    test_typed_page_components);
   g_test_add_func ("/awra/widgets/form-and-page-states",
@@ -1894,6 +2396,10 @@ main (int   argc,
   g_test_add_func ("/awra/widgets/extended-components",
                    test_extended_components);
   g_test_add_func ("/awra/widgets/dynamic-tabs", test_dynamic_tabs);
+  g_test_add_func ("/awra/widgets/tab-overflow-geometry",
+                   test_tab_overflow_geometry);
+  g_test_add_func ("/awra/widgets/dropdown-committed-selection",
+                   test_dropdown_committed_selection);
   g_test_add_func ("/awra/widgets/public-material-resolution",
                    test_public_material_resolution);
   g_test_add_func ("/awra/widgets/public-material-tuning",

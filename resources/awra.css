@@ -673,7 +673,13 @@ awrasplitview paned > separator {
 
 .awra-button.awra-primary:hover,
 .awra-menu-button.awra-primary:hover {
-  box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.08);
+  /* Keep the same compact rounded rectangle in every state.  A gigantic
+   * inset shadow used to fake a lighter fill here; GTK's clipping made that
+   * read as a second violet blob on small dialog actions. */
+  background-color: @awra_accent;
+  box-shadow:
+    inset 0 0 0 1px alpha(@awra_on_accent, 0.20),
+    inset 0 1px alpha(@awra_on_accent, 0.10);
 }
 
 .awra-button.awra-primary:active,
@@ -682,7 +688,9 @@ awrasplitview paned > separator {
 .awra-menu-button.awra-primary:checked {
   color: @awra_on_accent;
   background-color: @awra_accent;
-  box-shadow: inset 0 0 0 999px rgba(0, 0, 0, 0.12);
+  box-shadow:
+    inset 0 2px 4px rgba(10, 8, 18, 0.28),
+    inset 0 0 0 1px alpha(@awra_on_accent, 0.12);
 }
 
 .awra-button.awra-ghost,
@@ -691,6 +699,27 @@ awrasplitview paned > separator {
 .awra-menu-button.awra-toolbar-button {
   background-color: transparent;
   box-shadow: none;
+}
+
+/* Ghost means quiet at rest, not interactionless.  These selectors must be
+ * more specific than the base ghost rule above, otherwise it masks the
+ * generic :hover fill and an action such as Cancel never acknowledges the
+ * pointer. */
+.awra-button.awra-ghost:hover,
+.awra-menu-button.awra-ghost:hover {
+  color: @awra_foreground;
+  background-color: @awra_cap_hover;
+  box-shadow: inset 0 1px @awra_rim;
+}
+
+.awra-button.awra-ghost:active,
+.awra-button.awra-ghost:checked,
+.awra-menu-button.awra-ghost:active,
+.awra-menu-button.awra-ghost:checked,
+.awra-menu-button.awra-ghost.awra-open {
+  color: @awra_foreground;
+  background-color: @awra_control_pressed;
+  box-shadow: inset 0 1px 2px rgba(10, 8, 18, 0.16);
 }
 
 .awra-button.awra-toolbar-button,
@@ -817,6 +846,13 @@ popover.awra-popover > arrow {
   color: @awra_foreground;
   background-color: transparent;
   background-image: none;
+}
+
+/* Native dialogs use the same header primitive as full application windows,
+ * with a compact but still balanced title/control rhythm. */
+window.awra-dialog .awra-header-content {
+  min-height: 48px;
+  padding: 6px 18px;
 }
 
 .awra-header-title {
@@ -1477,16 +1513,16 @@ tooltip.background {
 }
 
 awrabadge {
-  min-width: 20px;
-  min-height: 20px;
-  padding: 2px 8px;
+  min-width: 18px;
+  min-height: 18px;
+  padding: 0;
   border-radius: 999px;
   border: 0;
   background-color: @awra_accent_soft;
   background-image: none;
   color: @awra_accent_content;
-  font-size: 0.82em;
-  font-weight: 700;
+  font-size: 0.80em;
+  font-weight: 800;
   box-shadow: none;
   opacity: 1;
   filter: none;
@@ -1529,10 +1565,6 @@ awrabadge.awra-badge-danger {
 awrabadge.awra-badge-custom {
   background-color: transparent;
   color: white;
-}
-
-awrabadge.awra-badge-custom-dark-text {
-  color: #171719;
 }
 
 .awra-light awrabadge.awra-badge-info { color: #1f6097; }
@@ -1655,36 +1687,169 @@ awrabadge.awra-badge-custom-dark-text {
  * proportions, close affordance and focus treatment without local CSS. */
 .awra-tab-bar,
 .awra-tab-bar:backdrop {
-  background: transparent;
+  min-height: 36px;
+  margin: 4px 10px 8px;
+  background: alpha(@awra_foreground, .032);
   background-image: none;
-  border: none;
+  border: 1px solid alpha(@awra_foreground, .035);
+  border-radius: 999px;
   box-shadow: none;
   color: alpha(@awra_foreground, .88);
-  padding: 4px 4px 7px 3px;
+  filter: none;
+  opacity: 1;
+  outline: 0;
+  padding: 1px;
+  transition: none;
+  animation: none;
+}
+
+.awra-pinned-tabs,
+.awra-tab-strip,
+.awra-tab-viewport-mask,
+.awra-tab-scroller,
+.awra-tab-scroller > viewport {
+  background: transparent;
+  background-image: none;
+  border: 0;
+  box-shadow: none;
+  filter: none;
+  opacity: 1;
+  outline: 0;
+  margin: 0;
+  padding: 0;
+  transition: none;
+  animation: none;
+}
+
+/* The rail scrolls through wheel/touchpad gestures and deliberately has no
+ * decorative scrollbar. Neutralize the private GtkScrolledWindow scrollbar
+ * nodes as well: desktop themes commonly assign negative slider margins even
+ * when the policy is EXTERNAL, which can otherwise leak warnings and metrics. */
+.awra-tab-scroller scrollbar,
+.awra-tab-scroller scrollbar trough,
+.awra-tab-scroller scrollbar slider {
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  background-image: none;
+  box-shadow: none;
+  opacity: 0;
 }
 
 .awra-tab-item {
   background: transparent;
+  background-image: none;
   border: 0;
-  border-radius: 9px;
+  border-radius: 0;
+  box-shadow: none;
   color: alpha(@awra_foreground, .62);
-  min-height: 32px;
-  min-width: 84px;
-  padding: 0 8px 0 11px;
+  filter: none;
+  min-height: 30px;
+  min-width: 92px;
+  opacity: 1;
+  outline: 0;
+  padding: 0;
+  transition: none;
+  animation: none;
+}
+
+/* The interactive capsule is deliberately separate from the fixed-width tab
+ * cell and its separator. This guarantees breathing room when two adjacent
+ * tabs are emphasized at the same time. */
+.awra-tab-pill {
+  background: transparent;
+  background-image: none;
+  border: 0;
+  border-radius: 999px;
+  box-shadow: none;
+  color: inherit;
+  filter: none;
+  margin: 0 2px;
+  min-height: 30px;
+  min-width: 0;
+  opacity: 1;
+  outline: 0;
+  padding: 0;
+  transition: none;
+  animation: none;
 }
 
 .awra-tab-pinned {
-  min-width: 54px;
+  min-width: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.awra-tab-pinned .awra-tab-pill {
+  margin: 0;
+}
+
+.awra-tab-pinned.awra-tab-icon-only .awra-tab-button {
+  background: transparent;
+  background-image: none;
+  border-radius: 999px;
+  box-shadow: none;
+  color: alpha(@awra_foreground, .62);
+  min-height: 36px;
+  min-width: 36px;
 }
 
 .awra-tab-button {
   background: transparent;
   background-image: none;
   border: none;
-  border-radius: 9px;
+  border-radius: 999px;
   box-shadow: none;
   color: inherit;
+  filter: none;
   min-height: 30px;
+  min-width: 0;
+  margin: 0;
+  opacity: 1;
+  outline: 0;
+  padding: 0;
+  transition: none;
+  animation: none;
+}
+
+/* The title owns the horizontal centre of the whole capsule. The close
+ * affordance is overlaid above its end, while equal reserves on both sides
+ * keep short labels perfectly centred in every state. */
+.awra-tab-item:not(.awra-tab-pinned) .awra-tab-button {
+  padding: 0 20px;
+}
+
+.awra-tab-title,
+.awra-tab-label {
+  background: transparent;
+  background-image: none;
+  border: 0;
+  box-shadow: none;
+  color: inherit;
+  filter: none;
+  margin: 0;
+  min-height: 0;
+  min-width: 0;
+  opacity: 1;
+  outline: 0;
+  padding: 0;
+}
+
+/* Application imagery is domain content, but its footprint and relationship
+ * with the title remain part of the Awra tab contract. */
+.awra-tab-icon {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  margin: 0;
+  min-height: 0;
+  min-width: 0;
+  opacity: 1;
+  outline: 0;
   padding: 0;
 }
 
@@ -1701,25 +1866,107 @@ awrabadge.awra-badge-custom-dark-text {
   background: transparent;
   background-image: none;
   border: none;
-  border-radius: 9px;
+  border-radius: 999px;
   box-shadow: none;
   color: alpha(@awra_foreground, .62);
-  margin: 3px 4px 3px -5px;
-  min-height: 24px;
-  min-width: 24px;
+  filter: none;
+  margin: 0 4px 0 0;
+  min-height: 22px;
+  min-width: 22px;
+  opacity: 0;
+  outline: 0;
   padding: 0;
+  transition: none;
+  animation: none;
 }
 
-.awra-tab-item:hover,
-.awra-tab-close:hover {
-  background: alpha(@awra_foreground, .055);
+.awra-tab-close.awra-tab-close-visible {
+  opacity: 1;
+}
+
+.awra-tab-item:hover {
+  background: transparent;
   color: @awra_foreground;
+}
+
+.awra-tab-item:hover > .awra-tab-pill {
+  background: alpha(@awra_foreground, .055);
+}
+
+.awra-tab-close:hover {
+  background: alpha(@awra_foreground, .115);
+  color: @awra_foreground;
+}
+
+.awra-tab-close:active {
+  background: alpha(@awra_foreground, .16);
+}
+
+separator.awra-tab-separator {
+  min-width: 1px;
+  margin: 9px 0 9px 2px;
+  background: alpha(@awra_foreground, .085);
+  color: transparent;
+  opacity: 1;
+}
+
+separator.awra-tab-separator.awra-tab-separator-hidden {
+  opacity: 0;
 }
 
 .awra-tab-item.awra-tab-selected {
-  background: alpha(@awra_foreground, .085);
-  box-shadow: inset 0 1px 0 alpha(@awra_rim, .36);
-  color: @awra_foreground;
+  background: transparent;
+  box-shadow: none;
+  color: alpha(@awra_foreground, .92);
+}
+
+.awra-tab-item.awra-tab-selected > .awra-tab-pill {
+  background: alpha(@awra_foreground, .075);
+  box-shadow: inset 0 1px 0 alpha(@awra_rim, .24);
+}
+
+.awra-tab-strip > .awra-tab-item:last-child > .awra-tab-pill {
+  margin-right: 0;
+}
+
+.awra-tab-strip > .awra-tab-item:last-child > separator.awra-tab-separator {
+  margin: 0;
+  min-width: 0;
+}
+
+/* Pinned icon-only destinations are true circular controls. The separator is
+ * a sibling outside the painted button, so its space can never stretch the
+ * circle into a pill. */
+.awra-tab-pinned.awra-tab-icon-only,
+.awra-tab-pinned.awra-tab-icon-only:hover,
+.awra-tab-pinned.awra-tab-icon-only.awra-tab-selected {
+  background: transparent;
+  box-shadow: none;
+  color: alpha(@awra_foreground, .62);
+}
+
+.awra-tab-pinned.awra-tab-icon-only separator.awra-tab-separator {
+  margin: 9px 8px 9px 13px;
+}
+
+.awra-tab-pinned.awra-tab-icon-only:hover > .awra-tab-pill {
+  background: transparent;
+}
+
+.awra-tab-pinned.awra-tab-icon-only:hover .awra-tab-button {
+  background: alpha(@awra_foreground, .075);
+  color: alpha(@awra_foreground, .92);
+}
+
+.awra-tab-pinned.awra-tab-icon-only.awra-tab-selected > .awra-tab-pill {
+  background: transparent;
+  box-shadow: none;
+}
+
+.awra-tab-pinned.awra-tab-icon-only.awra-tab-selected .awra-tab-button {
+  background: alpha(@awra_foreground, .11);
+  box-shadow: inset 0 1px 0 alpha(@awra_rim, .26);
+  color: alpha(@awra_foreground, .94);
 }
 
 .awra-tab-button:focus-visible,
@@ -1730,6 +1977,54 @@ awrabadge.awra-badge-custom-dark-text {
 
 .awra-tab-label {
   color: inherit;
+}
+
+awralistview {
+  min-width: 0;
+  min-height: 180px;
+  color: @awra_foreground;
+  background-color: alpha(@awra_foreground, .025);
+  border: 1px solid alpha(@awra_foreground, .055);
+  border-radius: 14px;
+}
+
+awralistview > box,
+awralistview scrolledwindow,
+awralistview viewport {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+}
+
+awralistview .awra-list-header {
+  min-height: 34px;
+  padding: 5px 8px;
+  color: @awra_muted;
+  background-color: alpha(@awra_background, .10);
+  box-shadow: inset 0 -1px @awra_separator;
+}
+
+awralistview .awra-list-header label {
+  color: @awra_muted;
+  font-size: .86em;
+  font-weight: 700;
+}
+
+awralistview scrollbar {
+  min-width: 8px;
+  min-height: 8px;
+  margin: 3px;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+awralistview:hover scrollbar,
+awralistview scrollbar:hover,
+awralistview scrollbar.dragging {
+  opacity: 1;
 }
 
 .awra-list,
@@ -1743,6 +2038,17 @@ awrabadge.awra-badge-custom-dark-text {
   filter: none;
   transition: none;
   animation: none;
+}
+
+/* A filter bar is structural chrome rather than another content card. Its
+ * own MD inset already controls the children; the quiet outer plane makes
+ * its edges align predictably with adjacent sidebars and data views. */
+awrafilterbar {
+  background: alpha(@awra_foreground, .030);
+  background-image: none;
+  border: 1px solid alpha(@awra_foreground, .055);
+  border-radius: 12px;
+  box-shadow: inset 0 1px alpha(@awra_rim, .16);
 }
 
 .awra-list row {
@@ -1850,7 +2156,8 @@ awrabadge.awra-badge-custom-dark-text {
 .awra-title-2,
 .awra-title-1,
 .awra-display,
-.awra-monospace {
+.awra-monospace,
+.awra-label {
   min-width: 0;
   min-height: 0;
   margin: 0;
@@ -1872,6 +2179,12 @@ awrabadge.awra-badge-custom-dark-text {
   color: @awra_foreground;
   font-size: 1em;
   font-weight: 400;
+}
+
+.awra-label {
+  color: @awra_foreground;
+  font-size: 1em;
+  font-weight: 700;
 }
 
 .awra-display {
@@ -1972,6 +2285,11 @@ awrabadge.awra-badge-custom-dark-text {
   -gtk-icon-size: 16px;
 }
 
+.awra-navigation-item-suffix {
+  margin: 0;
+  margin-left: 4px;
+}
+
 .awra-navigation-item:checked .awra-navigation-item-icon {
   color: @awra_accent_content;
 }
@@ -1985,13 +2303,14 @@ awrabadge.awra-badge-custom-dark-text {
 .awra-tab-item,
 .awra-tab-button,
 .awra-tab-close,
+.awra-tab-separator,
 .awra-list row,
 .awra-entry,
 .awra-dropdown,
 .awra-switch,
 .awra-switch slider,
 .awra-slider slider {
-  transition-property: background-color, color, box-shadow, border-color;
+  transition-property: background-color, color, box-shadow, border-color, opacity;
   transition-duration: 110ms;
   transition-timing-function: ease-out;
 }
@@ -2004,6 +2323,7 @@ awrabadge.awra-badge-custom-dark-text {
 .awra-reduced-motion .awra-tab-item,
 .awra-reduced-motion .awra-tab-button,
 .awra-reduced-motion .awra-tab-close,
+.awra-reduced-motion .awra-tab-separator,
 .awra-reduced-motion .awra-list row,
 .awra-reduced-motion .awra-entry,
 .awra-reduced-motion .awra-dropdown,

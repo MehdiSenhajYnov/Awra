@@ -249,6 +249,7 @@ typedef enum {
   AWRA_TYPOGRAPHY_TITLE_1,
   AWRA_TYPOGRAPHY_DISPLAY,
   AWRA_TYPOGRAPHY_MONOSPACE,
+  AWRA_TYPOGRAPHY_LABEL,
 } AwraTypography;
 
 #define AWRA_TYPE_TYPOGRAPHY (awra_typography_get_type ())

@@ -35,5 +35,19 @@ void                awra_list_view_set_factory (AwraListView       *self,
  * Returns: (transfer none): the underlying GTK list view
  */
 GtkListView        *awra_list_view_get_delegate (AwraListView *self);
+/**
+ * awra_list_view_get_header:
+ * @self: an Awra list view
+ *
+ * Returns: (transfer none) (nullable): the optional table-style header
+ */
+GtkWidget          *awra_list_view_get_header   (AwraListView *self);
+/**
+ * awra_list_view_set_header:
+ * @self: an Awra list view
+ * @header: (nullable): an optional table-style header
+ */
+void                awra_list_view_set_header   (AwraListView *self,
+                                                 GtkWidget    *header);
 
 G_END_DECLS

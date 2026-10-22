@@ -21,7 +21,15 @@ fn exercise_projected_gtk_types() {
     let selection = awra::gtk::SingleSelection::new(Some(store));
     let factory = awra::gtk::SignalListItemFactory::new();
     let _ = awra::DataView::new(Some(&selection)).delegate();
-    let _ = awra::ListView::new(&selection, &factory).delegate();
+    let list = awra::ListView::new(&selection, &factory);
+    let list_header = awra::gtk::Label::new(Some("Name"));
+    list.set_header(Some(&list_header));
+    assert_eq!(list.header(), Some(list_header.upcast()));
+    let _ = list.delegate();
+    let navigation_item = awra::NavigationItem::with_label("Library");
+    let count = awra::Badge::new("3");
+    navigation_item.set_suffix(Some(&count));
+    assert!(navigation_item.suffix().is_some());
     let column = awra::DataColumn::new(Some("Name"), Some(&factory));
     column.set_alignment(awra::gtk::Align::Start);
     let _ = (column.alignment(), column.delegate(), column.sorter());
@@ -41,7 +49,10 @@ fn main() {
         .title("Safe generated bindings")
         .subtitle("Awra widgets remain ordinary gtk-rs widgets")
         .build();
+    awra::set_typography(&header, awra::Typography::Title2);
     let page = awra::Page::builder().child(&header).build();
+    let page_content = awra::gtk::Box::new(awra::gtk::Orientation::Vertical, 0);
+    awra::apply_layout_preset(&page_content, awra::LayoutPreset::Page);
     let card = awra::Card::new();
     card.set_child(Some(&awra::gtk::Label::new(Some("Rust consumer"))));
     assert_eq!(page.child(), Some(header.upcast()));

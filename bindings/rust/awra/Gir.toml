@@ -127,6 +127,7 @@ manual = [
   "Gtk.Editable",
   "Gtk.Entry",
   "Gtk.Expression",
+  "Gtk.Image",
   "Gtk.ListItemFactory",
   "Gtk.ListView",
   "Gtk.Grid",

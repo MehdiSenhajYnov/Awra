@@ -17,6 +17,20 @@ void        awra_navigation_item_set_label     (AwraNavigationItem *self,
 const char *awra_navigation_item_get_icon_name (AwraNavigationItem *self);
 void        awra_navigation_item_set_icon_name (AwraNavigationItem *self,
                                                  const char         *icon_name);
+/**
+ * awra_navigation_item_get_suffix:
+ * @self: an Awra navigation item
+ *
+ * Returns: (transfer none) (nullable): the trailing widget
+ */
+GtkWidget  *awra_navigation_item_get_suffix    (AwraNavigationItem *self);
+/**
+ * awra_navigation_item_set_suffix:
+ * @self: an Awra navigation item
+ * @suffix: (transfer none) (nullable): an unparented trailing widget
+ */
+void        awra_navigation_item_set_suffix    (AwraNavigationItem *self,
+                                                 GtkWidget          *suffix);
 gboolean    awra_navigation_item_get_selected  (AwraNavigationItem *self);
 void        awra_navigation_item_set_selected  (AwraNavigationItem *self,
                                                  gboolean            selected);
