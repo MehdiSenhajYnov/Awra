@@ -79,6 +79,19 @@ widget_basics = executable(
 )
 test('widget-basics', widget_basics, is_parallel: false)
 
+media_input = executable(
+  'test-media-input',
+  'widget/test-media-input.c',
+  dependencies: [awra_test_internal_dep, cc.find_library('m')],
+  include_directories: inc_private,
+)
+test(
+  'media-input-widgets',
+  media_input,
+  env: ['G_DEBUG=fatal-warnings'],
+  is_parallel: false,
+)
+
 accessibility_audit = executable(
   'test-accessibility',
   'widget/test-accessibility.c',

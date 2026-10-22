@@ -73,6 +73,27 @@ main (void)
     awra_selection_toolbar_set_plural_title;
   AwraMetricRow *(*metadata_append) (AwraMetadataGroup *, const char *,
                                      const char *) = awra_metadata_group_append;
+  AwraKeyCap *(*keyboard_get_cap) (AwraKeyboardView *, const char *) =
+    awra_keyboard_view_get_key_cap;
+  char **(*keyboard_selected) (AwraKeyboardView *) =
+    awra_keyboard_view_get_selected_codes;
+  const char *(*code_from_keycode) (guint) =
+    awra_keyboard_code_from_hardware_keycode;
+  const guint *(*capture_keycodes) (AwraShortcutCapture *, guint *) =
+    awra_shortcut_capture_get_keycodes;
+  void (*waveform_peaks) (AwraWaveformView *, const float *, gsize) =
+    awra_waveform_view_set_peaks;
+  void (*media_row_suffix) (AwraMediaRow *, GtkWidget *) =
+    awra_media_row_set_suffix;
+  double (*volume_effective) (AwraVolumeControl *) =
+    awra_volume_control_get_effective_volume;
+  gboolean (*drop_accepts) (AwraDropZone *, GFile *) =
+    awra_drop_zone_accepts_file;
+  guint (*toast_action) (AwraToastOverlay *, const char *, const char *,
+                         const char *, guint) =
+    awra_toast_overlay_show_with_action;
+  void (*toast_dismiss) (AwraToastOverlay *, guint) =
+    awra_toast_overlay_dismiss;
 
   return awra_material_get_kind (material) == AWRA_MATERIAL_KIND_FROSTED &&
          awra_material_get_preset (canvas) == AWRA_MATERIAL_PRESET_CANVAS &&
@@ -118,6 +139,24 @@ main (void)
          AWRA_TYPE_BADGE_GROUP != G_TYPE_INVALID &&
          AWRA_TYPE_METADATA_GROUP != G_TYPE_INVALID &&
          AWRA_TYPE_SKELETON != G_TYPE_INVALID &&
+         AWRA_TYPE_KEY_CAP != G_TYPE_INVALID &&
+         AWRA_TYPE_KEYBOARD_VIEW != G_TYPE_INVALID &&
+         AWRA_TYPE_KEYBOARD_PHYSICAL_LAYOUT != G_TYPE_INVALID &&
+         AWRA_TYPE_SHORTCUT_CAPTURE != G_TYPE_INVALID &&
+         AWRA_TYPE_WAVEFORM_VIEW != G_TYPE_INVALID &&
+         AWRA_TYPE_VOLUME_CONTROL != G_TYPE_INVALID &&
+         AWRA_TYPE_MEDIA_ROW != G_TYPE_INVALID &&
+         AWRA_TYPE_DROP_ZONE != G_TYPE_INVALID &&
+         keyboard_get_cap != NULL &&
+         keyboard_selected != NULL &&
+         code_from_keycode != NULL &&
+         capture_keycodes != NULL &&
+         waveform_peaks != NULL &&
+         media_row_suffix != NULL &&
+         volume_effective != NULL &&
+         drop_accepts != NULL &&
+         toast_action != NULL &&
+         toast_dismiss != NULL &&
          dropdown_popup != NULL &&
          dropdown_get_popover != NULL &&
          menu_popup != NULL &&

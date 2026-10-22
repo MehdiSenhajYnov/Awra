@@ -6,9 +6,10 @@
 import gi
 
 gi.require_version("Gtk", "4.0")
+gi.require_version("Gdk", "4.0")
 gi.require_version("Awra", "1.0")
 
-from gi.repository import Awra, Gtk  # noqa: E402
+from gi.repository import Awra, Gdk, Gio, Gtk  # noqa: E402
 
 
 def main() -> int:
@@ -126,6 +127,38 @@ def main() -> int:
     metadata.append("Height", "0.7 m")
     skeleton = Awra.Skeleton.new()
     skeleton.set_lines(4)
+    keyboard = Awra.KeyboardView.new()
+    keyboard.set_physical_layout(Awra.KeyboardPhysicalLayout.ISO)
+    keyboard.set_selection_mode(Gtk.SelectionMode.MULTIPLE)
+    keyboard.set_selected_codes(["KeyA", "KeyS"])
+    assert keyboard.get_selected_codes() == ["KeyA", "KeyS"]
+    assert "IntlBackslash" in keyboard.get_codes()
+    cap = keyboard.get_key_cap("KeyA")
+    cap.set_bound(True)
+    cap.set_secondary_label("Thunder")
+    assert Awra.keyboard_code_from_hardware_keycode(38) == "KeyA"
+    assert Awra.keyboard_code_to_hardware_keycode("Space") == 65
+    capture = Awra.ShortcutCapture.new()
+    capture.set_shortcut([37, 38], Gdk.ModifierType.CONTROL_MASK)
+    assert list(capture.get_keycodes()) == [37, 38]
+    assert capture.get_codes() == ["ControlLeft", "KeyA"]
+    waveform = Awra.WaveformView.new()
+    waveform.set_peaks([0.1, 0.5, 0.9])
+    assert len(waveform.get_peaks()) == 3
+    waveform.set_duration(10)
+    waveform.set_marker_position(4)
+    row = Awra.MediaRow.new("Rain")
+    row.set_duration(90)
+    row.set_suffix(Gtk.Label(label="OST"))
+    volume = Awra.VolumeControl.new()
+    volume.set_muted(True)
+    assert volume.get_effective_volume() == 0
+    drop = Awra.DropZone.new()
+    drop.set_accepted_extensions(["mp3"])
+    assert drop.accepts_file(Gio.File.new_for_path("/tmp/a.MP3"))
+    toast = Awra.ToastOverlay.new()
+    toast_id = toast.show_with_action("Removed", "Undo", None, 0)
+    toast.dismiss(toast_id)
     return 0
 
 

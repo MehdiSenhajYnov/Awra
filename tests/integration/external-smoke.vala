@@ -62,6 +62,17 @@ int main () {
   var metadata = new Awra.MetadataGroup ();
   var skeleton = new Awra.Skeleton ();
   var palette = new Awra.CommandPalette (null);
+  var keyboard = new Awra.KeyboardView ();
+  keyboard.set_physical_layout (Awra.KeyboardPhysicalLayout.ISO);
+  var capture = new Awra.ShortcutCapture ();
+  var waveform = new Awra.WaveformView ();
+  var media_row = new Awra.MediaRow ("Rain");
+  var volume = new Awra.VolumeControl ();
+  var drop = new Awra.DropZone ();
+  capture.set_placeholder ("Assign");
+  waveform.set_duration (10.0);
+  drop.set_title ("Drop audio");
+
   var content = new Gtk.Label ("Vala page content");
   header.set_title ("Library");
   header.set_subtitle ("Typed Vala composition");
@@ -129,5 +140,12 @@ int main () {
          typeof (Awra.StatBar) != Type.INVALID &&
          typeof (Awra.MetadataGroup) != Type.INVALID &&
          typeof (Awra.Skeleton) != Type.INVALID &&
+         keyboard.get_key_cap ("KeyA") != null &&
+         media_row.get_title () == "Rain" &&
+         volume.get_effective_volume () == 1.0 &&
+         capture.get_placeholder () == "Assign" &&
+         waveform.get_duration () == 10.0 &&
+         drop.get_title () == "Drop audio" &&
+         Awra.keyboard_code_from_hardware_keycode (38) == "KeyA" &&
          typeof (Awra.SurfaceCorner) != Type.INVALID ? 0 : 1;
 }

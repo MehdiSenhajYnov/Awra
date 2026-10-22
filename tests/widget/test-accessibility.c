@@ -96,6 +96,110 @@ test_roles_keyboard_and_rtl (void)
   gtk_window_destroy (GTK_WINDOW (window));
 }
 
+static gboolean
+press_key (GtkWidget *widget,
+           guint      keyval,
+           guint      keycode)
+{
+  g_autoptr (GListModel) controllers = gtk_widget_observe_controllers (widget);
+  gboolean handled = FALSE;
+
+  for (guint i = 0; i < g_list_model_get_n_items (controllers); i++) {
+    g_autoptr (GtkEventController) controller =
+      g_list_model_get_item (controllers, i);
+
+    if (GTK_IS_EVENT_CONTROLLER_KEY (controller)) {
+      g_signal_emit_by_name (controller, "key-pressed", keyval, keycode, 0,
+                             &handled);
+      break;
+    }
+  }
+  return handled;
+}
+
+static void
+test_media_input_roles_and_rtl (void)
+{
+  GtkWidget *window = gtk_window_new ();
+  GtkWidget *box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
+  GtkWidget *keyboard = awra_keyboard_view_new ();
+  GtkWidget *capture = awra_shortcut_capture_new ();
+  GtkWidget *waveform = awra_waveform_view_new ();
+  GtkWidget *row = awra_media_row_new ("Ambient rain with a deliberately "
+                                       "long translated title");
+  GtkWidget *volume = awra_volume_control_new ();
+  GtkWidget *drop = awra_drop_zone_new ();
+  AwraKeyCap *cap;
+  GtkWidget *focus;
+
+  awra_box_apply_layout_preset (GTK_BOX (box), AWRA_LAYOUT_PRESET_PAGE);
+  gtk_box_append (GTK_BOX (box), keyboard);
+  gtk_box_append (GTK_BOX (box), capture);
+  gtk_box_append (GTK_BOX (box), waveform);
+  gtk_box_append (GTK_BOX (box), row);
+  gtk_box_append (GTK_BOX (box), volume);
+  gtk_box_append (GTK_BOX (box), drop);
+  gtk_window_set_child (GTK_WINDOW (window), box);
+  gtk_window_set_default_size (GTK_WINDOW (window), 900, 700);
+  gtk_window_present (GTK_WINDOW (window));
+  gtk_test_widget_wait_for_draw (window);
+
+  cap = awra_keyboard_view_get_key_cap (AWRA_KEYBOARD_VIEW (keyboard), "KeyA");
+  awra_key_cap_set_secondary_label (cap, "Thunder");
+  g_assert_cmpint (gtk_accessible_get_accessible_role (GTK_ACCESSIBLE (cap)),
+                   ==, GTK_ACCESSIBLE_ROLE_BUTTON);
+  g_assert_cmpint (gtk_accessible_get_accessible_role (
+                     GTK_ACCESSIBLE (keyboard)), ==, GTK_ACCESSIBLE_ROLE_GROUP);
+  g_assert_cmpint (gtk_accessible_get_accessible_role (
+                     GTK_ACCESSIBLE (capture)), ==, GTK_ACCESSIBLE_ROLE_BUTTON);
+  g_assert_cmpint (gtk_accessible_get_accessible_role (
+                     GTK_ACCESSIBLE (waveform)), ==, GTK_ACCESSIBLE_ROLE_SLIDER);
+  g_assert_cmpint (gtk_accessible_get_accessible_role (GTK_ACCESSIBLE (row)),
+                   ==, GTK_ACCESSIBLE_ROLE_GROUP);
+  g_assert_cmpint (gtk_accessible_get_accessible_role (
+                     GTK_ACCESSIBLE (volume)), ==, GTK_ACCESSIBLE_ROLE_GROUP);
+
+  /* Every new control is reachable with Tab; the keyboard is one stop. */
+  gtk_window_set_focus (GTK_WINDOW (window), NULL);
+  g_assert_true (gtk_widget_child_focus (box, GTK_DIR_TAB_FORWARD));
+  focus = gtk_root_get_focus (GTK_ROOT (window));
+  g_assert_true (AWRA_IS_KEY_CAP (focus));
+  g_assert_true (gtk_widget_child_focus (box, GTK_DIR_TAB_FORWARD));
+  g_assert_true (gtk_root_get_focus (GTK_ROOT (window)) == capture);
+  g_assert_true (gtk_widget_child_focus (box, GTK_DIR_TAB_FORWARD));
+  g_assert_true (gtk_root_get_focus (GTK_ROOT (window)) == waveform);
+
+  /* RTL mirrors the timeline, so Left moves forward in time. */
+  awra_waveform_view_set_duration (AWRA_WAVEFORM_VIEW (waveform), 100.0);
+  awra_waveform_view_set_marker_editable (AWRA_WAVEFORM_VIEW (waveform), TRUE);
+  awra_waveform_view_set_marker_position (AWRA_WAVEFORM_VIEW (waveform), 10.0);
+  gtk_widget_set_direction (box, GTK_TEXT_DIR_RTL);
+  gtk_widget_set_direction (waveform, GTK_TEXT_DIR_RTL);
+  gtk_widget_set_direction (keyboard, GTK_TEXT_DIR_RTL);
+  gtk_test_widget_wait_for_draw (window);
+  g_assert_true (press_key (waveform, GDK_KEY_Left, 113));
+  g_assert_cmpfloat (awra_waveform_view_get_marker_position (
+                       AWRA_WAVEFORM_VIEW (waveform)), >, 10.0);
+
+  /* Physical keyboards are never mirrored. */
+  {
+    graphene_rect_t escape;
+    graphene_rect_t f12;
+
+    g_assert_true (gtk_widget_compute_bounds (
+      GTK_WIDGET (awra_keyboard_view_get_key_cap (AWRA_KEYBOARD_VIEW (keyboard),
+                                                  "Escape")),
+      keyboard, &escape));
+    g_assert_true (gtk_widget_compute_bounds (
+      GTK_WIDGET (awra_keyboard_view_get_key_cap (AWRA_KEYBOARD_VIEW (keyboard),
+                                                  "F12")),
+      keyboard, &f12));
+    g_assert_cmpfloat (escape.origin.x, <, f12.origin.x);
+  }
+  g_assert_cmpint (gtk_widget_get_width (row), <=, gtk_widget_get_width (box));
+  gtk_window_destroy (GTK_WINDOW (window));
+}
+
 int
 main (int argc, char **argv)
 {
@@ -104,5 +208,7 @@ main (int argc, char **argv)
     return 77;
   g_test_add_func ("/awra/accessibility/roles-keyboard-rtl",
                    test_roles_keyboard_and_rtl);
+  g_test_add_func ("/awra/accessibility/media-input-roles-rtl",
+                   test_media_input_roles_and_rtl);
   return g_test_run ();
 }

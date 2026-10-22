@@ -97,6 +97,14 @@ def main() -> int:
         "BadgeGroup",
         "MetadataGroup",
         "Skeleton",
+        "KeyCap",
+        "KeyboardView",
+        "KeyboardPhysicalLayout",
+        "ShortcutCapture",
+        "WaveformView",
+        "VolumeControl",
+        "MediaRow",
+        "DropZone",
     }
     actual_types = {
         node.get("name")
@@ -121,6 +129,18 @@ def main() -> int:
     assert_nullable("awra_dropdown_new", "expression", root)
     assert_nullable("awra_inspector_set_target", "target", root)
     assert_nullable("awra_page_set_child", "child", root)
+    assert_nullable("awra_key_cap_set_tint", "tint", root)
+    assert_nullable("awra_key_cap_set_badge", "badge", root)
+    assert_nullable("awra_keyboard_view_set_key_label", "label", root)
+    assert_nullable("awra_keyboard_view_set_selected_codes", "codes", root)
+    assert_nullable("awra_shortcut_capture_set_display_labels", "labels", root)
+    assert_nullable("awra_waveform_view_set_peaks", "peaks", root)
+    assert_nullable("awra_media_row_set_suffix", "suffix", root)
+    assert_nullable("awra_drop_zone_set_child", "child", root)
+    assert_nullable("awra_toast_overlay_show_with_action", "detailed_action_name", root)
+    assert_return_transfer("awra_keyboard_view_get_selected_codes", "full", root)
+    assert_return_transfer("awra_shortcut_capture_get_codes", "full", root)
+    assert_return_transfer("awra_keyboard_view_get_key_cap", "none", root)
     assert_nullable("awra_page_header_set_title", "title", root)
     assert_nullable("awra_page_header_set_subtitle", "subtitle", root)
     assert_nullable("awra_page_header_set_actions", "actions", root)

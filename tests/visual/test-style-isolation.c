@@ -21,6 +21,10 @@ static const char hostile_css[] =
   "awramasterdetail, awradetailpane,"
   "awradataview, awraselectiontoolbar, awratextarea, awrapasswordentry,"
   "awratagentry, awrachoicegroup, awrastatusbanner,"
+  "awrakeycap, awrakeycap label, awrakeyboardview, awrashortcutcapture,"
+  "awrashortcutcapture label, awrawaveformview, awravolumecontrol,"
+  "awramediarow, awramediarow label, awradropzone, awradropzone label,"
+  "awradropzone box,"
   "awradataview columnview,"
   "awradataview columnview > header > button,"
   "awradataview columnview listview > row {"
@@ -287,6 +291,51 @@ make_probe_scene (void)
   gtk_grid_attach (GTK_GRID (grid), page, 0, 11, 3, 1);
   gtk_grid_attach (GTK_GRID (grid), master_detail, 0, 12, 3, 1);
   gtk_grid_attach (GTK_GRID (grid), tabs, 0, 13, 3, 1);
+  {
+    static const float peaks[] = { 0.2f, 0.6f, 0.9f, 0.4f, 0.7f, 0.3f,
+                                   0.8f, 0.5f, 0.2f, 0.6f };
+    static const guint shortcut[] = { 37, 38 };
+    GtkWidget *media = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6);
+    GtkWidget *caps = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
+    GtkWidget *bound = awra_key_cap_new ("KeyA", "A");
+    GtkWidget *free_key = awra_key_cap_new ("KeyS", "S");
+    GtkWidget *capture = awra_shortcut_capture_new ();
+    GtkWidget *waveform = awra_waveform_view_new ();
+    GtkWidget *row = awra_media_row_new ("Rain");
+    GtkWidget *drop = awra_drop_zone_new ();
+    GdkRGBA tint = { 0.70, 0.20, 0.25, 1.0 };
+
+    awra_key_cap_set_bound (AWRA_KEY_CAP (bound), TRUE);
+    awra_key_cap_set_secondary_label (AWRA_KEY_CAP (bound), "Thunder");
+    awra_key_cap_set_badge (AWRA_KEY_CAP (bound), "2");
+    awra_key_cap_set_tint (AWRA_KEY_CAP (free_key), &tint);
+    awra_shortcut_capture_set_shortcut (AWRA_SHORTCUT_CAPTURE (capture),
+                                        shortcut, G_N_ELEMENTS (shortcut),
+                                        GDK_CONTROL_MASK);
+    awra_shortcut_capture_set_display_labels (
+      AWRA_SHORTCUT_CAPTURE (capture),
+      (const char *[]) { "Ctrl", "A", NULL });
+    awra_waveform_view_set_peaks (AWRA_WAVEFORM_VIEW (waveform), peaks,
+                                  G_N_ELEMENTS (peaks));
+    awra_waveform_view_set_duration (AWRA_WAVEFORM_VIEW (waveform), 10.0);
+    awra_waveform_view_set_position (AWRA_WAVEFORM_VIEW (waveform), 4.0);
+    awra_waveform_view_set_marker_position (AWRA_WAVEFORM_VIEW (waveform),
+                                            2.0);
+    gtk_widget_set_size_request (waveform, -1, 32);
+    awra_media_row_set_subtitle (AWRA_MEDIA_ROW (row), "Ambience");
+    awra_media_row_set_duration (AWRA_MEDIA_ROW (row), 90.0);
+    awra_media_row_set_position (AWRA_MEDIA_ROW (row), 30.0);
+    awra_media_row_set_show_volume (AWRA_MEDIA_ROW (row), TRUE);
+    awra_drop_zone_set_title (AWRA_DROP_ZONE (drop), "Drop files");
+    gtk_box_append (GTK_BOX (caps), bound);
+    gtk_box_append (GTK_BOX (caps), free_key);
+    gtk_box_append (GTK_BOX (caps), capture);
+    gtk_box_append (GTK_BOX (media), caps);
+    gtk_box_append (GTK_BOX (media), waveform);
+    gtk_box_append (GTK_BOX (media), row);
+    gtk_box_append (GTK_BOX (media), drop);
+    gtk_grid_attach (GTK_GRID (grid), media, 0, 14, 3, 1);
+  }
   g_object_set_data (G_OBJECT (grid), "awra-probe-dropdown", dropdown);
   g_object_set_data (G_OBJECT (grid), "awra-probe-menu-button", menu_button);
   g_object_set_data (G_OBJECT (grid), "awra-probe-filter-bar", filter_bar);

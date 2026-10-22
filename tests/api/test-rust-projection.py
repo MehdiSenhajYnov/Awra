@@ -35,8 +35,28 @@ def main() -> int:
     if "pub fn set_suffix" not in navigation_item or "pub fn suffix" not in navigation_item:
         failures.append("navigation_item.rs (missing safe suffix projection)")
 
+    for module, needles in {
+        "keyboard_view.rs": ("pub fn connect_key_activated", "pub fn selected_codes"),
+        "shortcut_capture.rs": ("pub fn keycodes", "pub fn connect_captured"),
+        "waveform_view.rs": ("pub fn set_peaks", "pub fn connect_marker_committed"),
+        "drop_zone.rs": ("pub fn connect_files_dropped", "pub fn accepts_file"),
+        "toast_overlay.rs": ("pub fn show_with_action", "pub fn dismiss"),
+    }.items():
+        source = (generated / module).read_text(encoding="utf-8")
+        if not all(needle in source for needle in needles):
+            failures.append(f"{module} (missing typed media/input projection)")
+
     facade = (root / "src" / "lib.rs").read_text(encoding="utf-8")
-    for helper in ("add_style_role", "apply_layout_preset", "set_typography"):
+    for helper in (
+        "add_style_role",
+        "apply_layout_preset",
+        "set_typography",
+        "motion_duration",
+        "motion_ease_out_cubic",
+        "motion_ease_in_out_cubic",
+        "set_context_menu_model",
+        "keyboard_code_from_hardware_keycode",
+    ):
         if f"pub fn {helper}" not in facade:
             failures.append(f"lib.rs (missing safe {helper} helper)")
 
