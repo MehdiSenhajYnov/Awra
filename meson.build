@@ -121,6 +121,10 @@ public_headers = files(
   'include/awra-1/awra/awra-key-cap.h',
   'include/awra-1/awra/awra-keyboard-view.h',
   'include/awra-1/awra/awra-shortcut-capture.h',
+  'include/awra-1/awra/awra-waveform-view.h',
+  'include/awra-1/awra/awra-volume-control.h',
+  'include/awra-1/awra/awra-media-row.h',
+  'include/awra-1/awra/awra-drop-zone.h',
 )
 
 awra_sources = files(
@@ -188,6 +192,10 @@ awra_sources = files(
   'src/widgets/awra-key-cap.c',
   'src/widgets/awra-keyboard-view.c',
   'src/widgets/awra-shortcut-capture.c',
+  'src/widgets/awra-waveform-view.c',
+  'src/widgets/awra-volume-control.c',
+  'src/widgets/awra-media-row.c',
+  'src/widgets/awra-drop-zone.c',
 )
 
 awra_resources = gnome.compile_resources(

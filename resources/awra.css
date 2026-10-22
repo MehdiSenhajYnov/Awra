@@ -45,7 +45,11 @@ awrametadatagroup,
 awraskeleton,
 awrakeycap,
 awrakeyboardview,
-awrashortcutcapture {
+awrashortcutcapture,
+awrawaveformview,
+awravolumecontrol,
+awramediarow,
+awradropzone {
   min-width: 0;
   min-height: 0;
   margin: 0;
@@ -249,7 +253,17 @@ awratextarea .awra-placeholder {
  * CSS only owns legends so the system font and scale stay authoritative. */
 awrakeycap label,
 awrashortcutcapture box,
-awrashortcutcapture label {
+awrashortcutcapture label,
+awramediarow grid,
+awramediarow box,
+awramediarow label,
+awramediarow image,
+awravolumecontrol box,
+awradropzone overlay,
+awradropzone revealer,
+awradropzone box,
+awradropzone label,
+awradropzone image {
   min-width: 0;
   min-height: 0;
   margin: 0;
@@ -380,6 +394,138 @@ awrashortcutcapture:disabled label.awra-shortcut-chip {
 }
 
 .awra-reduced-motion awrashortcutcapture {
+  transition-duration: 0s;
+}
+
+awramediarow {
+  padding: 8px 10px;
+  border-radius: 12px;
+}
+
+awramediarow label.awra-media-title {
+  color: @awra_foreground;
+  font-weight: 650;
+}
+
+awramediarow label.awra-media-subtitle {
+  color: @awra_muted;
+  font-size: 0.88em;
+}
+
+awramediarow label.awra-media-time {
+  color: @awra_muted;
+  font-size: 0.82em;
+  font-feature-settings: "tnum";
+}
+
+awramediarow.awra-media-idle label.awra-media-title,
+awramediarow.awra-media-idle label.awra-media-time {
+  color: @awra_disabled;
+}
+
+awramediarow image.awra-media-leading {
+  color: @awra_foreground;
+  -gtk-icon-size: 18px;
+}
+
+awramediarow image.awra-media-leading.awra-media-on-dark {
+  color: #ffffff;
+}
+
+awramediarow image.awra-media-leading.awra-media-on-light {
+  color: #15121a;
+}
+
+.awra-button.awra-media-button,
+.awra-button.awra-volume-button {
+  min-width: 18px;
+  min-height: 18px;
+  padding: 6px;
+  border-radius: 999px;
+}
+
+awramediarow.awra-media-playing .awra-button.awra-media-button:first-child {
+  color: @awra_accent_content;
+}
+
+awravolumecontrol.awra-volume-muted .awra-volume-slider highlight {
+  background-color: @awra_disabled;
+}
+
+awradropzone box.awra-drop-zone-well {
+  min-height: 120px;
+  padding: 24px;
+  border: 2px dashed @awra_border;
+  border-radius: 17px;
+  background-color: @awra_well;
+  transition-property: background-color, border-color;
+  transition-duration: 110ms;
+  transition-timing-function: ease-out;
+}
+
+awradropzone.awra-drop-hover box.awra-drop-zone-well {
+  border-color: @awra_accent;
+  background-color: @awra_accent_soft;
+}
+
+awradropzone.awra-drop-hover.awra-drop-rejecting box.awra-drop-zone-well {
+  border-color: @awra_danger;
+  background-color: alpha(@awra_danger, 0.08);
+}
+
+awradropzone image.awra-drop-zone-icon {
+  color: @awra_muted;
+  -gtk-icon-size: 32px;
+}
+
+awradropzone.awra-drop-hover image.awra-drop-zone-icon {
+  color: @awra_accent_content;
+}
+
+awradropzone label.awra-drop-zone-title {
+  color: @awra_foreground;
+  font-size: 1.08em;
+  font-weight: 640;
+}
+
+awradropzone label.awra-drop-zone-subtitle {
+  color: @awra_muted;
+  font-size: 0.88em;
+}
+
+awradropzone box.awra-drop-zone-frame {
+  margin: 0;
+  padding: 0;
+  border: 2px dashed @awra_accent;
+  border-radius: 17px;
+  background-color: @awra_accent_soft;
+  box-shadow: none;
+}
+
+awradropzone.awra-drop-rejecting box.awra-drop-zone-frame {
+  border-color: @awra_danger;
+  background-color: alpha(@awra_danger, 0.08);
+}
+
+awradropzone label.awra-drop-hint-label {
+  color: @awra_foreground;
+  font-weight: 650;
+}
+
+awradropzone image.awra-drop-hint-icon {
+  color: @awra_accent_content;
+  -gtk-icon-size: 20px;
+}
+
+awradropzone.awra-drop-rejecting image.awra-drop-hint-icon {
+  color: @awra_danger;
+}
+
+.awra-high-contrast awradropzone box.awra-drop-zone-well {
+  border-color: @awra_outline;
+}
+
+.awra-reduced-motion awradropzone box.awra-drop-zone-well {
   transition-duration: 0s;
 }
 
@@ -1644,6 +1790,22 @@ button.awra-dropdown-button:disabled {
   padding: 10px 18px;
   color: @awra_foreground;
   font-weight: 600;
+}
+
+box.awra-toast-content {
+  margin: 0;
+  padding: 0 6px 0 0;
+  border-spacing: 2px;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.awra-button.awra-toast-action {
+  min-height: 20px;
+  padding: 5px 12px;
+  color: @awra_accent_content;
+  font-weight: 700;
 }
 
 tooltip.background {

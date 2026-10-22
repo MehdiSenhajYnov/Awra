@@ -75,6 +75,10 @@
 #include <awra/awra-key-cap.h>
 #include <awra/awra-keyboard-view.h>
 #include <awra/awra-shortcut-capture.h>
+#include <awra/awra-waveform-view.h>
+#include <awra/awra-volume-control.h>
+#include <awra/awra-media-row.h>
+#include <awra/awra-drop-zone.h>
 
 G_BEGIN_DECLS
 

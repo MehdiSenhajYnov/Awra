@@ -9,3 +9,7 @@ src/widgets/awra-selection-toolbar.c
 src/widgets/awra-key-codes.c
 src/widgets/awra-keyboard-view.c
 src/widgets/awra-shortcut-capture.c
+src/widgets/awra-waveform-view.c
+src/widgets/awra-volume-control.c
+src/widgets/awra-media-row.c
+src/widgets/awra-drop-zone.c
