@@ -563,3 +563,40 @@ faire posséder à `AwraListView` son viewport et son header optionnel : Pokedia
 ne reconstruit plus une table avec un scroller, trois rôles et un container.
 Les rôles restants décrivent uniquement le domaine (types, matchups, matrice,
 relations, sprites) ou une ligne GTK dont le comportement doit rester GTK.
+
+# 2026-10-23
+
+## 01:45 — KeyToMusicAwra — Un clavier, un lecteur et une zone de dépôt génériques
+
+KeyToMusic est une table de sons : chaque touche du clavier déclenche des
+sons, avec des pistes, des formes d'onde, un point de départ et une
+découverte de morceaux. Préparer son portage natif a montré que Awra n'avait
+ni touche, ni clavier physique, ni capture de raccourci, ni forme d'onde, ni
+ligne de lecture. Les reconstruire dans l'application aurait exigé du CSS
+local, du dessin GSK et de la sémantique clavier que le contrat des
+consommateurs interdit, et ces besoins ne sont pas propres à KeyToMusic :
+lanceur de macros, éditeur de raccourcis, lecteur de podcasts ou importateur
+de fichiers les partagent.
+
+Décisions confirmées :
+
+- `AwraKeyCap` peint la matière depuis les tokens (puits pour une touche
+  libre, cap pour une touche liée) ; teinte, bordure de catégorie, badge,
+  sélection, impulsion de lecture et filtrage ne sont que des états de
+  peinture, statiques en mouvement réduit.
+- `AwraKeyboardView` identifie les touches par `KeyboardEvent.code`, suit la
+  disposition logique active via GDK (AZERTY affiche bien `A` sur `KeyQ`),
+  garde une géométrie physique non miroir en RTL et réutilise
+  `GtkSelectionMode` plutôt qu'un nouvel enum.
+- Les tableaux et listes passent par des `strv`, des tableaux annotés et
+  `GdkFileList` : Python, Vala et Rust reçoivent des types natifs sans
+  surcouche.
+- `AwraDropZone` émet `browse-requested` au lieu d'embarquer un sélecteur de
+  fichiers : la règle des deux scénarios démontrés reste valable pour les
+  pickers.
+- Les toasts gagnent une action (« Annuler ») liée à une `GAction`, sans
+  changer `show_message()`.
+
+À tester dans KeyToMusicAwra : le glisser-déposer réel sur les touches (GTK
+n'offre pas de synthèse publique d'un drop) et la capture de raccourcis
+lorsque des accélérateurs d'application sont actifs.

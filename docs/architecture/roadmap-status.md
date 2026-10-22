@@ -146,6 +146,17 @@ Phase C work item 2 now covers advanced inputs and reusable settings patterns.
   Inputs page cover the family. Date/time/color/file wrappers remain deferred
   under the roadmap's demonstrated-use-case rule.
 
+### Media and keyboard input — validated
+
+- `AwraKeyCap`, `AwraKeyboardView`, `AwraShortcutCapture`,
+  `AwraWaveformView`, `AwraVolumeControl`, `AwraMediaRow`, `AwraDropZone` and
+  toast actions were added for KeyToMusicAwra and kept domain-neutral.
+- Widget behaviour/lifecycle, accessibility roles/Tab/RTL, hostile-provider
+  isolation, GtkBuilder, GIR/API baselines, C/Python/Vala consumers, the
+  generated Rust projection and the Showcase soundboard and media workspace
+  cover the family. Native drag-and-drop remains a manual Showcase check
+  because GTK offers no public drop synthesis.
+
 ### Responsive navigation and overlays — validated
 
 - `AwraResponsiveBin` provides observable Compact/Medium/Expanded size

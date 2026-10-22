@@ -148,6 +148,19 @@ provide dense reusable detail composition without application spacing.
 Display or Monospace hierarchy to any `GtkWidget`; its implementation classes
 remain private, while the system font family and scale remain authoritative.
 
+The media and keyboard input family adds `AwraKeyCap`, `AwraKeyboardView`
+(ANSI/ISO through `AwraKeyboardPhysicalLayout`, layout-aware legends,
+`GtkSelectionMode` selection, roving focus and per-key file drops),
+`AwraShortcutCapture`, `AwraWaveformView`, `AwraVolumeControl`,
+`AwraMediaRow` and `AwraDropZone`. Physical keys use `KeyboardEvent.code`
+identifiers; `awra_keyboard_code_from_hardware_keycode()`,
+`awra_keyboard_code_to_hardware_keycode()` and
+`awra_keyboard_code_get_label()` bridge them to GDK hardware keycodes and the
+active layout. Signals carry typed values (`GdkModifierType`, `GdkFileList`,
+seconds as doubles), and value collections are string vectors or
+length-annotated arrays so every binding receives native containers. See
+[forms-and-inputs.md](../guides/forms-and-inputs.md#media-and-keyboard-input).
+
 `awra_widget_add_style_role()` and `awra_widget_remove_style_role()` opt an
 ordinary GTK behavioral widget into Awra's data-application recipes. These
 roles cover dense tables, filter toolbars, domain tags,
@@ -164,7 +177,11 @@ listed in [the role catalogue](../guides/style-roles.md).
 
 `AwraPopover` and `AwraDialog` own native surfaces and therefore participate in
 the private effect coordinator. `AwraToastOverlay` stays inside its parent
-window. Menus consume `GMenuModel` and `GAction`; applications never call a
+window. `awra_toast_overlay_show_with_action()` adds one action button bound
+to a detailed `GAction` name (for example an Undo) and returns an identifier
+for `awra_toast_overlay_dismiss()`; `dismissed` reports every hidden toast,
+while `show_message()` keeps its original behaviour. Menus consume
+`GMenuModel` and `GAction`; applications never call a
 Wayland or compositor API. `awra_widget_set_context_menu_model()` attaches the
 same Awra menu presentation and secondary-click lifecycle to any widget, so
 applications do not need to manually parent popovers or own input gestures.

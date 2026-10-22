@@ -2,6 +2,21 @@
 
 # Changelog
 
+## Unreleased
+
+- Added `AwraKeyCap`, `AwraKeyboardView` (ANSI/ISO, layout-aware legends,
+  selection, roving focus, per-key file drops) and `AwraShortcutCapture`,
+  plus public `KeyboardEvent.code` ↔ hardware keycode helpers.
+- Added `AwraWaveformView`, `AwraVolumeControl`, `AwraMediaRow` and
+  `AwraDropZone` for media workspaces.
+- Added toast actions to `AwraToastOverlay` (`show_with_action()`,
+  `dismiss()`, `get_current_toast_id()`, `dismissed`); `show_message()` is
+  unchanged.
+- The safe Rust crate projects the new family and exposes motion duration and
+  easing, context-menu and key-code helpers.
+- Showcase gains a soundboard pattern and a media workspace built on
+  `AwraMediaRow`.
+
 ## 1.0.0 — 2026-08-19
 
 - Added typed page, section, toolbar, forms, application states, filters,
