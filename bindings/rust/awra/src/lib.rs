@@ -93,6 +93,91 @@ pub fn set_typography(widget: &impl glib::object::IsA<gtk::Widget>, typography: 
     }
 }
 
+/// Resolves a semantic motion preset to milliseconds for `manager`.
+///
+/// The result is `0` while reduced motion is enabled, so animations driven
+/// by application code follow the same accessibility contract as Awra
+/// widgets.
+pub fn motion_duration(manager: &StyleManager, preset: MotionPreset) -> u32 {
+    use glib::translate::{IntoGlib, ToGlibPtr};
+
+    unsafe { ffi::awra_motion_get_duration(manager.to_glib_none().0, preset.into_glib()) }
+}
+
+/// Awra's ease-out cubic curve; `progress` is clamped to `0.0..=1.0`.
+pub fn motion_ease_out_cubic(progress: f64) -> f64 {
+    unsafe { ffi::awra_motion_ease_out_cubic(progress) }
+}
+
+/// Awra's ease-in-out cubic curve; `progress` is clamped to `0.0..=1.0`.
+pub fn motion_ease_in_out_cubic(progress: f64) -> f64 {
+    unsafe { ffi::awra_motion_ease_in_out_cubic(progress) }
+}
+
+/// Attaches Awra's secondary-click context menu to any widget, or removes it
+/// with `None`.
+pub fn set_context_menu_model(
+    widget: &impl glib::object::IsA<gtk::Widget>,
+    model: Option<&impl glib::object::IsA<gio::MenuModel>>,
+) {
+    use glib::translate::ToGlibPtr;
+
+    unsafe {
+        ffi::awra_widget_set_context_menu_model(
+            widget.as_ref().to_glib_none().0,
+            model.map(|model| model.as_ref()).to_glib_none().0,
+        );
+    }
+}
+
+/// Returns the context menu model attached with [`set_context_menu_model`].
+pub fn context_menu_model(
+    widget: &impl glib::object::IsA<gtk::Widget>,
+) -> Option<gio::MenuModel> {
+    use glib::translate::{from_glib_none, ToGlibPtr};
+
+    unsafe {
+        from_glib_none(ffi::awra_widget_get_context_menu_model(
+            widget.as_ref().to_glib_none().0,
+        ))
+    }
+}
+
+/// Maps a GDK hardware keycode (Linux evdev code + 8) to its
+/// `KeyboardEvent.code` identifier, such as `"KeyA"`.
+pub fn keyboard_code_from_hardware_keycode(keycode: u32) -> Option<&'static str> {
+    unsafe {
+        let code = ffi::awra_keyboard_code_from_hardware_keycode(keycode);
+        if code.is_null() {
+            None
+        } else {
+            std::ffi::CStr::from_ptr(code).to_str().ok()
+        }
+    }
+}
+
+/// Maps a `KeyboardEvent.code` identifier to its GDK hardware keycode, or `0`.
+pub fn keyboard_code_to_hardware_keycode(code: &str) -> u32 {
+    let Ok(code) = std::ffi::CString::new(code) else {
+        return 0;
+    };
+    unsafe { ffi::awra_keyboard_code_to_hardware_keycode(code.as_ptr()) }
+}
+
+/// Returns the legend of a physical key in the active keyboard layout of
+/// `display`, or a layout-independent legend when `display` is `None`.
+pub fn keyboard_code_label(display: Option<&gdk::Display>, code: &str) -> Option<glib::GString> {
+    use glib::translate::{from_glib_full, ToGlibPtr};
+
+    let code = std::ffi::CString::new(code).ok()?;
+    unsafe {
+        from_glib_full(ffi::awra_keyboard_code_get_label(
+            display.to_glib_none().0,
+            code.as_ptr(),
+        ))
+    }
+}
+
 /// Registers Awra's resources and public types.
 pub fn init() {
     assert_initialized_main_thread!();

@@ -30,6 +30,7 @@ int main() {
     printf("%s;%zu;%zu\n", "AwraDetailPaneClass", sizeof(AwraDetailPaneClass), alignof(AwraDetailPaneClass));
     printf("%s;%zu;%zu\n", "AwraDiagnosticsClass", sizeof(AwraDiagnosticsClass), alignof(AwraDiagnosticsClass));
     printf("%s;%zu;%zu\n", "AwraDialogClass", sizeof(AwraDialogClass), alignof(AwraDialogClass));
+    printf("%s;%zu;%zu\n", "AwraDropZoneClass", sizeof(AwraDropZoneClass), alignof(AwraDropZoneClass));
     printf("%s;%zu;%zu\n", "AwraDropdownClass", sizeof(AwraDropdownClass), alignof(AwraDropdownClass));
     printf("%s;%zu;%zu\n", "AwraEdgePanelClass", sizeof(AwraEdgePanelClass), alignof(AwraEdgePanelClass));
     printf("%s;%zu;%zu\n", "AwraEffectCapability", sizeof(AwraEffectCapability), alignof(AwraEffectCapability));
@@ -42,6 +43,9 @@ int main() {
     printf("%s;%zu;%zu\n", "AwraFormRowClass", sizeof(AwraFormRowClass), alignof(AwraFormRowClass));
     printf("%s;%zu;%zu\n", "AwraHeaderClass", sizeof(AwraHeaderClass), alignof(AwraHeaderClass));
     printf("%s;%zu;%zu\n", "AwraInspectorClass", sizeof(AwraInspectorClass), alignof(AwraInspectorClass));
+    printf("%s;%zu;%zu\n", "AwraKeyCapClass", sizeof(AwraKeyCapClass), alignof(AwraKeyCapClass));
+    printf("%s;%zu;%zu\n", "AwraKeyboardPhysicalLayout", sizeof(AwraKeyboardPhysicalLayout), alignof(AwraKeyboardPhysicalLayout));
+    printf("%s;%zu;%zu\n", "AwraKeyboardViewClass", sizeof(AwraKeyboardViewClass), alignof(AwraKeyboardViewClass));
     printf("%s;%zu;%zu\n", "AwraLayoutMode", sizeof(AwraLayoutMode), alignof(AwraLayoutMode));
     printf("%s;%zu;%zu\n", "AwraLayoutPreset", sizeof(AwraLayoutPreset), alignof(AwraLayoutPreset));
     printf("%s;%zu;%zu\n", "AwraListViewClass", sizeof(AwraListViewClass), alignof(AwraListViewClass));
@@ -52,6 +56,7 @@ int main() {
     printf("%s;%zu;%zu\n", "AwraMaterialKind", sizeof(AwraMaterialKind), alignof(AwraMaterialKind));
     printf("%s;%zu;%zu\n", "AwraMaterialPreset", sizeof(AwraMaterialPreset), alignof(AwraMaterialPreset));
     printf("%s;%zu;%zu\n", "AwraMaterialResolutionClass", sizeof(AwraMaterialResolutionClass), alignof(AwraMaterialResolutionClass));
+    printf("%s;%zu;%zu\n", "AwraMediaRowClass", sizeof(AwraMediaRowClass), alignof(AwraMediaRowClass));
     printf("%s;%zu;%zu\n", "AwraMenuButtonClass", sizeof(AwraMenuButtonClass), alignof(AwraMenuButtonClass));
     printf("%s;%zu;%zu\n", "AwraMetadataGroupClass", sizeof(AwraMetadataGroupClass), alignof(AwraMetadataGroupClass));
     printf("%s;%zu;%zu\n", "AwraMetricRowClass", sizeof(AwraMetricRowClass), alignof(AwraMetricRowClass));
@@ -70,6 +75,7 @@ int main() {
     printf("%s;%zu;%zu\n", "AwraSectionClass", sizeof(AwraSectionClass), alignof(AwraSectionClass));
     printf("%s;%zu;%zu\n", "AwraSegmentedControlClass", sizeof(AwraSegmentedControlClass), alignof(AwraSegmentedControlClass));
     printf("%s;%zu;%zu\n", "AwraSelectionToolbarClass", sizeof(AwraSelectionToolbarClass), alignof(AwraSelectionToolbarClass));
+    printf("%s;%zu;%zu\n", "AwraShortcutCaptureClass", sizeof(AwraShortcutCaptureClass), alignof(AwraShortcutCaptureClass));
     printf("%s;%zu;%zu\n", "AwraSidebarClass", sizeof(AwraSidebarClass), alignof(AwraSidebarClass));
     printf("%s;%zu;%zu\n", "AwraSkeletonClass", sizeof(AwraSkeletonClass), alignof(AwraSkeletonClass));
     printf("%s;%zu;%zu\n", "AwraSliderClass", sizeof(AwraSliderClass), alignof(AwraSliderClass));
@@ -94,6 +100,8 @@ int main() {
     printf("%s;%zu;%zu\n", "AwraToolbarClass", sizeof(AwraToolbarClass), alignof(AwraToolbarClass));
     printf("%s;%zu;%zu\n", "AwraTypography", sizeof(AwraTypography), alignof(AwraTypography));
     printf("%s;%zu;%zu\n", "AwraValidationState", sizeof(AwraValidationState), alignof(AwraValidationState));
+    printf("%s;%zu;%zu\n", "AwraVolumeControlClass", sizeof(AwraVolumeControlClass), alignof(AwraVolumeControlClass));
+    printf("%s;%zu;%zu\n", "AwraWaveformViewClass", sizeof(AwraWaveformViewClass), alignof(AwraWaveformViewClass));
     printf("%s;%zu;%zu\n", "AwraWindow", sizeof(AwraWindow), alignof(AwraWindow));
     printf("%s;%zu;%zu\n", "AwraWindowClass", sizeof(AwraWindowClass), alignof(AwraWindowClass));
     return 0;

@@ -76,12 +76,6 @@ impl NavigationItem {
         unsafe { from_glib_none(ffi::awra_navigation_item_get_label(self.to_glib_none().0)) }
     }
 
-    #[doc(alias = "awra_navigation_item_get_suffix")]
-    #[doc(alias = "get_suffix")]
-    pub fn suffix(&self) -> Option<gtk::Widget> {
-        unsafe { from_glib_none(ffi::awra_navigation_item_get_suffix(self.to_glib_none().0)) }
-    }
-
     #[doc(alias = "awra_navigation_item_get_selected")]
     #[doc(alias = "get_selected")]
     #[doc(alias = "selected")]
@@ -91,6 +85,12 @@ impl NavigationItem {
                 self.to_glib_none().0,
             ))
         }
+    }
+
+    #[doc(alias = "awra_navigation_item_get_suffix")]
+    #[doc(alias = "get_suffix")]
+    pub fn suffix(&self) -> Option<gtk::Widget> {
+        unsafe { from_glib_none(ffi::awra_navigation_item_get_suffix(self.to_glib_none().0)) }
     }
 
     #[doc(alias = "awra_navigation_item_set_group")]
@@ -133,7 +133,7 @@ impl NavigationItem {
         unsafe {
             ffi::awra_navigation_item_set_suffix(
                 self.to_glib_none().0,
-                suffix.map(|widget| widget.as_ref()).to_glib_none().0,
+                suffix.map(|p| p.as_ref()).to_glib_none().0,
             );
         }
     }
@@ -157,6 +157,31 @@ impl NavigationItem {
                 c"notify::selected".as_ptr(),
                 Some(std::mem::transmute::<*const (), unsafe extern "C" fn()>(
                     notify_selected_trampoline::<F> as *const (),
+                )),
+                Box_::into_raw(f),
+            )
+        }
+    }
+
+    #[doc(alias = "suffix")]
+    pub fn connect_suffix_notify<F: Fn(&Self) + 'static>(&self, f: F) -> SignalHandlerId {
+        unsafe extern "C" fn notify_suffix_trampoline<F: Fn(&NavigationItem) + 'static>(
+            this: *mut ffi::AwraNavigationItem,
+            _param_spec: glib::ffi::gpointer,
+            f: glib::ffi::gpointer,
+        ) {
+            unsafe {
+                let f: &F = &*(f as *const F);
+                f(&from_glib_borrow(this))
+            }
+        }
+        unsafe {
+            let f: Box_<F> = Box_::new(f);
+            connect_raw(
+                self.as_ptr() as *mut _,
+                c"notify::suffix".as_ptr(),
+                Some(std::mem::transmute::<*const (), unsafe extern "C" fn()>(
+                    notify_suffix_trampoline::<F> as *const (),
                 )),
                 Box_::into_raw(f),
             )

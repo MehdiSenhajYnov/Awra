@@ -36,6 +36,7 @@ generate = [
   "Awra.DetailPane",
   "Awra.Diagnostics",
   "Awra.Dialog",
+  "Awra.DropZone",
   "Awra.Dropdown",
   "Awra.EdgePanel",
   "Awra.EffectCapability",
@@ -47,6 +48,9 @@ generate = [
   "Awra.Form",
   "Awra.FormRow",
   "Awra.Header",
+  "Awra.KeyCap",
+  "Awra.KeyboardPhysicalLayout",
+  "Awra.KeyboardView",
   "Awra.LayoutMode",
   "Awra.LayoutPreset",
   "Awra.ListView",
@@ -57,6 +61,7 @@ generate = [
   "Awra.MaterialKind",
   "Awra.MaterialPreset",
   "Awra.MaterialResolution",
+  "Awra.MediaRow",
   "Awra.MenuButton",
   "Awra.MetadataGroup",
   "Awra.MetricRow",
@@ -75,6 +80,7 @@ generate = [
   "Awra.Section",
   "Awra.SegmentedControl",
   "Awra.SelectionToolbar",
+  "Awra.ShortcutCapture",
   "Awra.Sidebar",
   "Awra.Skeleton",
   "Awra.Slider",
@@ -99,6 +105,8 @@ generate = [
   "Awra.Toolbar",
   "Awra.Typography",
   "Awra.ValidationState",
+  "Awra.VolumeControl",
+  "Awra.WaveformView",
   "Awra.Window",
 ]
 manual = [
@@ -153,6 +161,10 @@ manual = [
   "Gtk.ToggleButton",
   "Gtk.Widget",
   "Gtk.Window",
+  "Gdk.ModifierType",
+  "Gdk.FileList",
+  "Gtk.SelectionMode",
+  "Gio.File",
 ]
 
 [[object]]

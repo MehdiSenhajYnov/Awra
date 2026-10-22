@@ -214,15 +214,15 @@ impl ListViewBuilder {
         }
     }
 
-    pub fn model(self, model: &impl IsA<gtk::SelectionModel>) -> Self {
-        Self {
-            builder: self.builder.property("model", model.clone().upcast()),
-        }
-    }
-
     pub fn header(self, header: &impl IsA<gtk::Widget>) -> Self {
         Self {
             builder: self.builder.property("header", header.clone().upcast()),
+        }
+    }
+
+    pub fn model(self, model: &impl IsA<gtk::SelectionModel>) -> Self {
+        Self {
+            builder: self.builder.property("model", model.clone().upcast()),
         }
     }
 

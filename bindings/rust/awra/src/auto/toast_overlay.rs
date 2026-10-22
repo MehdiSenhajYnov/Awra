@@ -5,6 +5,7 @@
 
 use crate::ffi;
 use glib::{
+    object::ObjectType as _,
     prelude::*,
     signal::{connect_raw, SignalHandlerId},
     translate::*,
@@ -47,10 +48,23 @@ impl ToastOverlay {
         ToastOverlayBuilder::new()
     }
 
+    #[doc(alias = "awra_toast_overlay_dismiss")]
+    pub fn dismiss(&self, toast_id: u32) {
+        unsafe {
+            ffi::awra_toast_overlay_dismiss(self.to_glib_none().0, toast_id);
+        }
+    }
+
     #[doc(alias = "awra_toast_overlay_get_child")]
     #[doc(alias = "get_child")]
     pub fn child(&self) -> Option<gtk::Widget> {
         unsafe { from_glib_none(ffi::awra_toast_overlay_get_child(self.to_glib_none().0)) }
+    }
+
+    #[doc(alias = "awra_toast_overlay_get_current_toast_id")]
+    #[doc(alias = "get_current_toast_id")]
+    pub fn current_toast_id(&self) -> u32 {
+        unsafe { ffi::awra_toast_overlay_get_current_toast_id(self.to_glib_none().0) }
     }
 
     #[doc(alias = "awra_toast_overlay_get_revealed")]
@@ -79,6 +93,50 @@ impl ToastOverlay {
                 message.to_glib_none().0,
                 timeout_ms,
             );
+        }
+    }
+
+    #[doc(alias = "awra_toast_overlay_show_with_action")]
+    pub fn show_with_action(
+        &self,
+        message: &str,
+        button_label: &str,
+        detailed_action_name: Option<&str>,
+        timeout_ms: u32,
+    ) -> u32 {
+        unsafe {
+            ffi::awra_toast_overlay_show_with_action(
+                self.to_glib_none().0,
+                message.to_glib_none().0,
+                button_label.to_glib_none().0,
+                detailed_action_name.to_glib_none().0,
+                timeout_ms,
+            )
+        }
+    }
+
+    #[doc(alias = "dismissed")]
+    pub fn connect_dismissed<F: Fn(&Self, u32) + 'static>(&self, f: F) -> SignalHandlerId {
+        unsafe extern "C" fn dismissed_trampoline<F: Fn(&ToastOverlay, u32) + 'static>(
+            this: *mut ffi::AwraToastOverlay,
+            object: std::ffi::c_uint,
+            f: glib::ffi::gpointer,
+        ) {
+            unsafe {
+                let f: &F = &*(f as *const F);
+                f(&from_glib_borrow(this), object)
+            }
+        }
+        unsafe {
+            let f: Box_<F> = Box_::new(f);
+            connect_raw(
+                self.as_ptr() as *mut _,
+                c"dismissed".as_ptr(),
+                Some(std::mem::transmute::<*const (), unsafe extern "C" fn()>(
+                    dismissed_trampoline::<F> as *const (),
+                )),
+                Box_::into_raw(f),
+            )
         }
     }
 

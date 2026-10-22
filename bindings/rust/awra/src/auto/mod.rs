@@ -51,6 +51,9 @@ pub use self::diagnostics::Diagnostics;
 mod dialog;
 pub use self::dialog::Dialog;
 
+mod drop_zone;
+pub use self::drop_zone::DropZone;
+
 mod dropdown;
 pub use self::dropdown::Dropdown;
 
@@ -81,6 +84,12 @@ pub use self::header::Header;
 mod inspector;
 pub use self::inspector::Inspector;
 
+mod key_cap;
+pub use self::key_cap::KeyCap;
+
+mod keyboard_view;
+pub use self::keyboard_view::KeyboardView;
+
 mod list_view;
 pub use self::list_view::ListView;
 
@@ -95,6 +104,9 @@ pub use self::material::Material;
 
 mod material_resolution;
 pub use self::material_resolution::MaterialResolution;
+
+mod media_row;
+pub use self::media_row::MediaRow;
 
 mod menu_button;
 pub use self::menu_button::MenuButton;
@@ -140,6 +152,9 @@ pub use self::segmented_control::SegmentedControl;
 
 mod selection_toolbar;
 pub use self::selection_toolbar::SelectionToolbar;
+
+mod shortcut_capture;
+pub use self::shortcut_capture::ShortcutCapture;
 
 mod sidebar;
 pub use self::sidebar::Sidebar;
@@ -192,6 +207,12 @@ pub use self::token_set::TokenSet;
 mod toolbar;
 pub use self::toolbar::Toolbar;
 
+mod volume_control;
+pub use self::volume_control::VolumeControl;
+
+mod waveform_view;
+pub use self::waveform_view::WaveformView;
+
 mod window;
 pub use self::window::Window;
 
@@ -203,6 +224,7 @@ pub use self::enums::ButtonAppearance;
 pub use self::enums::CardAppearance;
 pub use self::enums::DataViewState;
 pub use self::enums::Elevation;
+pub use self::enums::KeyboardPhysicalLayout;
 pub use self::enums::LayoutMode;
 pub use self::enums::LayoutPreset;
 pub use self::enums::MasterDetailPane;
@@ -240,6 +262,7 @@ pub(crate) mod builders {
     pub use super::data_view::DataViewBuilder;
     pub use super::detail_pane::DetailPaneBuilder;
     pub use super::dialog::DialogBuilder;
+    pub use super::drop_zone::DropZoneBuilder;
     pub use super::dropdown::DropdownBuilder;
     pub use super::edge_panel::EdgePanelBuilder;
     pub use super::empty_state::EmptyStateBuilder;
@@ -250,9 +273,12 @@ pub(crate) mod builders {
     pub use super::form_row::FormRowBuilder;
     pub use super::header::HeaderBuilder;
     pub use super::inspector::InspectorBuilder;
+    pub use super::key_cap::KeyCapBuilder;
+    pub use super::keyboard_view::KeyboardViewBuilder;
     pub use super::list_view::ListViewBuilder;
     pub use super::loading_state::LoadingStateBuilder;
     pub use super::master_detail::MasterDetailBuilder;
+    pub use super::media_row::MediaRowBuilder;
     pub use super::menu_button::MenuButtonBuilder;
     pub use super::metadata_group::MetadataGroupBuilder;
     pub use super::metric_row::MetricRowBuilder;
@@ -268,6 +294,7 @@ pub(crate) mod builders {
     pub use super::section::SectionBuilder;
     pub use super::segmented_control::SegmentedControlBuilder;
     pub use super::selection_toolbar::SelectionToolbarBuilder;
+    pub use super::shortcut_capture::ShortcutCaptureBuilder;
     pub use super::sidebar::SidebarBuilder;
     pub use super::skeleton::SkeletonBuilder;
     pub use super::slider::SliderBuilder;
@@ -284,5 +311,7 @@ pub(crate) mod builders {
     pub use super::toast_overlay::ToastOverlayBuilder;
     pub use super::toggle_button::ToggleButtonBuilder;
     pub use super::toolbar::ToolbarBuilder;
+    pub use super::volume_control::VolumeControlBuilder;
+    pub use super::waveform_view::WaveformViewBuilder;
     pub use super::window::WindowBuilder;
 }

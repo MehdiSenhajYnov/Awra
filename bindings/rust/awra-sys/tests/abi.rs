@@ -357,6 +357,13 @@ const RUST_LAYOUTS: &[(&str, Layout)] = &[
         },
     ),
     (
+        "AwraDropZoneClass",
+        Layout {
+            size: size_of::<AwraDropZoneClass>(),
+            alignment: align_of::<AwraDropZoneClass>(),
+        },
+    ),
+    (
         "AwraDropdownClass",
         Layout {
             size: size_of::<AwraDropdownClass>(),
@@ -441,6 +448,27 @@ const RUST_LAYOUTS: &[(&str, Layout)] = &[
         },
     ),
     (
+        "AwraKeyCapClass",
+        Layout {
+            size: size_of::<AwraKeyCapClass>(),
+            alignment: align_of::<AwraKeyCapClass>(),
+        },
+    ),
+    (
+        "AwraKeyboardPhysicalLayout",
+        Layout {
+            size: size_of::<AwraKeyboardPhysicalLayout>(),
+            alignment: align_of::<AwraKeyboardPhysicalLayout>(),
+        },
+    ),
+    (
+        "AwraKeyboardViewClass",
+        Layout {
+            size: size_of::<AwraKeyboardViewClass>(),
+            alignment: align_of::<AwraKeyboardViewClass>(),
+        },
+    ),
+    (
         "AwraLayoutMode",
         Layout {
             size: size_of::<AwraLayoutMode>(),
@@ -508,6 +536,13 @@ const RUST_LAYOUTS: &[(&str, Layout)] = &[
         Layout {
             size: size_of::<AwraMaterialResolutionClass>(),
             alignment: align_of::<AwraMaterialResolutionClass>(),
+        },
+    ),
+    (
+        "AwraMediaRowClass",
+        Layout {
+            size: size_of::<AwraMediaRowClass>(),
+            alignment: align_of::<AwraMediaRowClass>(),
         },
     ),
     (
@@ -634,6 +669,13 @@ const RUST_LAYOUTS: &[(&str, Layout)] = &[
         Layout {
             size: size_of::<AwraSelectionToolbarClass>(),
             alignment: align_of::<AwraSelectionToolbarClass>(),
+        },
+    ),
+    (
+        "AwraShortcutCaptureClass",
+        Layout {
+            size: size_of::<AwraShortcutCaptureClass>(),
+            alignment: align_of::<AwraShortcutCaptureClass>(),
         },
     ),
     (
@@ -805,6 +847,20 @@ const RUST_LAYOUTS: &[(&str, Layout)] = &[
         },
     ),
     (
+        "AwraVolumeControlClass",
+        Layout {
+            size: size_of::<AwraVolumeControlClass>(),
+            alignment: align_of::<AwraVolumeControlClass>(),
+        },
+    ),
+    (
+        "AwraWaveformViewClass",
+        Layout {
+            size: size_of::<AwraWaveformViewClass>(),
+            alignment: align_of::<AwraWaveformViewClass>(),
+        },
+    ),
+    (
         "AwraWindow",
         Layout {
             size: size_of::<AwraWindow>(),
@@ -851,6 +907,8 @@ const RUST_CONSTANTS: &[(&str, &str)] = &[
     ("(gint) AWRA_ELEVATION_FLOATING", "2"),
     ("(gint) AWRA_ELEVATION_MODAL", "3"),
     ("(gint) AWRA_ELEVATION_RAISED", "1"),
+    ("(gint) AWRA_KEYBOARD_PHYSICAL_LAYOUT_ANSI", "0"),
+    ("(gint) AWRA_KEYBOARD_PHYSICAL_LAYOUT_ISO", "1"),
     ("(gint) AWRA_LAYOUT_MODE_COMPACT", "0"),
     ("(gint) AWRA_LAYOUT_MODE_EXPANDED", "2"),
     ("(gint) AWRA_LAYOUT_MODE_MEDIUM", "1"),
@@ -925,6 +983,7 @@ const RUST_CONSTANTS: &[(&str, &str)] = &[
     ("(gint) AWRA_TYPOGRAPHY_BODY", "0"),
     ("(gint) AWRA_TYPOGRAPHY_DISPLAY", "6"),
     ("(gint) AWRA_TYPOGRAPHY_EYEBROW", "2"),
+    ("(gint) AWRA_TYPOGRAPHY_LABEL", "8"),
     ("(gint) AWRA_TYPOGRAPHY_MONOSPACE", "7"),
     ("(gint) AWRA_TYPOGRAPHY_MUTED", "1"),
     ("(gint) AWRA_TYPOGRAPHY_TITLE_1", "5"),

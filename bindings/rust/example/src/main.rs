@@ -39,11 +39,107 @@ fn exercise_projected_gtk_types() {
     palette.connect_activate_command(|_, _, _| false);
 }
 
+fn exercise_media_input_components() {
+    use std::cell::Cell;
+    use std::rc::Rc;
+
+    let keyboard = awra::KeyboardView::builder()
+        .physical_layout(awra::KeyboardPhysicalLayout::Iso)
+        .selection_mode(awra::gtk::SelectionMode::Multiple)
+        .show_numpad(true)
+        .build();
+    let activated = Rc::new(Cell::new(0));
+    let counter = activated.clone();
+    keyboard.connect_key_activated(move |_, code, modifiers| {
+        assert_eq!(code, "KeyA");
+        assert!(modifiers.contains(awra::gdk::ModifierType::CONTROL_MASK));
+        counter.set(counter.get() + 1);
+    });
+    keyboard.connect_files_dropped(|_, _code, files| {
+        let _ = files.files();
+    });
+    keyboard.set_selected_codes(&["KeyA", "KeyS"]);
+    assert_eq!(keyboard.selected_codes(), vec!["KeyA", "KeyS"]);
+    assert!(keyboard.codes().iter().any(|code| code == "IntlBackslash"));
+    let cap = keyboard.key_cap("KeyA").expect("KeyA cap");
+    cap.set_bound(true);
+    cap.set_secondary_label(Some("Thunder"));
+    cap.set_tint(Some(&awra::gdk::RGBA::new(0.7, 0.2, 0.25, 1.0)));
+    cap.set_badge(Some("2"));
+    cap.emit_by_name::<()>("activated", &[&awra::gdk::ModifierType::CONTROL_MASK]);
+    assert_eq!(activated.get(), 1);
+    keyboard.set_key_label("KeyA", Some("Kick"));
+    assert_eq!(cap.label(), "Kick");
+
+    assert_eq!(awra::keyboard_code_from_hardware_keycode(38), Some("KeyA"));
+    assert_eq!(awra::keyboard_code_to_hardware_keycode("Space"), 65);
+    assert!(awra::keyboard_code_label(None, "ArrowUp").is_some());
+
+    let capture = awra::ShortcutCapture::new();
+    capture.set_shortcut(&[37, 38], awra::gdk::ModifierType::CONTROL_MASK);
+    assert_eq!(capture.keycodes(), vec![37, 38]);
+    assert_eq!(capture.codes(), vec!["ControlLeft", "KeyA"]);
+    capture.set_display_labels(&["Ctrl", "Q"]);
+    capture.connect_captured(|capture| {
+        let _ = (capture.keycodes(), capture.keyvals(), capture.modifiers());
+    });
+
+    let waveform = awra::WaveformView::builder()
+        .duration(10.0)
+        .marker_editable(true)
+        .build();
+    waveform.set_peaks(&[0.1, 0.6, 0.9, 0.3]);
+    assert_eq!(waveform.peaks().len(), 4);
+    waveform.set_marker_position(4.0);
+    waveform.connect_marker_committed(|_, position| assert!(position >= 0.0));
+
+    let row = awra::MediaRow::builder()
+        .title("Rain")
+        .duration(90.0)
+        .show_volume(true)
+        .build();
+    row.connect_seek_requested(|_, position| assert!(position >= 0.0));
+    row.connect_volume_changed(|_, volume| assert!((0.0..=1.0).contains(&volume)));
+    row.set_suffix(Some(&awra::Badge::new("OST")));
+
+    let volume = awra::VolumeControl::new();
+    volume.set_muted(true);
+    assert_eq!(volume.effective_volume(), 0.0);
+
+    let drop = awra::DropZone::new();
+    drop.set_accepted_extensions(&["mp3", "ogg"]);
+    assert!(drop.accepts_file(&awra::gio::File::for_path("/tmp/theme.MP3")));
+    drop.connect_files_dropped(|_, files| assert!(!files.files().is_empty()));
+
+    let toast = awra::ToastOverlay::new();
+    let id = toast.show_with_action("Sound removed", "Undo", Some("win.undo"), 0);
+    assert_eq!(toast.current_toast_id(), id);
+    toast.dismiss(id);
+    assert!(!toast.is_revealed());
+
+    let context = awra::Context::for_display(&awra::gdk::Display::default().expect("display"));
+    let style = context.style_manager();
+    let duration = awra::motion_duration(&style, awra::MotionPreset::Normal);
+    style.set_reduced_motion(true);
+    assert_eq!(awra::motion_duration(&style, awra::MotionPreset::Normal), 0);
+    style.set_reduced_motion(false);
+    assert!(duration > 0);
+    assert_eq!(awra::motion_ease_out_cubic(1.0), 1.0);
+    assert_eq!(awra::motion_ease_in_out_cubic(0.0), 0.0);
+    let menu = awra::gio::Menu::new();
+    menu.append(Some("Remove"), Some("win.remove"));
+    awra::set_context_menu_model(&cap, Some(&menu));
+    assert!(awra::context_menu_model(&cap).is_some());
+    awra::set_context_menu_model(&cap, None::<&awra::gio::MenuModel>);
+    assert!(awra::context_menu_model(&cap).is_none());
+}
+
 fn main() {
     assert_action_map::<awra::Window>();
     awra::gtk::init().expect("Rust Awra example requires a GTK display");
     awra::init();
     exercise_projected_gtk_types();
+    exercise_media_input_components();
 
     let header = awra::PageHeader::builder()
         .title("Safe generated bindings")

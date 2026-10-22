@@ -74,6 +74,10 @@ pub const AWRA_ELEVATION_RAISED: AwraElevation = 1;
 pub const AWRA_ELEVATION_FLOATING: AwraElevation = 2;
 pub const AWRA_ELEVATION_MODAL: AwraElevation = 3;
 
+pub type AwraKeyboardPhysicalLayout = c_int;
+pub const AWRA_KEYBOARD_PHYSICAL_LAYOUT_ANSI: AwraKeyboardPhysicalLayout = 0;
+pub const AWRA_KEYBOARD_PHYSICAL_LAYOUT_ISO: AwraKeyboardPhysicalLayout = 1;
+
 pub type AwraLayoutMode = c_int;
 pub const AWRA_LAYOUT_MODE_COMPACT: AwraLayoutMode = 0;
 pub const AWRA_LAYOUT_MODE_MEDIUM: AwraLayoutMode = 1;
@@ -423,6 +427,20 @@ impl ::std::fmt::Debug for AwraDialogClass {
 
 #[derive(Copy, Clone)]
 #[repr(C)]
+pub struct AwraDropZoneClass {
+    pub parent_class: gtk::GtkWidgetClass,
+}
+
+impl ::std::fmt::Debug for AwraDropZoneClass {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraDropZoneClass @ {self:p}"))
+            .field("parent_class", &self.parent_class)
+            .finish()
+    }
+}
+
+#[derive(Copy, Clone)]
+#[repr(C)]
 pub struct AwraDropdownClass {
     pub parent_class: gtk::GtkWidgetClass,
 }
@@ -563,6 +581,34 @@ impl ::std::fmt::Debug for AwraInspectorClass {
 
 #[derive(Copy, Clone)]
 #[repr(C)]
+pub struct AwraKeyCapClass {
+    pub parent_class: gtk::GtkWidgetClass,
+}
+
+impl ::std::fmt::Debug for AwraKeyCapClass {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraKeyCapClass @ {self:p}"))
+            .field("parent_class", &self.parent_class)
+            .finish()
+    }
+}
+
+#[derive(Copy, Clone)]
+#[repr(C)]
+pub struct AwraKeyboardViewClass {
+    pub parent_class: gtk::GtkWidgetClass,
+}
+
+impl ::std::fmt::Debug for AwraKeyboardViewClass {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraKeyboardViewClass @ {self:p}"))
+            .field("parent_class", &self.parent_class)
+            .finish()
+    }
+}
+
+#[derive(Copy, Clone)]
+#[repr(C)]
 pub struct AwraListViewClass {
     pub parent_class: gtk::GtkWidgetClass,
 }
@@ -626,6 +672,20 @@ pub struct AwraMaterialResolutionClass {
 impl ::std::fmt::Debug for AwraMaterialResolutionClass {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         f.debug_struct(&format!("AwraMaterialResolutionClass @ {self:p}"))
+            .field("parent_class", &self.parent_class)
+            .finish()
+    }
+}
+
+#[derive(Copy, Clone)]
+#[repr(C)]
+pub struct AwraMediaRowClass {
+    pub parent_class: gtk::GtkWidgetClass,
+}
+
+impl ::std::fmt::Debug for AwraMediaRowClass {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraMediaRowClass @ {self:p}"))
             .field("parent_class", &self.parent_class)
             .finish()
     }
@@ -836,6 +896,20 @@ pub struct AwraSelectionToolbarClass {
 impl ::std::fmt::Debug for AwraSelectionToolbarClass {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         f.debug_struct(&format!("AwraSelectionToolbarClass @ {self:p}"))
+            .field("parent_class", &self.parent_class)
+            .finish()
+    }
+}
+
+#[derive(Copy, Clone)]
+#[repr(C)]
+pub struct AwraShortcutCaptureClass {
+    pub parent_class: gtk::GtkWidgetClass,
+}
+
+impl ::std::fmt::Debug for AwraShortcutCaptureClass {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraShortcutCaptureClass @ {self:p}"))
             .field("parent_class", &self.parent_class)
             .finish()
     }
@@ -1081,6 +1155,34 @@ impl ::std::fmt::Debug for AwraToolbarClass {
 
 #[derive(Copy, Clone)]
 #[repr(C)]
+pub struct AwraVolumeControlClass {
+    pub parent_class: gtk::GtkWidgetClass,
+}
+
+impl ::std::fmt::Debug for AwraVolumeControlClass {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraVolumeControlClass @ {self:p}"))
+            .field("parent_class", &self.parent_class)
+            .finish()
+    }
+}
+
+#[derive(Copy, Clone)]
+#[repr(C)]
+pub struct AwraWaveformViewClass {
+    pub parent_class: gtk::GtkWidgetClass,
+}
+
+impl ::std::fmt::Debug for AwraWaveformViewClass {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraWaveformViewClass @ {self:p}"))
+            .field("parent_class", &self.parent_class)
+            .finish()
+    }
+}
+
+#[derive(Copy, Clone)]
+#[repr(C)]
 pub struct AwraWindowClass {
     pub parent_class: gtk::GtkApplicationWindowClass,
     pub padding: [gpointer; 8],
@@ -1316,6 +1418,19 @@ impl ::std::fmt::Debug for AwraDialog {
 
 #[repr(C)]
 #[allow(dead_code)]
+pub struct AwraDropZone {
+    _data: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
+}
+
+impl ::std::fmt::Debug for AwraDropZone {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraDropZone @ {self:p}")).finish()
+    }
+}
+
+#[repr(C)]
+#[allow(dead_code)]
 pub struct AwraDropdown {
     _data: [u8; 0],
     _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
@@ -1451,6 +1566,33 @@ impl ::std::fmt::Debug for AwraInspector {
 
 #[repr(C)]
 #[allow(dead_code)]
+pub struct AwraKeyCap {
+    _data: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
+}
+
+impl ::std::fmt::Debug for AwraKeyCap {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraKeyCap @ {self:p}")).finish()
+    }
+}
+
+#[repr(C)]
+#[allow(dead_code)]
+pub struct AwraKeyboardView {
+    _data: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
+}
+
+impl ::std::fmt::Debug for AwraKeyboardView {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraKeyboardView @ {self:p}"))
+            .finish()
+    }
+}
+
+#[repr(C)]
+#[allow(dead_code)]
 pub struct AwraListView {
     _data: [u8; 0],
     _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
@@ -1514,6 +1656,19 @@ impl ::std::fmt::Debug for AwraMaterialResolution {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         f.debug_struct(&format!("AwraMaterialResolution @ {self:p}"))
             .finish()
+    }
+}
+
+#[repr(C)]
+#[allow(dead_code)]
+pub struct AwraMediaRow {
+    _data: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
+}
+
+impl ::std::fmt::Debug for AwraMediaRow {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraMediaRow @ {self:p}")).finish()
     }
 }
 
@@ -1720,6 +1875,20 @@ pub struct AwraSelectionToolbar {
 impl ::std::fmt::Debug for AwraSelectionToolbar {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         f.debug_struct(&format!("AwraSelectionToolbar @ {self:p}"))
+            .finish()
+    }
+}
+
+#[repr(C)]
+#[allow(dead_code)]
+pub struct AwraShortcutCapture {
+    _data: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
+}
+
+impl ::std::fmt::Debug for AwraShortcutCapture {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraShortcutCapture @ {self:p}"))
             .finish()
     }
 }
@@ -1951,6 +2120,34 @@ impl ::std::fmt::Debug for AwraToolbar {
     }
 }
 
+#[repr(C)]
+#[allow(dead_code)]
+pub struct AwraVolumeControl {
+    _data: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
+}
+
+impl ::std::fmt::Debug for AwraVolumeControl {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraVolumeControl @ {self:p}"))
+            .finish()
+    }
+}
+
+#[repr(C)]
+#[allow(dead_code)]
+pub struct AwraWaveformView {
+    _data: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
+}
+
+impl ::std::fmt::Debug for AwraWaveformView {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraWaveformView @ {self:p}"))
+            .finish()
+    }
+}
+
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct AwraWindow {
@@ -2001,6 +2198,11 @@ unsafe extern "C" {
     // AwraElevation
     //=========================================================================
     pub fn awra_elevation_get_type() -> GType;
+
+    //=========================================================================
+    // AwraKeyboardPhysicalLayout
+    //=========================================================================
+    pub fn awra_keyboard_physical_layout_get_type() -> GType;
 
     //=========================================================================
     // AwraLayoutMode
@@ -2358,6 +2560,41 @@ unsafe extern "C" {
     pub fn awra_dialog_new(parent: *mut gtk::GtkWindow) -> *mut gtk::GtkWidget;
 
     //=========================================================================
+    // AwraDropZone
+    //=========================================================================
+    pub fn awra_drop_zone_get_type() -> GType;
+    pub fn awra_drop_zone_new() -> *mut gtk::GtkWidget;
+    pub fn awra_drop_zone_accepts_file(self_: *mut AwraDropZone, file: *mut gio::GFile)
+        -> gboolean;
+    pub fn awra_drop_zone_get_accepted_extensions(self_: *mut AwraDropZone)
+        -> *const *const c_char;
+    pub fn awra_drop_zone_get_accepted_mime_types(self_: *mut AwraDropZone)
+        -> *const *const c_char;
+    pub fn awra_drop_zone_get_browse_label(self_: *mut AwraDropZone) -> *const c_char;
+    pub fn awra_drop_zone_get_child(self_: *mut AwraDropZone) -> *mut gtk::GtkWidget;
+    pub fn awra_drop_zone_get_drop_active(self_: *mut AwraDropZone) -> gboolean;
+    pub fn awra_drop_zone_get_drop_message(self_: *mut AwraDropZone) -> *const c_char;
+    pub fn awra_drop_zone_get_icon_name(self_: *mut AwraDropZone) -> *const c_char;
+    pub fn awra_drop_zone_get_show_browse_button(self_: *mut AwraDropZone) -> gboolean;
+    pub fn awra_drop_zone_get_subtitle(self_: *mut AwraDropZone) -> *const c_char;
+    pub fn awra_drop_zone_get_title(self_: *mut AwraDropZone) -> *const c_char;
+    pub fn awra_drop_zone_set_accepted_extensions(
+        self_: *mut AwraDropZone,
+        extensions: *const *const c_char,
+    );
+    pub fn awra_drop_zone_set_accepted_mime_types(
+        self_: *mut AwraDropZone,
+        mime_types: *const *const c_char,
+    );
+    pub fn awra_drop_zone_set_browse_label(self_: *mut AwraDropZone, label: *const c_char);
+    pub fn awra_drop_zone_set_child(self_: *mut AwraDropZone, child: *mut gtk::GtkWidget);
+    pub fn awra_drop_zone_set_drop_message(self_: *mut AwraDropZone, message: *const c_char);
+    pub fn awra_drop_zone_set_icon_name(self_: *mut AwraDropZone, icon_name: *const c_char);
+    pub fn awra_drop_zone_set_show_browse_button(self_: *mut AwraDropZone, show: gboolean);
+    pub fn awra_drop_zone_set_subtitle(self_: *mut AwraDropZone, subtitle: *const c_char);
+    pub fn awra_drop_zone_set_title(self_: *mut AwraDropZone, title: *const c_char);
+
+    //=========================================================================
     // AwraDropdown
     //=========================================================================
     pub fn awra_dropdown_get_type() -> GType;
@@ -2532,6 +2769,87 @@ unsafe extern "C" {
     pub fn awra_inspector_set_target(self_: *mut AwraInspector, target: *mut gtk::GtkWidget);
 
     //=========================================================================
+    // AwraKeyCap
+    //=========================================================================
+    pub fn awra_key_cap_get_type() -> GType;
+    pub fn awra_key_cap_new(key_code: *const c_char, label: *const c_char) -> *mut gtk::GtkWidget;
+    pub fn awra_key_cap_flash(self_: *mut AwraKeyCap);
+    pub fn awra_key_cap_get_active(self_: *mut AwraKeyCap) -> gboolean;
+    pub fn awra_key_cap_get_badge(self_: *mut AwraKeyCap) -> *const c_char;
+    pub fn awra_key_cap_get_bound(self_: *mut AwraKeyCap) -> gboolean;
+    pub fn awra_key_cap_get_dimmed(self_: *mut AwraKeyCap) -> gboolean;
+    pub fn awra_key_cap_get_edge_color(self_: *mut AwraKeyCap) -> *const gdk::GdkRGBA;
+    pub fn awra_key_cap_get_key_code(self_: *mut AwraKeyCap) -> *const c_char;
+    pub fn awra_key_cap_get_label(self_: *mut AwraKeyCap) -> *const c_char;
+    pub fn awra_key_cap_get_secondary_label(self_: *mut AwraKeyCap) -> *const c_char;
+    pub fn awra_key_cap_get_selected(self_: *mut AwraKeyCap) -> gboolean;
+    pub fn awra_key_cap_get_tint(self_: *mut AwraKeyCap) -> *const gdk::GdkRGBA;
+    pub fn awra_key_cap_get_width_units(self_: *mut AwraKeyCap) -> c_double;
+    pub fn awra_key_cap_set_active(self_: *mut AwraKeyCap, active: gboolean);
+    pub fn awra_key_cap_set_badge(self_: *mut AwraKeyCap, badge: *const c_char);
+    pub fn awra_key_cap_set_bound(self_: *mut AwraKeyCap, bound: gboolean);
+    pub fn awra_key_cap_set_dimmed(self_: *mut AwraKeyCap, dimmed: gboolean);
+    pub fn awra_key_cap_set_edge_color(self_: *mut AwraKeyCap, color: *const gdk::GdkRGBA);
+    pub fn awra_key_cap_set_key_code(self_: *mut AwraKeyCap, key_code: *const c_char);
+    pub fn awra_key_cap_set_label(self_: *mut AwraKeyCap, label: *const c_char);
+    pub fn awra_key_cap_set_secondary_label(self_: *mut AwraKeyCap, label: *const c_char);
+    pub fn awra_key_cap_set_selected(self_: *mut AwraKeyCap, selected: gboolean);
+    pub fn awra_key_cap_set_tint(self_: *mut AwraKeyCap, tint: *const gdk::GdkRGBA);
+    pub fn awra_key_cap_set_width_units(self_: *mut AwraKeyCap, width_units: c_double);
+
+    //=========================================================================
+    // AwraKeyboardView
+    //=========================================================================
+    pub fn awra_keyboard_view_get_type() -> GType;
+    pub fn awra_keyboard_view_new() -> *mut gtk::GtkWidget;
+    pub fn awra_keyboard_view_get_accepts_file_drops(self_: *mut AwraKeyboardView) -> gboolean;
+    pub fn awra_keyboard_view_get_codes(self_: *mut AwraKeyboardView) -> *mut *mut c_char;
+    pub fn awra_keyboard_view_get_key_cap(
+        self_: *mut AwraKeyboardView,
+        code: *const c_char,
+    ) -> *mut AwraKeyCap;
+    pub fn awra_keyboard_view_get_physical_layout(
+        self_: *mut AwraKeyboardView,
+    ) -> AwraKeyboardPhysicalLayout;
+    pub fn awra_keyboard_view_get_selected_codes(self_: *mut AwraKeyboardView) -> *mut *mut c_char;
+    pub fn awra_keyboard_view_get_selection_mode(
+        self_: *mut AwraKeyboardView,
+    ) -> gtk::GtkSelectionMode;
+    pub fn awra_keyboard_view_get_show_function_row(self_: *mut AwraKeyboardView) -> gboolean;
+    pub fn awra_keyboard_view_get_show_navigation_cluster(self_: *mut AwraKeyboardView)
+        -> gboolean;
+    pub fn awra_keyboard_view_get_show_numpad(self_: *mut AwraKeyboardView) -> gboolean;
+    pub fn awra_keyboard_view_select_all(self_: *mut AwraKeyboardView);
+    pub fn awra_keyboard_view_set_accepts_file_drops(
+        self_: *mut AwraKeyboardView,
+        accepts: gboolean,
+    );
+    pub fn awra_keyboard_view_set_key_label(
+        self_: *mut AwraKeyboardView,
+        code: *const c_char,
+        label: *const c_char,
+    );
+    pub fn awra_keyboard_view_set_physical_layout(
+        self_: *mut AwraKeyboardView,
+        layout: AwraKeyboardPhysicalLayout,
+    );
+    pub fn awra_keyboard_view_set_selected_codes(
+        self_: *mut AwraKeyboardView,
+        codes: *const *const c_char,
+    );
+    pub fn awra_keyboard_view_set_selection_mode(
+        self_: *mut AwraKeyboardView,
+        mode: gtk::GtkSelectionMode,
+    );
+    pub fn awra_keyboard_view_set_show_function_row(self_: *mut AwraKeyboardView, show: gboolean);
+    pub fn awra_keyboard_view_set_show_navigation_cluster(
+        self_: *mut AwraKeyboardView,
+        show: gboolean,
+    );
+    pub fn awra_keyboard_view_set_show_numpad(self_: *mut AwraKeyboardView, show: gboolean);
+    pub fn awra_keyboard_view_unselect_all(self_: *mut AwraKeyboardView);
+
+    //=========================================================================
     // AwraListView
     //=========================================================================
     pub fn awra_list_view_get_type() -> GType;
@@ -2627,6 +2945,38 @@ unsafe extern "C" {
     pub fn awra_material_resolution_get_shadow(
         self_: *mut AwraMaterialResolution,
     ) -> *const gdk::GdkRGBA;
+
+    //=========================================================================
+    // AwraMediaRow
+    //=========================================================================
+    pub fn awra_media_row_get_type() -> GType;
+    pub fn awra_media_row_new(title: *const c_char) -> *mut gtk::GtkWidget;
+    pub fn awra_media_row_get_accent_color(self_: *mut AwraMediaRow) -> *const gdk::GdkRGBA;
+    pub fn awra_media_row_get_duration(self_: *mut AwraMediaRow) -> c_double;
+    pub fn awra_media_row_get_icon_name(self_: *mut AwraMediaRow) -> *const c_char;
+    pub fn awra_media_row_get_playing(self_: *mut AwraMediaRow) -> gboolean;
+    pub fn awra_media_row_get_position(self_: *mut AwraMediaRow) -> c_double;
+    pub fn awra_media_row_get_seekable(self_: *mut AwraMediaRow) -> gboolean;
+    pub fn awra_media_row_get_show_play_button(self_: *mut AwraMediaRow) -> gboolean;
+    pub fn awra_media_row_get_show_stop_button(self_: *mut AwraMediaRow) -> gboolean;
+    pub fn awra_media_row_get_show_volume(self_: *mut AwraMediaRow) -> gboolean;
+    pub fn awra_media_row_get_subtitle(self_: *mut AwraMediaRow) -> *const c_char;
+    pub fn awra_media_row_get_suffix(self_: *mut AwraMediaRow) -> *mut gtk::GtkWidget;
+    pub fn awra_media_row_get_title(self_: *mut AwraMediaRow) -> *const c_char;
+    pub fn awra_media_row_get_volume(self_: *mut AwraMediaRow) -> c_double;
+    pub fn awra_media_row_set_accent_color(self_: *mut AwraMediaRow, color: *const gdk::GdkRGBA);
+    pub fn awra_media_row_set_duration(self_: *mut AwraMediaRow, duration: c_double);
+    pub fn awra_media_row_set_icon_name(self_: *mut AwraMediaRow, icon_name: *const c_char);
+    pub fn awra_media_row_set_playing(self_: *mut AwraMediaRow, playing: gboolean);
+    pub fn awra_media_row_set_position(self_: *mut AwraMediaRow, position: c_double);
+    pub fn awra_media_row_set_seekable(self_: *mut AwraMediaRow, seekable: gboolean);
+    pub fn awra_media_row_set_show_play_button(self_: *mut AwraMediaRow, show: gboolean);
+    pub fn awra_media_row_set_show_stop_button(self_: *mut AwraMediaRow, show: gboolean);
+    pub fn awra_media_row_set_show_volume(self_: *mut AwraMediaRow, show: gboolean);
+    pub fn awra_media_row_set_subtitle(self_: *mut AwraMediaRow, subtitle: *const c_char);
+    pub fn awra_media_row_set_suffix(self_: *mut AwraMediaRow, suffix: *mut gtk::GtkWidget);
+    pub fn awra_media_row_set_title(self_: *mut AwraMediaRow, title: *const c_char);
+    pub fn awra_media_row_set_volume(self_: *mut AwraMediaRow, volume: c_double);
 
     //=========================================================================
     // AwraMenuButton
@@ -2892,6 +3242,51 @@ unsafe extern "C" {
         title: *const c_char,
     );
     pub fn awra_selection_toolbar_set_title(self_: *mut AwraSelectionToolbar, title: *const c_char);
+
+    //=========================================================================
+    // AwraShortcutCapture
+    //=========================================================================
+    pub fn awra_shortcut_capture_get_type() -> GType;
+    pub fn awra_shortcut_capture_new() -> *mut gtk::GtkWidget;
+    pub fn awra_shortcut_capture_cancel(self_: *mut AwraShortcutCapture);
+    pub fn awra_shortcut_capture_clear(self_: *mut AwraShortcutCapture);
+    pub fn awra_shortcut_capture_get_allow_chords(self_: *mut AwraShortcutCapture) -> gboolean;
+    pub fn awra_shortcut_capture_get_codes(self_: *mut AwraShortcutCapture) -> *mut *mut c_char;
+    pub fn awra_shortcut_capture_get_display_labels(
+        self_: *mut AwraShortcutCapture,
+    ) -> *const *const c_char;
+    pub fn awra_shortcut_capture_get_keycodes(
+        self_: *mut AwraShortcutCapture,
+        n_keycodes: *mut c_uint,
+    ) -> *const c_uint;
+    pub fn awra_shortcut_capture_get_keyvals(
+        self_: *mut AwraShortcutCapture,
+        n_keyvals: *mut c_uint,
+    ) -> *const c_uint;
+    pub fn awra_shortcut_capture_get_listening(self_: *mut AwraShortcutCapture) -> gboolean;
+    pub fn awra_shortcut_capture_get_modifiers(
+        self_: *mut AwraShortcutCapture,
+    ) -> gdk::GdkModifierType;
+    pub fn awra_shortcut_capture_get_placeholder(self_: *mut AwraShortcutCapture) -> *const c_char;
+    pub fn awra_shortcut_capture_set_allow_chords(
+        self_: *mut AwraShortcutCapture,
+        allow_chords: gboolean,
+    );
+    pub fn awra_shortcut_capture_set_display_labels(
+        self_: *mut AwraShortcutCapture,
+        labels: *const *const c_char,
+    );
+    pub fn awra_shortcut_capture_set_placeholder(
+        self_: *mut AwraShortcutCapture,
+        placeholder: *const c_char,
+    );
+    pub fn awra_shortcut_capture_set_shortcut(
+        self_: *mut AwraShortcutCapture,
+        keycodes: *const c_uint,
+        n_keycodes: c_uint,
+        modifiers: gdk::GdkModifierType,
+    );
+    pub fn awra_shortcut_capture_start(self_: *mut AwraShortcutCapture);
 
     //=========================================================================
     // AwraSidebar
@@ -3220,7 +3615,9 @@ unsafe extern "C" {
     //=========================================================================
     pub fn awra_toast_overlay_get_type() -> GType;
     pub fn awra_toast_overlay_new() -> *mut gtk::GtkWidget;
+    pub fn awra_toast_overlay_dismiss(self_: *mut AwraToastOverlay, toast_id: c_uint);
     pub fn awra_toast_overlay_get_child(self_: *mut AwraToastOverlay) -> *mut gtk::GtkWidget;
+    pub fn awra_toast_overlay_get_current_toast_id(self_: *mut AwraToastOverlay) -> c_uint;
     pub fn awra_toast_overlay_get_revealed(self_: *mut AwraToastOverlay) -> gboolean;
     pub fn awra_toast_overlay_set_child(self_: *mut AwraToastOverlay, child: *mut gtk::GtkWidget);
     pub fn awra_toast_overlay_show_message(
@@ -3228,6 +3625,13 @@ unsafe extern "C" {
         message: *const c_char,
         timeout_ms: c_uint,
     );
+    pub fn awra_toast_overlay_show_with_action(
+        self_: *mut AwraToastOverlay,
+        message: *const c_char,
+        button_label: *const c_char,
+        detailed_action_name: *const c_char,
+        timeout_ms: c_uint,
+    ) -> c_uint;
 
     //=========================================================================
     // AwraToggleButton
@@ -3310,6 +3714,48 @@ unsafe extern "C" {
     pub fn awra_toolbar_set_start_widget(self_: *mut AwraToolbar, widget: *mut gtk::GtkWidget);
 
     //=========================================================================
+    // AwraVolumeControl
+    //=========================================================================
+    pub fn awra_volume_control_get_type() -> GType;
+    pub fn awra_volume_control_new() -> *mut gtk::GtkWidget;
+    pub fn awra_volume_control_get_effective_volume(self_: *mut AwraVolumeControl) -> c_double;
+    pub fn awra_volume_control_get_muted(self_: *mut AwraVolumeControl) -> gboolean;
+    pub fn awra_volume_control_get_slider(self_: *mut AwraVolumeControl) -> *mut gtk::GtkRange;
+    pub fn awra_volume_control_get_volume(self_: *mut AwraVolumeControl) -> c_double;
+    pub fn awra_volume_control_set_muted(self_: *mut AwraVolumeControl, muted: gboolean);
+    pub fn awra_volume_control_set_volume(self_: *mut AwraVolumeControl, volume: c_double);
+
+    //=========================================================================
+    // AwraWaveformView
+    //=========================================================================
+    pub fn awra_waveform_view_get_type() -> GType;
+    pub fn awra_waveform_view_new() -> *mut gtk::GtkWidget;
+    pub fn awra_waveform_view_get_duration(self_: *mut AwraWaveformView) -> c_double;
+    pub fn awra_waveform_view_get_expected_peaks(self_: *mut AwraWaveformView) -> c_uint;
+    pub fn awra_waveform_view_get_hint_position(self_: *mut AwraWaveformView) -> c_double;
+    pub fn awra_waveform_view_get_marker_editable(self_: *mut AwraWaveformView) -> gboolean;
+    pub fn awra_waveform_view_get_marker_position(self_: *mut AwraWaveformView) -> c_double;
+    pub fn awra_waveform_view_get_peaks(
+        self_: *mut AwraWaveformView,
+        n_peaks: *mut size_t,
+    ) -> *const c_float;
+    pub fn awra_waveform_view_get_position(self_: *mut AwraWaveformView) -> c_double;
+    pub fn awra_waveform_view_set_duration(self_: *mut AwraWaveformView, duration: c_double);
+    pub fn awra_waveform_view_set_expected_peaks(
+        self_: *mut AwraWaveformView,
+        expected_peaks: c_uint,
+    );
+    pub fn awra_waveform_view_set_hint_position(self_: *mut AwraWaveformView, position: c_double);
+    pub fn awra_waveform_view_set_marker_editable(self_: *mut AwraWaveformView, editable: gboolean);
+    pub fn awra_waveform_view_set_marker_position(self_: *mut AwraWaveformView, position: c_double);
+    pub fn awra_waveform_view_set_peaks(
+        self_: *mut AwraWaveformView,
+        peaks: *const c_float,
+        n_peaks: size_t,
+    );
+    pub fn awra_waveform_view_set_position(self_: *mut AwraWaveformView, position: c_double);
+
+    //=========================================================================
     // AwraWindow
     //=========================================================================
     pub fn awra_window_get_type() -> GType;
@@ -3337,6 +3783,12 @@ unsafe extern "C" {
         column_spacing: AwraSpacing,
     );
     pub fn awra_init();
+    pub fn awra_keyboard_code_from_hardware_keycode(keycode: c_uint) -> *const c_char;
+    pub fn awra_keyboard_code_get_label(
+        display: *mut gdk::GdkDisplay,
+        code: *const c_char,
+    ) -> *mut c_char;
+    pub fn awra_keyboard_code_to_hardware_keycode(code: *const c_char) -> c_uint;
     pub fn awra_motion_ease_in_out_cubic(progress: c_double) -> c_double;
     pub fn awra_motion_ease_out_cubic(progress: c_double) -> c_double;
     pub fn awra_motion_get_duration(
