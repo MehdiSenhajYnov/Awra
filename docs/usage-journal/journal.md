@@ -600,3 +600,41 @@ Décisions confirmées :
 À tester dans KeyToMusicAwra : le glisser-déposer réel sur les touches (GTK
 n'offre pas de synthèse publique d'un drop) et la capture de raccourcis
 lorsque des accélérateurs d'application sont actifs.
+
+## 02:10 — KeyToMusicAwra — Premier assemblage de l'application réelle
+
+L'application complète (clavier, inspecteur, pistes, ajout de sons, Découvrir,
+Mood AI, Bibliothèque, Réglages) a été assemblée sur les nouveaux composants
+puis pilotée pour de vrai sous X11 (Xvfb + XTEST) avec le profil d'un
+utilisateur. Quatre défauts génériques sont apparus et ont été corrigés dans
+Awra plutôt que contournés :
+
+- **Boutons dans le suffixe d'`AwraActionRow` : confirmé, corrigé.** La rangée
+  est un `GtkButton`, dont le geste de clic travaille en phase de capture : il
+  réclamait chaque clic avant que les boutons du suffixe ne le voient. Un
+  « + » ou une corbeille posés en suffixe ne réagissaient jamais. Le geste
+  passe en phase de bouillonnement ; un test vérifie la phase.
+- **Légendes de clavier sur un backend sans keymap fiable : corrigé.** Sous
+  Broadway, `gdk_display_translate_key()` renvoyait des keyvals sans caractère
+  et la vue affichait `0xa`, `0xb`… Une touche de disposition dont la
+  traduction n'est ni imprimable ni morte garde désormais sa légende physique.
+- **Traductions jamais chargées : corrigé.** Awra n'appelait pas
+  `bindtextdomain()`, si bien que le domaine `awra-1` ne pouvait venir que du
+  répertoire par défaut du système. `awra_init()` le lie au préfixe
+  d'installation, ou à `$AWRA_LOCALEDIR` (exporté par `meson devenv`) pour un
+  arbre de build. Le catalogue français est ajouté.
+- **Focus volé par `GtkFlowBox` : leçon côté application.** Un
+  `AwraShortcutCapture` placé dans un `GtkFlowBox` démarrait l'écoute puis
+  l'annulait aussitôt : l'enfant de la flowbox prenait le focus au même clic.
+  Rien à changer dans Awra, mais à retenir : pas de contrôle interactif dans un
+  enfant de flowbox focusable.
+
+Ce qui a bien marché sans retouche : `AwraEdgePanel` comme panneau d'ajout
+flottant, `AwraMediaRow` pour le dock des pistes, `AwraWaveformView` en flux
+progressif, les toasts avec action « Annuler » liés à `win.undo`, et la palette
+de commandes construite depuis un `GMenuModel`. Aucune ligne de CSS locale
+dans l'application.
+
+Encore à vérifier sur un vrai bureau Wayland : le flou natif, le
+glisser-déposer de fichiers sur les touches et la capture de raccourcis
+pendant que la détection globale du clavier est active.
