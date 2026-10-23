@@ -2,6 +2,7 @@
 
 #include <awra/awra-context.h>
 #include <awra/awra-surface.h>
+#include <awra/awra-window.h>
 
 #include "material/awra-material-resolver-private.h"
 
@@ -161,6 +162,37 @@ awra_surface_unmap (GtkWidget *widget)
   GTK_WIDGET_CLASS (awra_surface_parent_class)->unmap (widget);
 }
 
+/* Compositor blur only blurs what is behind the window. An overlay surface
+ * (floating panel, menu, HUD…) drawn inside a window covers the window's own
+ * content, which no compositor can blur: it must take the opaque fallback or
+ * the content beneath stays sharp and unreadable through it. Popovers and
+ * dialogs own a native surface and keep their blur. */
+static gboolean
+draws_over_window_content (AwraSurface *self)
+{
+  GtkNative *native;
+
+  switch (self->role) {
+  case AWRA_SURFACE_ROLE_FLOATING:
+  case AWRA_SURFACE_ROLE_POPOVER:
+  case AWRA_SURFACE_ROLE_MENU:
+  case AWRA_SURFACE_ROLE_DIALOG:
+  case AWRA_SURFACE_ROLE_TOOLTIP:
+  case AWRA_SURFACE_ROLE_HUD:
+    break;
+  default:
+    return FALSE;
+  }
+
+  native = gtk_widget_get_native (GTK_WIDGET (self));
+  if (!GTK_IS_WINDOW (native))
+    return FALSE;
+  if (AWRA_IS_WINDOW (native) &&
+      awra_window_get_root_surface (AWRA_WINDOW (native)) == self)
+    return FALSE;
+  return TRUE;
+}
+
 static void
 awra_surface_snapshot (GtkWidget   *widget,
                        GtkSnapshot *snapshot)
@@ -199,7 +231,8 @@ awra_surface_snapshot (GtkWidget   *widget,
     active = gtk_window_is_active (GTK_WINDOW (root));
   blur_available = (awra_diagnostics_get_capabilities (diagnostics) &
                     AWRA_EFFECT_CAPABILITY_BLUR) != 0 &&
-                   awra_style_manager_get_native_blur_enabled (manager);
+                   awra_style_manager_get_native_blur_enabled (manager) &&
+                   !draws_over_window_content (self);
   reduced_transparency = awra_style_manager_get_reduced_transparency (manager);
 
   awra_material_resolve (self->material,

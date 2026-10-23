@@ -15,7 +15,7 @@
 #define UNIT_NATURAL   46.0
 #define UNIT_MAXIMUM   64.0
 #define SECTION_GAP    0.25
-#define FUNCTION_GAP   0.5
+#define FUNCTION_GAP   0.25
 #define MAIN_WIDTH     15.0
 #define NAV_WIDTH      3.0
 #define NUMPAD_WIDTH   4.0

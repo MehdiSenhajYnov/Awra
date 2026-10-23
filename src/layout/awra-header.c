@@ -184,10 +184,10 @@ awra_header_content_measure (GtkWidget      *widget,
                  &end_minimum, &end_natural);
 
   if (orientation == GTK_ORIENTATION_HORIZONTAL) {
-    /* Symmetric side reservations guarantee that the visual centre remains
-     * stable even when branding and window controls have different widths. */
-    *minimum = center_minimum +
-               2 * MAX (start_minimum, end_minimum);
+    /* Natural width keeps symmetric side reservations so the centre stays
+     * visually stable; the minimum does not, otherwise a wide end cluster
+     * would force the whole window wider than the screen. */
+    *minimum = start_minimum + center_minimum + end_minimum;
     *natural = center_natural +
                2 * MAX (start_natural, end_natural);
   } else {
@@ -231,11 +231,12 @@ awra_header_content_size_allocate (GtkWidget *widget,
   int center_natural;
   int end_minimum;
   int end_natural;
-  int side_minimum;
-  int side_budget;
+  int available;
   int start_width;
   int end_width;
-  int side_extent;
+  int gap_start;
+  int gap_end;
+  int gap;
   int center_width;
   int center_x;
   gboolean rtl;
@@ -247,21 +248,24 @@ awra_header_content_size_allocate (GtkWidget *widget,
   measure_child (self->end, GTK_ORIENTATION_HORIZONTAL, height,
                  &end_minimum, &end_natural);
 
-  /* Protect each side's real minimum, then give the centered control its
-   * preferred span before spending leftover width on the side clusters. This
-   * mirrors a product header: branding may compact slightly, but search does
-   * not remain needlessly narrow while empty symmetric space is available. */
-  side_minimum = MAX (start_minimum, end_minimum);
-  center_width = MIN (center_natural,
-                      MAX (0, width - 2 * side_minimum));
-  center_width = MIN (width, MAX (MIN (center_minimum, width), center_width));
-  side_budget = MAX (0, (width - center_width) / 2);
-  start_width = MIN (start_natural, side_budget);
-  end_width = MIN (end_natural, side_budget);
-  side_extent = MAX (start_width, end_width);
-  center_width = MIN (center_width, MAX (0, width - 2 * side_extent));
-  center_x = (width - center_width) / 2;
+  /* Sides get their natural width when it fits beside the centre's minimum,
+   * never less than their own minimum. The centre then takes its preferred
+   * span inside the remaining gap, as close to the true centre as the sides
+   * allow: perfectly centred when there is room, shifted (never overlapped)
+   * when the window is narrow. */
+  available = MAX (0, width - center_minimum);
+  start_width = MAX (start_minimum,
+                     MIN (start_natural, available - end_minimum));
+  end_width = MAX (end_minimum,
+                   MIN (end_natural, available - start_width));
   rtl = gtk_widget_get_direction (widget) == GTK_TEXT_DIR_RTL;
+  gap_start = rtl ? end_width : start_width;
+  gap_end = width - (rtl ? start_width : end_width);
+  gap = MAX (0, gap_end - gap_start);
+  center_width = MIN (center_natural, gap);
+  center_width = MAX (center_width, MIN (center_minimum, gap));
+  center_x = CLAMP ((width - center_width) / 2,
+                    gap_start, MAX (gap_start, gap_end - center_width));
 
   allocate_child_at (self->start,
                      rtl ? width - start_width : 0,

@@ -3,10 +3,14 @@
 #include <awra/awra-form.h>
 #include <awra/awra-layout.h>
 
+#include "awra-form-row-private.h"
+
 struct _AwraForm {
   GtkWidget parent_instance;
   GtkBox *rows_box;
   GPtrArray *rows;
+  /* Every row's label shares one column so controls line up. */
+  GtkSizeGroup *labels;
 };
 
 static GtkBuildableIface *parent_buildable_iface;
@@ -49,6 +53,7 @@ awra_form_dispose (GObject *object)
     self->rows_box = NULL;
   }
   g_clear_pointer (&self->rows, g_ptr_array_unref);
+  g_clear_object (&self->labels);
   G_OBJECT_CLASS (awra_form_parent_class)->dispose (object);
 }
 
@@ -80,6 +85,7 @@ static void
 awra_form_init (AwraForm *self)
 {
   self->rows = g_ptr_array_new ();
+  self->labels = gtk_size_group_new (GTK_SIZE_GROUP_HORIZONTAL);
   self->rows_box = GTK_BOX (gtk_box_new (GTK_ORIENTATION_VERTICAL, 0));
   awra_box_set_spacing (self->rows_box, AWRA_SPACING_LG);
   gtk_widget_set_parent (GTK_WIDGET (self->rows_box), GTK_WIDGET (self));
@@ -115,6 +121,7 @@ awra_form_insert (AwraForm    *self,
     sibling = g_ptr_array_index (self->rows, position - 1);
   gtk_box_insert_child_after (self->rows_box, GTK_WIDGET (row), sibling);
   g_ptr_array_insert (self->rows, position, row);
+  gtk_size_group_add_widget (self->labels, awra_form_row_get_label_widget (row));
 }
 
 void
@@ -128,6 +135,7 @@ awra_form_remove (AwraForm    *self,
   if (!g_ptr_array_find (self->rows, row, &position))
     return;
   g_ptr_array_remove_index (self->rows, position);
+  gtk_size_group_remove_widget (self->labels, awra_form_row_get_label_widget (row));
   gtk_box_remove (self->rows_box, GTK_WIDGET (row));
 }
 

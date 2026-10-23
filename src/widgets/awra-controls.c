@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
 
+#include <string.h>
 #include <awra/awra-check-button.h>
 #include <awra/awra-entry.h>
 #include <awra/awra-search-entry.h>
@@ -196,7 +197,39 @@ static void awra_spin_button_get_property (GObject *object, guint id, GValue *va
 static void awra_spin_button_set_property (GObject *object, guint id, const GValue *value, GParamSpec *pspec) { if (id == SPIN_PROP_VALUE) awra_spin_button_set_value (AWRA_SPIN_BUTTON (object), g_value_get_double (value)); else G_OBJECT_WARN_INVALID_PROPERTY_ID (object, id, pspec); }
 static void awra_spin_button_class_init (AwraSpinButtonClass *klass) { GObjectClass *oc = G_OBJECT_CLASS (klass); GtkWidgetClass *wc = GTK_WIDGET_CLASS (klass); oc->dispose = awra_spin_button_dispose; oc->get_property = awra_spin_button_get_property; oc->set_property = awra_spin_button_set_property; wc->snapshot = awra_spin_button_snapshot; spin_properties[SPIN_PROP_VALUE] = g_param_spec_double ("value", NULL, NULL, -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS); g_object_class_install_properties (oc, SPIN_N_PROPS, spin_properties); gtk_widget_class_set_layout_manager_type (wc, GTK_TYPE_BIN_LAYOUT); }
 static void awra_spin_button_init (AwraSpinButton *self) { self->delegate = GTK_SPIN_BUTTON (gtk_spin_button_new_with_range (0.0, 100.0, 1.0)); gtk_widget_add_css_class (GTK_WIDGET (self->delegate), "awra-entry"); gtk_widget_add_css_class (GTK_WIDGET (self->delegate), "awra-spin-button"); gtk_widget_set_parent (GTK_WIDGET (self->delegate), GTK_WIDGET (self)); g_signal_connect (self->delegate, "notify::value", G_CALLBACK (spin_notify_cb), self); }
-GtkWidget *awra_spin_button_new_with_range (double minimum, double maximum, double step) { AwraSpinButton *self; g_return_val_if_fail (minimum < maximum, NULL); g_return_val_if_fail (step > 0.0, NULL); self = g_object_new (AWRA_TYPE_SPIN_BUTTON, NULL); gtk_spin_button_set_range (self->delegate, minimum, maximum); gtk_spin_button_set_increments (self->delegate, step, step * 10.0); return GTK_WIDGET (self); }
+/* The text field fits the widest value of the range (sign and decimals
+ * included) so "8765" never shows as "876". */
+static void
+fit_width_to_range (AwraSpinButton *self,
+                    double          minimum,
+                    double          maximum)
+{
+  g_autofree char *low = g_strdup_printf ("%.*f",
+                                          gtk_spin_button_get_digits (self->delegate),
+                                          minimum);
+  g_autofree char *high = g_strdup_printf ("%.*f",
+                                           gtk_spin_button_get_digits (self->delegate),
+                                           maximum);
+  int chars = (int) MAX (strlen (low), strlen (high));
+
+  gtk_editable_set_width_chars (GTK_EDITABLE (self->delegate), MAX (chars, 2));
+}
+
+GtkWidget *
+awra_spin_button_new_with_range (double minimum,
+                                 double maximum,
+                                 double step)
+{
+  AwraSpinButton *self;
+
+  g_return_val_if_fail (minimum < maximum, NULL);
+  g_return_val_if_fail (step > 0.0, NULL);
+  self = g_object_new (AWRA_TYPE_SPIN_BUTTON, NULL);
+  gtk_spin_button_set_range (self->delegate, minimum, maximum);
+  gtk_spin_button_set_increments (self->delegate, step, step * 10.0);
+  fit_width_to_range (self, minimum, maximum);
+  return GTK_WIDGET (self);
+}
 double awra_spin_button_get_value (AwraSpinButton *self) { g_return_val_if_fail (AWRA_IS_SPIN_BUTTON (self), 0.0); return gtk_spin_button_get_value (self->delegate); }
 void awra_spin_button_set_value (AwraSpinButton *self, double value) { g_return_if_fail (AWRA_IS_SPIN_BUTTON (self)); gtk_spin_button_set_value (self->delegate, value); }
 GtkSpinButton *awra_spin_button_get_delegate (AwraSpinButton *self) { g_return_val_if_fail (AWRA_IS_SPIN_BUTTON (self), NULL); return self->delegate; }

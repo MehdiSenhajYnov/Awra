@@ -1329,6 +1329,47 @@ test_action_row_and_context_menu (void)
   g_assert_null (awra_widget_get_context_menu_popover (row));
 }
 
+/* Rows of a form share one label column, compact controls keep their natural
+ * width and text fields fill the field column. */
+static void
+test_form_alignment_and_control_width (void)
+{
+  g_autoptr (GtkWidget) form = g_object_ref_sink (awra_form_new ());
+  AwraFormRow *short_row = AWRA_FORM_ROW (awra_form_row_new ());
+  AwraFormRow *long_row = AWRA_FORM_ROW (awra_form_row_new ());
+  GtkWidget *spin = awra_spin_button_new_with_range (1024.0, 65535.0, 1.0);
+  GtkWidget *entry = awra_entry_new ();
+  GtkWidget *short_label;
+  GtkWidget *long_label;
+  int short_width = 0;
+  int long_width = 0;
+
+  awra_form_row_set_label (short_row, "Port");
+  awra_form_row_set_label (long_row,
+                           "A considerably longer label that needs more room");
+  awra_form_row_set_control (short_row, spin);
+  awra_form_row_set_control (long_row, entry);
+  awra_form_append (AWRA_FORM (form), short_row);
+  awra_form_append (AWRA_FORM (form), long_row);
+
+  short_label = gtk_widget_get_first_child (
+    gtk_widget_get_first_child (GTK_WIDGET (short_row)));
+  long_label = gtk_widget_get_first_child (
+    gtk_widget_get_first_child (GTK_WIDGET (long_row)));
+  gtk_widget_measure (short_label, GTK_ORIENTATION_HORIZONTAL, -1,
+                      NULL, &short_width, NULL, NULL);
+  gtk_widget_measure (long_label, GTK_ORIENTATION_HORIZONTAL, -1,
+                      NULL, &long_width, NULL, NULL);
+  g_assert_cmpint (short_width, ==, long_width);
+
+  g_assert_false (gtk_widget_get_hexpand (spin));
+  g_assert_cmpint (gtk_widget_get_halign (spin), ==, GTK_ALIGN_START);
+  g_assert_true (gtk_widget_get_hexpand (entry));
+  g_assert_cmpint (gtk_editable_get_width_chars (GTK_EDITABLE (
+                     awra_spin_button_get_delegate (AWRA_SPIN_BUTTON (spin)))),
+                   >=, 5);
+}
+
 /* Interactive suffix controls must see clicks before the row claims them. */
 static void
 test_action_row_suffix_receives_clicks (void)
@@ -2413,6 +2454,8 @@ main (int   argc,
   g_test_add_func ("/awra/widgets/edge-panel", test_edge_panel);
   g_test_add_func ("/awra/widgets/action-row-context-menu",
                    test_action_row_and_context_menu);
+  g_test_add_func ("/awra/widgets/form-alignment-and-control-width",
+                   test_form_alignment_and_control_width);
   g_test_add_func ("/awra/widgets/action-row-suffix-receives-clicks",
                    test_action_row_suffix_receives_clicks);
   g_test_add_func ("/awra/widgets/window-popover", test_window_and_popover);

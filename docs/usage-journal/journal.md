@@ -638,3 +638,38 @@ dans l'application.
 Encore à vérifier sur un vrai bureau Wayland : le flou natif, le
 glisser-déposer de fichiers sur les touches et la capture de raccourcis
 pendant que la détection globale du clavier est active.
+
+## 03:03 — KeyToMusicAwra — Seconde passe de finition après un vrai retour
+
+Le premier retour d'utilisation réelle a été sévère : icônes trompeuses,
+panneau d'ajout illisible sans flou, espacements irréguliers, artefact au clic
+sur une touche. Une partie venait de l'application, une partie d'Awra.
+
+- **Surfaces superposées sans flou : corrigé.** Une surface de rôle flottant,
+  popover, menu, dialogue, infobulle ou HUD posée à l'intérieur d'une fenêtre
+  n'a pas de fenêtre compositeur propre : le flou du compositeur ne la
+  traverse pas, et le contenu de la fenêtre se lisait au travers. Ces surfaces
+  basculent désormais sur le rendu opaque de repli ; seule la surface racine
+  de la fenêtre garde le verre.
+- **Formulaires mal alignés : corrigé.** Les libellés d'`AwraForm` partagent
+  un `GtkSizeGroup` (colonne commune, largeur minimale), le champ s'aligne sur
+  la ligne de base du libellé, et seuls les champs texte, listes déroulantes
+  et zones de texte s'étirent ; interrupteurs, compteurs et captures de
+  raccourci gardent leur largeur naturelle au lieu de remplir la ligne.
+- **Compteurs trop larges : corrigé.** Un `AwraSpinControl` dimensionne son
+  entrée d'après le nombre de chiffres de sa plage.
+- **En-tête qui imposait une largeur de fenêtre : corrigé.** `AwraHeader`
+  réclamait trois fois la plus large de ses zones pour rester symétrique ; la
+  fenêtre ne descendait pas sous 1 560 px. Le minimum vaut maintenant la somme
+  des zones, et le centre se décale s'il ne peut plus être centré.
+- **Légendes de touches tronquées : corrigé.** Une légende trop longue pour sa
+  touche (« Échap » à petite taille) est réduite jusqu'à 65 % plutôt que
+  coupée par des points de suspension.
+- **Écart des touches de fonction :** ramené à un quart de touche, plus proche
+  d'un vrai clavier.
+
+Côté application, sans rien à changer dans Awra : un bouton à bascule dont
+seule l'icône dit l'état (le micro de l'écoute) ne se comprend pas ; un
+libellé d'état et une bannière avec action règlent le problème. Un panneau
+qui se révèle à côté d'une grille fait recalculer la grille à chaque
+sélection ; une colonne de contexte permanente évite l'artefact.

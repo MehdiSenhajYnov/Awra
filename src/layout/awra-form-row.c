@@ -3,6 +3,9 @@
 #include <awra/awra-form-row.h>
 #include <awra/awra-layout.h>
 #include <awra/awra-typography.h>
+#include <awra/awra.h>
+
+#include "awra-form-row-private.h"
 
 struct _AwraFormRow {
   GtkWidget parent_instance;
@@ -310,7 +313,14 @@ awra_form_row_init (AwraFormRow *self)
   gtk_label_set_wrap (self->help_widget, TRUE);
   gtk_label_set_wrap (self->error_widget, TRUE);
   gtk_widget_set_hexpand (GTK_WIDGET (self->field), TRUE);
-  gtk_widget_set_size_request (GTK_WIDGET (self->label_widget), 176, -1);
+  /* Labels line up with the control, not with the control and its help text. */
+  gtk_box_set_baseline_child (self->field, 0);
+  gtk_widget_set_valign (GTK_WIDGET (self->label_widget),
+                         GTK_ALIGN_BASELINE_FILL);
+  gtk_widget_set_valign (GTK_WIDGET (self->field), GTK_ALIGN_BASELINE_FILL);
+  /* A common minimum keeps label columns aligned across the forms of a
+   * page; AwraForm widens it to its longest label. */
+  gtk_widget_set_size_request (GTK_WIDGET (self->label_widget), 224, -1);
   gtk_box_append (self->root, GTK_WIDGET (self->label_widget));
   gtk_box_append (self->root, GTK_WIDGET (self->field));
   gtk_box_append (self->field, GTK_WIDGET (self->help_widget));
@@ -328,7 +338,51 @@ void awra_form_row_set_help_text (AwraFormRow *self, const char *text) { g_retur
 const char *awra_form_row_get_error_message (AwraFormRow *self) { g_return_val_if_fail (AWRA_IS_FORM_ROW (self), NULL); return self->error_message; }
 void awra_form_row_set_error_message (AwraFormRow *self, const char *message) { g_return_if_fail (AWRA_IS_FORM_ROW (self)); if (g_strcmp0 (self->error_message, message) == 0) return; g_free (self->error_message); self->error_message = g_strdup (message); gtk_label_set_text (self->error_widget, message != NULL ? message : ""); update_validation (self); g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_ERROR_MESSAGE]); }
 GtkWidget *awra_form_row_get_control (AwraFormRow *self) { g_return_val_if_fail (AWRA_IS_FORM_ROW (self), NULL); return self->control; }
-void awra_form_row_set_control (AwraFormRow *self, GtkWidget *control) { g_return_if_fail (AWRA_IS_FORM_ROW (self)); g_return_if_fail (control == NULL || GTK_IS_WIDGET (control)); if (self->control == control) return; if (self->control != NULL) gtk_box_remove (self->field, self->control); self->control = control; if (control != NULL) { gtk_widget_set_hexpand (control, TRUE); gtk_box_prepend (self->field, control); } update_validation (self); g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_CONTROL]); }
+/* Text fields and pickers fill the field column; compact controls (spin
+ * buttons, switches, segmented controls, shortcut captures…) keep their natural
+ * width instead of stretching across the form. An explicit hexpand wins. */
+static gboolean
+control_fills_width (GtkWidget *control)
+{
+  return GTK_IS_EDITABLE (control) && !GTK_IS_SPIN_BUTTON (control)
+    ? TRUE
+    : AWRA_IS_ENTRY (control) || AWRA_IS_SEARCH_ENTRY (control) ||
+      AWRA_IS_PASSWORD_ENTRY (control) || AWRA_IS_TEXT_AREA (control) ||
+      AWRA_IS_TAG_ENTRY (control) || AWRA_IS_DROPDOWN (control) ||
+      GTK_IS_DROP_DOWN (control) || GTK_IS_TEXT_VIEW (control) ||
+      GTK_IS_SCROLLED_WINDOW (control);
+}
+
+void
+awra_form_row_set_control (AwraFormRow *self,
+                           GtkWidget   *control)
+{
+  g_return_if_fail (AWRA_IS_FORM_ROW (self));
+  g_return_if_fail (control == NULL || GTK_IS_WIDGET (control));
+  if (self->control == control)
+    return;
+  if (self->control != NULL)
+    gtk_box_remove (self->field, self->control);
+  self->control = control;
+  if (control != NULL) {
+    if (!gtk_widget_get_hexpand_set (control)) {
+      if (control_fills_width (control))
+        gtk_widget_set_hexpand (control, TRUE);
+      else
+        gtk_widget_set_halign (control, GTK_ALIGN_START);
+    }
+    gtk_box_prepend (self->field, control);
+  }
+  update_validation (self);
+  g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_CONTROL]);
+}
+
+GtkWidget *
+awra_form_row_get_label_widget (AwraFormRow *self)
+{
+  g_return_val_if_fail (AWRA_IS_FORM_ROW (self), NULL);
+  return GTK_WIDGET (self->label_widget);
+}
 gboolean awra_form_row_get_required (AwraFormRow *self) { g_return_val_if_fail (AWRA_IS_FORM_ROW (self), FALSE); return self->required; }
 void awra_form_row_set_required (AwraFormRow *self, gboolean required) { g_return_if_fail (AWRA_IS_FORM_ROW (self)); required = !!required; if (self->required == required) return; self->required = required; update_label (self); g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_REQUIRED]); }
 AwraValidationState awra_form_row_get_validation_state (AwraFormRow *self) { g_return_val_if_fail (AWRA_IS_FORM_ROW (self), AWRA_VALIDATION_STATE_NONE); return self->validation_state; }

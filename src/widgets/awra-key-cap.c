@@ -397,6 +397,44 @@ awra_key_cap_measure (GtkWidget      *widget,
   *natural_baseline = -1;
 }
 
+/* Places the legend in @width × @height at (@x, @y). A legend wider than the
+ * slot (French "Échap" on a narrow 1u key) is drawn at its natural width and
+ * scaled down to fit, down to 65 %, rather than being cut by an ellipsis. */
+static void
+allocate_legend (GtkLabel *label,
+                 int       x,
+                 int       y,
+                 int       width,
+                 int       height,
+                 float     xalign)
+{
+  int natural = 0;
+  int ignored;
+  float scale;
+  float drawn_width;
+  float offset;
+  GskTransform *transform;
+
+  gtk_widget_measure (GTK_WIDGET (label), GTK_ORIENTATION_HORIZONTAL, -1,
+                      &ignored, &natural, NULL, NULL);
+  if (natural <= width || width <= 0) {
+    gtk_widget_allocate (GTK_WIDGET (label), MAX (width, 0), height, -1,
+                         gsk_transform_translate (
+                           NULL, &GRAPHENE_POINT_INIT ((float) x, (float) y)));
+    return;
+  }
+
+  scale = MAX ((float) width / (float) natural, 0.65f);
+  drawn_width = natural * scale;
+  offset = MAX ((width - drawn_width) * xalign, 0.0f);
+  transform = gsk_transform_translate (
+    NULL,
+    &GRAPHENE_POINT_INIT ((float) x + offset,
+                          (float) y + height * (1.0f - scale) / 2.0f));
+  transform = gsk_transform_scale (transform, scale, scale);
+  gtk_widget_allocate (GTK_WIDGET (label), natural, height, -1, transform);
+}
+
 static void
 awra_key_cap_size_allocate (GtkWidget *widget,
                             int        width,
@@ -448,14 +486,9 @@ awra_key_cap_size_allocate (GtkWidget *widget,
 
     gtk_label_set_xalign (self->label, 0.0f);
     gtk_label_set_xalign (self->secondary, 0.0f);
-    gtk_widget_allocate (GTK_WIDGET (self->label), label_width, label_height,
-                         -1,
-                         gsk_transform_translate (
-                           NULL,
-                           &GRAPHENE_POINT_INIT (
-                             rtl ? (float) (width - inset - label_width)
-                                 : (float) inset,
-                             (float) inset)));
+    allocate_legend (self->label,
+                     rtl ? width - inset - label_width : inset,
+                     inset, label_width, label_height, rtl ? 1.0f : 0.0f);
     gtk_widget_allocate (GTK_WIDGET (self->secondary), inner_width,
                          secondary_height, -1,
                          gsk_transform_translate (
@@ -465,13 +498,8 @@ awra_key_cap_size_allocate (GtkWidget *widget,
                              (float) (height - inset - secondary_height))));
   } else {
     gtk_label_set_xalign (self->label, 0.5f);
-    gtk_widget_allocate (GTK_WIDGET (self->label), inner_width, label_height,
-                         -1,
-                         gsk_transform_translate (
-                           NULL,
-                           &GRAPHENE_POINT_INIT (
-                             (float) inset,
-                             (float) MAX ((height - label_height) / 2, 0))));
+    allocate_legend (self->label, inset, MAX ((height - label_height) / 2, 0),
+                     inner_width, label_height, 0.5f);
   }
 }
 
