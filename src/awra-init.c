@@ -1,7 +1,10 @@
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
 
+#include "awra-config.h"
+
 #include <awra/awra.h>
 
+#include "awra-i18n-private.h"
 #include "awra-init-private.h"
 
 static GQuark provider_quark;
@@ -202,10 +205,30 @@ awra_update_css_for_display (GdkDisplay  *display,
   gtk_css_provider_load_from_string (provider, stylesheet);
 }
 
+/* Awra's visible defaults live in the awra-1 gettext domain. Bind it to the
+ * install prefix, or to $AWRA_LOCALEDIR when running from a build tree. */
+static void
+ensure_translations (void)
+{
+  static gsize bound = 0;
+
+  if (g_once_init_enter (&bound)) {
+    const char *override = g_getenv ("AWRA_LOCALEDIR");
+
+    bindtextdomain (GETTEXT_PACKAGE,
+                    override != NULL && *override != '\0'
+                      ? override : AWRA_LOCALEDIR);
+    bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+    g_once_init_leave (&bound, 1);
+  }
+}
+
 void
 awra_init (void)
 {
   GdkDisplay *display = gdk_display_get_default ();
+
+  ensure_translations ();
 
   if (display == NULL) {
     g_warning ("awra_init() called before GTK opened a display");

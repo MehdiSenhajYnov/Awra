@@ -102,6 +102,27 @@ awra_action_row_class_init (AwraActionRowClass *klass)
                                         GTK_ACCESSIBLE_ROLE_BUTTON);
 }
 
+/* GtkButton claims clicks in the capture phase, before any descendant sees
+ * them, which made buttons placed in the suffix unreachable. In the bubble
+ * phase the suffix controls handle their own clicks first and clicks on the
+ * title, subtitle or icon still activate the row. */
+static void
+let_suffix_handle_clicks (AwraActionRow *self)
+{
+  g_autoptr (GListModel) controllers =
+    gtk_widget_observe_controllers (GTK_WIDGET (self));
+  guint n = g_list_model_get_n_items (controllers);
+
+  for (guint i = 0; i < n; i++) {
+    g_autoptr (GtkEventController) controller =
+      g_list_model_get_item (controllers, i);
+
+    if (GTK_IS_GESTURE_CLICK (controller))
+      gtk_event_controller_set_propagation_phase (controller,
+                                                  GTK_PHASE_BUBBLE);
+  }
+}
+
 static void
 awra_action_row_init (AwraActionRow *self)
 {
@@ -130,6 +151,7 @@ awra_action_row_init (AwraActionRow *self)
   gtk_box_append (self->content, labels);
   gtk_button_set_child (GTK_BUTTON (self), GTK_WIDGET (self->content));
   gtk_button_set_has_frame (GTK_BUTTON (self), FALSE);
+  let_suffix_handle_clicks (self);
 }
 
 GtkWidget *

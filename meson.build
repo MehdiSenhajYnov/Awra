@@ -33,6 +33,7 @@ wayland_scanner = find_program(
 
 conf = configuration_data()
 conf.set_quoted('AWRA_VERSION', meson.project_version())
+conf.set_quoted('AWRA_LOCALEDIR', get_option('prefix') / get_option('localedir'))
 conf.set('AWRA_HAVE_WAYLAND_EFFECTS', wayland_dep.found() and wayland_scanner.found())
 conf.set('AWRA_DEVELOPER_MODE', get_option('developer'))
 configure_file(output: 'awra-config.h', configuration: conf)

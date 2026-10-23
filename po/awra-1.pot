@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: awra-1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-19 00:49+0200\n"
+"POT-Creation-Date: 2026-10-23 01:45+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,12 +21,12 @@ msgstr ""
 msgid "Reveal side panel"
 msgstr ""
 
-#: src/navigation/awra-tab-view.c:206
+#: src/navigation/awra-tab-view.c:909
 msgid "Close tab"
 msgstr ""
 
-#: src/navigation/awra-tab-view.c:414 src/navigation/awra-tab-view.c:498
-#: src/navigation/awra-tab-view.c:501
+#: src/navigation/awra-tab-view.c:1208 src/navigation/awra-tab-view.c:1297
+#: src/navigation/awra-tab-view.c:1300
 msgid "Untitled"
 msgstr ""
 
@@ -88,4 +88,172 @@ msgstr ""
 
 #: src/widgets/awra-selection-toolbar.c:211
 msgid "Clear"
+msgstr ""
+
+#: src/widgets/awra-key-codes.c:14 src/widgets/awra-key-codes.c:219
+msgid "Esc"
+msgstr ""
+
+#: src/widgets/awra-key-codes.c:27 src/widgets/awra-key-codes.c:224
+msgid "Backspace"
+msgstr ""
+
+#: src/widgets/awra-key-codes.c:28 src/widgets/awra-key-codes.c:222
+msgid "Tab"
+msgstr ""
+
+#: src/widgets/awra-key-codes.c:41 src/widgets/awra-key-codes.c:100
+#: src/widgets/awra-key-codes.c:217
+msgid "Enter"
+msgstr ""
+
+#: src/widgets/awra-key-codes.c:42 src/widgets/awra-key-codes.c:101
+#: src/widgets/awra-key-codes.c:202
+msgid "Ctrl"
+msgstr ""
+
+#: src/widgets/awra-key-codes.c:55 src/widgets/awra-key-codes.c:67
+#: src/widgets/awra-key-codes.c:199
+msgid "Shift"
+msgstr ""
+
+#: src/widgets/awra-key-codes.c:69 src/widgets/awra-key-codes.c:104
+#: src/widgets/awra-key-codes.c:207
+msgid "Alt"
+msgstr ""
+
+#: src/widgets/awra-key-codes.c:70 src/widgets/awra-key-codes.c:214
+msgid "Space"
+msgstr ""
+
+#: src/widgets/awra-key-codes.c:71
+msgid "Caps Lock"
+msgstr ""
+
+#: src/widgets/awra-key-codes.c:82
+msgid "Num"
+msgstr ""
+
+#: src/widgets/awra-key-codes.c:83
+msgid "ScrLk"
+msgstr ""
+
+#: src/widgets/awra-key-codes.c:103
+msgid "PrtSc"
+msgstr ""
+
+#: src/widgets/awra-key-codes.c:105
+msgid "Home"
+msgstr ""
+
+#: src/widgets/awra-key-codes.c:107
+msgid "PgUp"
+msgstr ""
+
+#: src/widgets/awra-key-codes.c:110
+msgid "End"
+msgstr ""
+
+#: src/widgets/awra-key-codes.c:112
+msgid "PgDn"
+msgstr ""
+
+#: src/widgets/awra-key-codes.c:113
+msgid "Ins"
+msgstr ""
+
+#: src/widgets/awra-key-codes.c:114
+msgid "Del"
+msgstr ""
+
+#: src/widgets/awra-key-codes.c:115 src/widgets/awra-media-row.c:125
+msgid "Pause"
+msgstr ""
+
+#: src/widgets/awra-key-codes.c:116 src/widgets/awra-key-codes.c:117
+#: src/widgets/awra-key-codes.c:212
+msgid "Super"
+msgstr ""
+
+#: src/widgets/awra-key-codes.c:118
+msgid "Menu"
+msgstr ""
+
+#: src/widgets/awra-key-codes.c:209 src/widgets/awra-key-codes.c:269
+msgid "AltGr"
+msgstr ""
+
+#: src/widgets/awra-keyboard-view.c:1062
+msgid "Keyboard"
+msgstr ""
+
+#: src/widgets/awra-shortcut-capture.c:173
+#: src/widgets/awra-shortcut-capture.c:181
+msgid "Press keys…"
+msgstr ""
+
+#: src/widgets/awra-shortcut-capture.c:176
+msgid "Not set"
+msgstr ""
+
+#: src/widgets/awra-shortcut-capture.c:189
+msgid "Activate to record a new shortcut"
+msgstr ""
+
+#: src/widgets/awra-waveform-view.c:130 src/widgets/awra-media-row.c:89
+#, c-format
+msgid "%s of %s"
+msgstr ""
+
+#: src/widgets/awra-waveform-view.c:778
+msgid "Waveform"
+msgstr ""
+
+#: src/widgets/awra-volume-control.c:57
+#, c-format
+msgid "%d %%"
+msgstr ""
+
+#: src/widgets/awra-volume-control.c:67 src/widgets/awra-volume-control.c:70
+msgid "Unmute"
+msgstr ""
+
+#: src/widgets/awra-volume-control.c:67 src/widgets/awra-volume-control.c:70
+msgid "Mute"
+msgstr ""
+
+#: src/widgets/awra-volume-control.c:257 src/widgets/awra-volume-control.c:263
+msgid "Volume"
+msgstr ""
+
+#: src/widgets/awra-media-row.c:125 src/widgets/awra-media-row.c:564
+msgid "Play"
+msgstr ""
+
+#: src/widgets/awra-media-row.c:168
+msgid "Media"
+msgstr ""
+
+#: src/widgets/awra-media-row.c:566
+msgid "Stop"
+msgstr ""
+
+#: src/widgets/awra-media-row.c:585
+msgid "Seek"
+msgstr ""
+
+#: src/widgets/awra-drop-zone.c:130
+msgid "These files are not supported"
+msgstr ""
+
+#: src/widgets/awra-drop-zone.c:519 src/widgets/awra-drop-zone.c:729
+msgid "Browse…"
+msgstr ""
+
+#: src/widgets/awra-drop-zone.c:632
+msgid "Drop zone"
+msgstr ""
+
+#: src/widgets/awra-drop-zone.c:691
+msgid "Drop files to add them"
 msgstr ""

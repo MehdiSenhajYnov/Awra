@@ -1329,6 +1329,31 @@ test_action_row_and_context_menu (void)
   g_assert_null (awra_widget_get_context_menu_popover (row));
 }
 
+/* Interactive suffix controls must see clicks before the row claims them. */
+static void
+test_action_row_suffix_receives_clicks (void)
+{
+  g_autoptr (GtkWidget) row = g_object_ref_sink (
+    awra_action_row_new ("Track", "Interactive suffix"));
+  g_autoptr (GListModel) controllers = NULL;
+  gboolean found_click = FALSE;
+
+  awra_action_row_set_suffix (AWRA_ACTION_ROW (row),
+                              gtk_button_new_from_icon_name ("list-add-symbolic"));
+  controllers = gtk_widget_observe_controllers (row);
+  for (guint i = 0; i < g_list_model_get_n_items (controllers); i++) {
+    g_autoptr (GtkEventController) controller =
+      g_list_model_get_item (controllers, i);
+
+    if (!GTK_IS_GESTURE_CLICK (controller))
+      continue;
+    found_click = TRUE;
+    g_assert_cmpint (gtk_event_controller_get_propagation_phase (controller),
+                     ==, GTK_PHASE_BUBBLE);
+  }
+  g_assert_true (found_click);
+}
+
 static void
 test_window_and_popover (void)
 {
@@ -2388,6 +2413,8 @@ main (int   argc,
   g_test_add_func ("/awra/widgets/edge-panel", test_edge_panel);
   g_test_add_func ("/awra/widgets/action-row-context-menu",
                    test_action_row_and_context_menu);
+  g_test_add_func ("/awra/widgets/action-row-suffix-receives-clicks",
+                   test_action_row_suffix_receives_clicks);
   g_test_add_func ("/awra/widgets/window-popover", test_window_and_popover);
   g_test_add_func ("/awra/widgets/overlays-navigation",
                    test_overlays_and_navigation);

@@ -269,6 +269,18 @@ awra_key_code_info_dup_label (const AwraKeyCodeInfo *info,
                        ? _("AltGr") : _(info->fallback_label));
   }
 
+  /* Some backends (Broadway, nested or remote sessions) map hardware keycodes
+   * to unrelated keyvals. A layout key that does not produce a printable
+   * character or a dead key keeps its physical legend instead of a raw
+   * keyval name such as "0xa". */
+  if (info->kind == AWRA_KEY_LABEL_LAYOUT) {
+    gunichar character = gdk_keyval_to_unicode (keyval);
+
+    if ((character == 0 || !g_unichar_isgraph (character)) &&
+        dead_key_label (keyval) == NULL)
+      return g_strdup (_(info->fallback_label));
+  }
+
   return awra_key_keyval_dup_label (keyval);
 }
 

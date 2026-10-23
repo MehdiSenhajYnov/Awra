@@ -5,3 +5,8 @@ i18n.gettext(
   args: ['--from-code=UTF-8'],
   preset: 'glib',
 )
+
+# `meson devenv` and uninstalled consumers read the catalogs from the build tree.
+po_devenv = environment()
+po_devenv.set('AWRA_LOCALEDIR', meson.current_build_dir())
+meson.add_devenv(po_devenv)
