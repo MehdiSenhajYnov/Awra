@@ -12,14 +12,17 @@ typedef struct {
   char *label;
   char *action;
   GVariant *target;
+  GIcon *icon;
+  char *accel;
+  const char *section; /* owned by AwraCommandPalette.sections */
 } PaletteCommand;
 
 struct _AwraCommandPalette {
   AwraWindow parent_instance;
   AwraSearchEntry *search;
   GtkListBox *list;
-  GtkLabel *title_label;
   GtkLabel *empty;
+  GPtrArray *sections;
   GMenuModel *model;
   GPtrArray *commands;
   char *title;
@@ -42,11 +45,15 @@ palette_command_free (gpointer data)
   g_free (command->label);
   g_free (command->action);
   g_clear_pointer (&command->target, g_variant_unref);
+  g_clear_object (&command->icon);
+  g_free (command->accel);
   g_free (command);
 }
 
 static void
-collect_commands (AwraCommandPalette *self, GMenuModel *model)
+collect_commands (AwraCommandPalette *self,
+                  GMenuModel         *model,
+                  const char         *section_label)
 {
   for (int i = 0; i < g_menu_model_get_n_items (model); i++) {
     g_autofree char *label = NULL;
@@ -56,10 +63,23 @@ collect_commands (AwraCommandPalette *self, GMenuModel *model)
 
     section = g_menu_model_get_item_link (model, i, G_MENU_LINK_SECTION);
     submenu = g_menu_model_get_item_link (model, i, G_MENU_LINK_SUBMENU);
-    if (section != NULL)
-      collect_commands (self, section);
-    if (submenu != NULL)
-      collect_commands (self, submenu);
+    if (section != NULL || submenu != NULL) {
+      g_autofree char *heading = NULL;
+      const char *child_label = section_label;
+
+      /* A labelled section or submenu becomes a heading in the results. */
+      if (g_menu_model_get_item_attribute (model, i, G_MENU_ATTRIBUTE_LABEL,
+                                           "s", &heading) &&
+          *heading != '\0') {
+        child_label = heading;
+        g_ptr_array_add (self->sections, g_steal_pointer (&heading));
+      }
+      if (section != NULL)
+        collect_commands (self, section, child_label);
+      if (submenu != NULL)
+        collect_commands (self, submenu, child_label);
+      continue;
+    }
     if (!g_menu_model_get_item_attribute (model, i, G_MENU_ATTRIBUTE_LABEL,
                                           "s", &label) ||
         !g_menu_model_get_item_attribute (model, i, G_MENU_ATTRIBUTE_ACTION,
@@ -70,6 +90,14 @@ collect_commands (AwraCommandPalette *self, GMenuModel *model)
     command->action = g_steal_pointer (&action);
     command->target = g_menu_model_get_item_attribute_value (
       model, i, G_MENU_ATTRIBUTE_TARGET, NULL);
+    {
+      g_autoptr (GVariant) icon = g_menu_model_get_item_attribute_value (
+        model, i, G_MENU_ATTRIBUTE_ICON, NULL);
+      if (icon != NULL)
+        command->icon = g_icon_deserialize (icon);
+    }
+    g_menu_model_get_item_attribute (model, i, "accel", "s", &command->accel);
+    command->section = section_label;
     g_ptr_array_add (self->commands, command);
   }
 }
@@ -101,11 +129,58 @@ command_clicked_cb (GtkButton *button, AwraCommandPalette *self)
   awra_command_palette_close (self);
 }
 
+static GtkWidget *
+create_command_content (PaletteCommand *command)
+{
+  GtkWidget *box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+  GtkWidget *label = gtk_label_new (command->label);
+
+  awra_box_set_spacing (GTK_BOX (box), AWRA_SPACING_MD);
+  if (command->icon != NULL) {
+    GtkWidget *image = gtk_image_new_from_gicon (command->icon);
+    gtk_widget_add_css_class (image, "awra-command-icon");
+    gtk_box_append (GTK_BOX (box), image);
+  }
+  gtk_label_set_xalign (GTK_LABEL (label), 0.0f);
+  gtk_label_set_ellipsize (GTK_LABEL (label), PANGO_ELLIPSIZE_END);
+  gtk_widget_set_hexpand (label, TRUE);
+  gtk_box_append (GTK_BOX (box), label);
+  if (command->accel != NULL) {
+    guint key = 0;
+    GdkModifierType mods = 0;
+
+    if (gtk_accelerator_parse (command->accel, &key, &mods)) {
+      g_autofree char *text = gtk_accelerator_get_label (key, mods);
+      GtkWidget *accel = gtk_label_new (text);
+      gtk_widget_add_css_class (accel, "awra-command-accel");
+      gtk_box_append (GTK_BOX (box), accel);
+    }
+  }
+  return box;
+}
+
+static void
+append_heading (AwraCommandPalette *self,
+                const char         *text)
+{
+  GtkWidget *row = gtk_list_box_row_new ();
+  GtkWidget *label = gtk_label_new (text);
+
+  awra_widget_set_typography (label, AWRA_TYPOGRAPHY_EYEBROW);
+  gtk_label_set_xalign (GTK_LABEL (label), 0.0f);
+  gtk_widget_add_css_class (label, "awra-command-heading");
+  gtk_list_box_row_set_child (GTK_LIST_BOX_ROW (row), label);
+  gtk_list_box_row_set_activatable (GTK_LIST_BOX_ROW (row), FALSE);
+  gtk_widget_set_focusable (row, FALSE);
+  gtk_list_box_append (self->list, row);
+}
+
 static void
 rebuild_results (AwraCommandPalette *self)
 {
   GtkWidget *child;
   const char *query = awra_search_entry_get_text (self->search);
+  const char *current_section = NULL;
   guint visible = 0;
 
   while ((child = gtk_widget_get_first_child (GTK_WIDGET (self->list))) != NULL)
@@ -117,8 +192,13 @@ rebuild_results (AwraCommandPalette *self)
 
     if (!matches_query (command->label, query))
       continue;
+    if (command->section != NULL && command->section != current_section)
+      append_heading (self, command->section);
+    current_section = command->section;
     row = gtk_list_box_row_new ();
-    button = gtk_button_new_with_label (command->label);
+    gtk_widget_set_focusable (row, FALSE);
+    button = gtk_button_new ();
+    gtk_button_set_child (GTK_BUTTON (button), create_command_content (command));
     gtk_widget_add_css_class (button, "awra-command-row");
     gtk_widget_set_hexpand (button, TRUE);
     gtk_widget_set_halign (button, GTK_ALIGN_FILL);
@@ -164,6 +244,7 @@ awra_command_palette_dispose (GObject *object)
   AwraCommandPalette *self = AWRA_COMMAND_PALETTE (object);
   g_clear_object (&self->model);
   g_clear_pointer (&self->commands, g_ptr_array_unref);
+  g_clear_pointer (&self->sections, g_ptr_array_unref);
   G_OBJECT_CLASS (awra_command_palette_parent_class)->dispose (object);
 }
 
@@ -218,18 +299,18 @@ awra_command_palette_init (AwraCommandPalette *self)
     AWRA_MATERIAL_PRESET_FLOATING);
 
   self->commands = g_ptr_array_new_with_free_func (palette_command_free);
+  self->sections = g_ptr_array_new_with_free_func (g_free);
   self->title = g_strdup (_("Commands"));
   self->placeholder_text = g_strdup (_("Type a command…"));
   self->empty_text = g_strdup (_("No matching command"));
   g_weak_ref_init (&self->previous_focus, NULL);
   self->search = AWRA_SEARCH_ENTRY (awra_search_entry_new ());
   self->list = GTK_LIST_BOX (gtk_list_box_new ());
-  self->title_label = GTK_LABEL (gtk_label_new (self->title));
   self->empty = GTK_LABEL (gtk_label_new (self->empty_text));
-  awra_widget_set_typography (GTK_WIDGET (self->title_label),
-                              AWRA_TYPOGRAPHY_TITLE_2);
   awra_widget_set_typography (GTK_WIDGET (self->empty), AWRA_TYPOGRAPHY_MUTED);
-  gtk_label_set_xalign (self->title_label, 0.0f);
+  /* The window header shows the title; repeating it in the body only
+   * pushes the results down. */
+  gtk_window_set_title (GTK_WINDOW (self), self->title);
   gtk_widget_set_halign (GTK_WIDGET (self->empty), GTK_ALIGN_CENTER);
   awra_search_entry_set_placeholder_text (self->search, self->placeholder_text);
   gtk_list_box_set_selection_mode (self->list, GTK_SELECTION_NONE);
@@ -237,7 +318,6 @@ awra_command_palette_init (AwraCommandPalette *self)
                                  GTK_WIDGET (self->list));
   gtk_widget_set_vexpand (scroller, TRUE);
   awra_box_apply_layout_preset (GTK_BOX (root), AWRA_LAYOUT_PRESET_OVERLAY);
-  gtk_box_append (GTK_BOX (root), GTK_WIDGET (self->title_label));
   gtk_box_append (GTK_BOX (root), GTK_WIDGET (self->search));
   gtk_box_append (GTK_BOX (root), scroller);
   gtk_box_append (GTK_BOX (root), GTK_WIDGET (self->empty));
@@ -262,9 +342,9 @@ awra_command_palette_init (AwraCommandPalette *self)
 
 GtkWidget *awra_command_palette_new (GtkWindow *parent) { AwraCommandPalette *self; g_return_val_if_fail (parent == NULL || GTK_IS_WINDOW (parent), NULL); self = g_object_new (AWRA_TYPE_COMMAND_PALETTE, NULL); if (parent != NULL) gtk_window_set_transient_for (GTK_WINDOW (self), parent); return GTK_WIDGET (self); }
 GMenuModel *awra_command_palette_get_menu_model (AwraCommandPalette *self) { g_return_val_if_fail (AWRA_IS_COMMAND_PALETTE (self), NULL); return self->model; }
-void awra_command_palette_set_menu_model (AwraCommandPalette *self, GMenuModel *model) { g_return_if_fail (AWRA_IS_COMMAND_PALETTE (self)); g_return_if_fail (model == NULL || G_IS_MENU_MODEL (model)); if (self->model == model) return; g_set_object (&self->model, model); g_ptr_array_set_size (self->commands, 0); if (model != NULL) collect_commands (self, model); rebuild_results (self); g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_MENU_MODEL]); }
+void awra_command_palette_set_menu_model (AwraCommandPalette *self, GMenuModel *model) { g_return_if_fail (AWRA_IS_COMMAND_PALETTE (self)); g_return_if_fail (model == NULL || G_IS_MENU_MODEL (model)); if (self->model == model) return; g_set_object (&self->model, model); g_ptr_array_set_size (self->commands, 0); g_ptr_array_set_size (self->sections, 0); if (model != NULL) collect_commands (self, model, NULL); rebuild_results (self); g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_MENU_MODEL]); }
 const char *awra_command_palette_get_title (AwraCommandPalette *self) { g_return_val_if_fail (AWRA_IS_COMMAND_PALETTE (self), NULL); return self->title; }
-void awra_command_palette_set_title (AwraCommandPalette *self, const char *title) { const char *value; g_return_if_fail (AWRA_IS_COMMAND_PALETTE (self)); value = title != NULL ? title : _("Commands"); if (g_strcmp0 (self->title, value) == 0) return; g_free (self->title); self->title = g_strdup (value); gtk_label_set_text (self->title_label, value); g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_TITLE]); }
+void awra_command_palette_set_title (AwraCommandPalette *self, const char *title) { const char *value; g_return_if_fail (AWRA_IS_COMMAND_PALETTE (self)); value = title != NULL ? title : _("Commands"); if (g_strcmp0 (self->title, value) == 0) return; g_free (self->title); self->title = g_strdup (value); gtk_window_set_title (GTK_WINDOW (self), value); g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_TITLE]); }
 const char *awra_command_palette_get_query (AwraCommandPalette *self) { g_return_val_if_fail (AWRA_IS_COMMAND_PALETTE (self), NULL); return awra_search_entry_get_text (self->search); }
 void awra_command_palette_set_query (AwraCommandPalette *self, const char *query) { g_return_if_fail (AWRA_IS_COMMAND_PALETTE (self)); awra_search_entry_set_text (self->search, query); }
 const char *awra_command_palette_get_placeholder_text (AwraCommandPalette *self) { g_return_val_if_fail (AWRA_IS_COMMAND_PALETTE (self), NULL); return self->placeholder_text; }

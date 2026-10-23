@@ -8,5 +8,9 @@
     <file compressed="true">icons/radio-symbolic.svg</file>
     <file compressed="true">icons/mixed-symbolic.svg</file>
     <file compressed="true">icons/chevron-down-symbolic.svg</file>
+    <file compressed="true">icons/awra-status-info-symbolic.svg</file>
+    <file compressed="true">icons/awra-status-success-symbolic.svg</file>
+    <file compressed="true">icons/awra-status-warning-symbolic.svg</file>
+    <file compressed="true">icons/awra-status-error-symbolic.svg</file>
   </gresource>
 </gresources>

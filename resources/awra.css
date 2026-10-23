@@ -96,11 +96,26 @@ window.awra-command-palette row > button {
 }
 
 window.awra-command-palette row > button.awra-command-row {
-  min-height: 38px;
-  padding: 8px 12px;
+  min-height: 32px;
+  padding: 5px 12px;
   border-radius: 10px;
   color: @awra_foreground;
   font-weight: 560;
+}
+
+window.awra-command-palette .awra-command-heading {
+  margin: 12px 12px 4px;
+}
+
+window.awra-command-palette .awra-command-icon {
+  color: @awra_muted;
+  -gtk-icon-size: 16px;
+}
+
+window.awra-command-palette .awra-command-accel {
+  color: @awra_muted;
+  font-weight: 400;
+  font-size: 0.92em;
 }
 
 window.awra-command-palette row > button.awra-command-row:hover,
@@ -1023,6 +1038,17 @@ awrasplitview paned > separator {
 .awra-menu-button.awra-destructive {
   color: @awra_on_accent;
   background-color: @awra_danger;
+}
+
+/* Appearance rules share :disabled's specificity and come later; restate the
+ * disabled look so an unavailable primary action does not look clickable. */
+.awra-button.awra-primary:disabled,
+.awra-button.awra-destructive:disabled,
+.awra-menu-button.awra-primary:disabled,
+.awra-menu-button.awra-destructive:disabled {
+  color: @awra_disabled;
+  background-color: @awra_cap;
+  box-shadow: none;
 }
 
 .awra-toggle-button:checked:not(.awra-primary):not(.awra-destructive) {
@@ -2572,6 +2598,12 @@ awrafilterbar {
 .awra-navigation-item:disabled {
   color: @awra_disabled;
   background-color: transparent;
+}
+
+/* Inside a sidebar, items float as pills with breathing room on both sides;
+ * the label then lines up with section eyebrows inset by the same amount. */
+awrasidebar .awra-navigation-item {
+  margin: 1px 8px;
 }
 
 .awra-navigation-item-box {

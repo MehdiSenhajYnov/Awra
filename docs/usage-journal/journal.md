@@ -673,3 +673,36 @@ seule l'icône dit l'état (le micro de l'écoute) ne se comprend pas ; un
 libellé d'état et une bannière avec action règlent le problème. Un panneau
 qui se révèle à côté d'une grille fait recalculer la grille à chaque
 sélection ; une colonne de contexte permanente évite l'artefact.
+
+## 17:54 — KeyToMusicAwra — Troisième passe : respiration et détails
+
+Retour de l'utilisateur, captures à l'appui : la barre latérale de KeyToMusic
+collait ses éléments aux bords, là où celle de PokediaAwra respire. La cause
+était dans Awra, et d'autres défauts sont sortis en refaisant le tour.
+
+- **Éléments de navigation collés aux bords : corrigé.** Dans un
+  `AwraSidebar`, un `AwraNavigationItem` prend désormais 8 px de marge de
+  chaque côté ; son libellé s'aligne sur les intitulés de section posés avec
+  la même marge que dans PokediaAwra.
+- **Formulaire empilé sans regroupement : corrigé.** En mode compact, le
+  libellé d'un `AwraFormRow` était aussi loin de son champ que de la ligne
+  suivante. L'écart libellé–champ tombe à SM ; l'écart entre lignes reste LG.
+- **Palette de commandes : retravaillée.** Le titre apparaissait deux fois
+  (en-tête de fenêtre et corps) ; il ne reste que l'en-tête. Les entrées
+  étaient des libellés centrés : elles sont alignées à gauche, avec l'icône
+  du `GMenuItem` (`icon`), un raccourci lu dans l'attribut `accel` et un
+  intitulé par section nommée. Lignes plus compactes. Test ajouté.
+- **Bouton principal désactivé qui restait violet : corrigé.** Les règles
+  d'apparence avaient la même spécificité que `:disabled` et venaient après.
+- **Icône de bannière vide : corrigé.** `dialog-information-symbolic`
+  manque dans Breeze. Awra embarque ses quatre icônes d'état et ajoute son
+  chemin de ressources au thème d'icônes de l'écran.
+- **Bannière trop large dans un panneau étroit : corrigé.** Le titre d'une
+  `AwraStatusBanner` passe à la ligne et son action est centrée
+  verticalement au lieu d'être étirée.
+
+Côté application : la colonne de contexte adoptait la largeur naturelle de
+son contenu, si bien qu'une bannière qui apparaissait faisait reculer le
+clavier. Un `GtkScrolledWindow` sans défilement ni largeur naturelle propagée
+fige la colonne à sa largeur minimale. À retenir pour toute colonne latérale
+qui ne doit jamais bouger.

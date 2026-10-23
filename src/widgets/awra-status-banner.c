@@ -37,8 +37,10 @@ static const char *appearance_classes[] = {
   "awra-status-error",
 };
 static const char *appearance_icons[] = {
-  "dialog-information-symbolic", "emblem-ok-symbolic",
-  "dialog-warning-symbolic", "dialog-error-symbolic",
+  /* Bundled with Awra: not every icon theme ships these (Breeze has no
+   * dialog-information-symbolic, and the banner showed an empty slot). */
+  "awra-status-info-symbolic", "awra-status-success-symbolic",
+  "awra-status-warning-symbolic", "awra-status-error-symbolic",
 };
 
 static void
@@ -175,7 +177,12 @@ awra_status_banner_init (AwraStatusBanner *self)
   awra_widget_set_typography (GTK_WIDGET (self->description_label), AWRA_TYPOGRAPHY_MUTED);
   gtk_label_set_xalign (self->title_label, 0.0f);
   gtk_label_set_xalign (self->description_label, 0.0f);
+  gtk_label_set_wrap (self->title_label, TRUE);
   gtk_label_set_wrap (self->description_label, TRUE);
+  /* Wrapping labels report their longest word as minimum; keep the copy from
+   * claiming its whole natural width in narrow side panels. */
+  gtk_label_set_natural_wrap_mode (self->title_label,
+                                   GTK_NATURAL_WRAP_WORD);
   gtk_widget_set_hexpand (GTK_WIDGET (self->copy), TRUE);
   gtk_widget_set_visible (GTK_WIDGET (self->title_label), FALSE);
   gtk_widget_set_visible (GTK_WIDGET (self->description_label), FALSE);
@@ -199,7 +206,7 @@ void awra_status_banner_set_description (AwraStatusBanner *self, const char *des
 AwraStatusAppearance awra_status_banner_get_appearance (AwraStatusBanner *self) { g_return_val_if_fail (AWRA_IS_STATUS_BANNER (self), AWRA_STATUS_APPEARANCE_INFO); return self->appearance; }
 void awra_status_banner_set_appearance (AwraStatusBanner *self, AwraStatusAppearance appearance) { g_return_if_fail (AWRA_IS_STATUS_BANNER (self)); g_return_if_fail (appearance >= AWRA_STATUS_APPEARANCE_INFO && appearance <= AWRA_STATUS_APPEARANCE_ERROR); if (self->appearance == appearance) return; self->appearance = appearance; update_appearance (self); g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_APPEARANCE]); }
 GtkWidget *awra_status_banner_get_action (AwraStatusBanner *self) { g_return_val_if_fail (AWRA_IS_STATUS_BANNER (self), NULL); return self->action; }
-void awra_status_banner_set_action (AwraStatusBanner *self, GtkWidget *action) { g_return_if_fail (AWRA_IS_STATUS_BANNER (self)); g_return_if_fail (action == NULL || GTK_IS_WIDGET (action)); if (self->action == action) return; if (self->action != NULL) gtk_box_remove (self->root, self->action); self->action = action; if (action != NULL) gtk_box_insert_child_after (self->root, action, GTK_WIDGET (self->copy)); g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_ACTION]); }
+void awra_status_banner_set_action (AwraStatusBanner *self, GtkWidget *action) { g_return_if_fail (AWRA_IS_STATUS_BANNER (self)); g_return_if_fail (action == NULL || GTK_IS_WIDGET (action)); if (self->action == action) return; if (self->action != NULL) gtk_box_remove (self->root, self->action); self->action = action; if (action != NULL) { gtk_widget_set_valign (action, GTK_ALIGN_CENTER); gtk_box_insert_child_after (self->root, action, GTK_WIDGET (self->copy)); } g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_ACTION]); }
 gboolean awra_status_banner_get_dismissible (AwraStatusBanner *self) { g_return_val_if_fail (AWRA_IS_STATUS_BANNER (self), FALSE); return self->dismissible; }
 void awra_status_banner_set_dismissible (AwraStatusBanner *self, gboolean dismissible) { g_return_if_fail (AWRA_IS_STATUS_BANNER (self)); dismissible = !!dismissible; if (self->dismissible == dismissible) return; self->dismissible = dismissible; gtk_widget_set_visible (self->dismiss_button, dismissible); g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_DISMISSIBLE]); }
 gboolean awra_status_banner_get_revealed (AwraStatusBanner *self) { g_return_val_if_fail (AWRA_IS_STATUS_BANNER (self), FALSE); return self->revealed; }

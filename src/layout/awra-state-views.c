@@ -380,7 +380,7 @@ static void
 awra_error_state_init (AwraErrorState *self)
 {
   state_content_init (GTK_WIDGET (self), &self->content,
-                      "dialog-error-symbolic");
+                      "awra-status-error-symbolic");
   gtk_widget_add_css_class (GTK_WIDGET (self->content.icon),
                             "awra-state-error-icon");
 }

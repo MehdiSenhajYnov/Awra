@@ -49,6 +49,10 @@ awra_install_css_for_display (GdkDisplay *display)
   if (g_object_get_qdata (G_OBJECT (display), provider_quark) != NULL)
     return;
 
+  /* Icons Awra's own widgets rely on, found whatever the icon theme. */
+  gtk_icon_theme_add_resource_path (gtk_icon_theme_get_for_display (display),
+                                    "/org/awra/icons");
+
   provider = gtk_css_provider_new ();
   gtk_style_context_add_provider_for_display (
     display,

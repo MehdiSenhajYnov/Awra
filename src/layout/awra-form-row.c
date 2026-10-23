@@ -145,6 +145,10 @@ update_responsive_layout (AwraFormRow *self,
   gtk_orientable_set_orientation (GTK_ORIENTABLE (self->root),
                                   compact ? GTK_ORIENTATION_VERTICAL
                                           : GTK_ORIENTATION_HORIZONTAL);
+  /* Stacked, the label belongs to its control: keep them closer together
+   * than consecutive rows so each pair reads as one group. */
+  awra_box_set_spacing (self->root,
+                        compact ? AWRA_SPACING_SM : AWRA_SPACING_LG);
   gtk_widget_set_size_request (GTK_WIDGET (self->label_widget),
                                compact ? -1 : 176, -1);
   gtk_widget_set_valign (GTK_WIDGET (self->label_widget),

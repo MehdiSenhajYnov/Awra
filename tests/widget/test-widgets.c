@@ -1648,6 +1648,27 @@ test_command_palette (void)
                      AWRA_COMMAND_PALETTE (palette)), ==, "Quick actions");
   g_assert_cmpstr (awra_command_palette_get_empty_text (
                      AWRA_COMMAND_PALETTE (palette)), ==, "Nothing found");
+  /* The window header carries the title; the body does not repeat it. */
+  g_assert_cmpstr (gtk_window_get_title (GTK_WINDOW (palette)), ==,
+                   "Quick actions");
+
+  {
+    g_autoptr (GMenu) model = g_menu_new ();
+    g_autoptr (GMenu) section = g_menu_new ();
+    g_autoptr (GMenuItem) item = g_menu_item_new ("Undo", "win.undo");
+
+    g_menu_item_set_attribute (item, "accel", "s", "<Control>z");
+    g_menu_append_item (section, item);
+    g_menu_append (section, "Redo", "win.redo");
+    g_menu_append_section (model, "Edit", G_MENU_MODEL (section));
+    awra_command_palette_set_query (AWRA_COMMAND_PALETTE (palette), "");
+    awra_command_palette_set_menu_model (AWRA_COMMAND_PALETTE (palette),
+                                         G_MENU_MODEL (model));
+    g_assert_nonnull (find_descendant_with_class (palette,
+                                                  "awra-command-heading"));
+    g_assert_nonnull (find_descendant_with_class (palette,
+                                                  "awra-command-accel"));
+  }
   gtk_window_destroy (GTK_WINDOW (palette));
   gtk_window_destroy (GTK_WINDOW (parent));
 }
