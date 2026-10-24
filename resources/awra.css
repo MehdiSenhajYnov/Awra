@@ -2678,3 +2678,10 @@ window.awra-window.awra-win32:backdrop {
   box-shadow: none;
   border-radius: 0;
 }
+
+/* GTK still keeps a 12px resize-handle margin around a client-decorated
+ * window, which DWM would fill with the backdrop: cancel it so the Win32
+ * window is the visible one (it resizes through native borders instead). */
+window.awra-window.awra-win32.csd:not(.maximized):not(.fullscreen) {
+  margin: -12px;
+}

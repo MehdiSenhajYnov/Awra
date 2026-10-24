@@ -149,6 +149,16 @@ active_changed_cb (AwraWindow *self,
 }
 
 static void
+awra_window_realize (GtkWidget *widget)
+{
+  GTK_WIDGET_CLASS (awra_window_parent_class)->realize (widget);
+#ifdef AWRA_HAVE_WIN32
+  if (gtk_widget_has_css_class (widget, "awra-win32"))
+    awra_win32_window_attach (GTK_WINDOW (widget));
+#endif
+}
+
+static void
 awra_window_map (GtkWidget *widget)
 {
   AwraWindow *self = AWRA_WINDOW (widget);
@@ -277,6 +287,7 @@ awra_window_class_init (AwraWindowClass *klass)
   object_class->dispose = awra_window_dispose;
   object_class->get_property = awra_window_get_property;
   object_class->set_property = awra_window_set_property;
+  widget_class->realize = awra_window_realize;
   widget_class->map = awra_window_map;
   widget_class->unmap = awra_window_unmap;
   widget_class->size_allocate = awra_window_size_allocate;
@@ -332,7 +343,8 @@ awra_window_init (AwraWindow *self)
   gtk_window_set_default_size (GTK_WINDOW (self), 900, 620);
 #ifdef AWRA_HAVE_WIN32
   /* DWM draws the shadow and rounds the corners natively; GTK's own shadow
-   * margin would otherwise be filled by the backdrop too. */
+   * and resize margin would otherwise be filled by the backdrop too (see
+   * awra_win32_window_attach). */
   if (GDK_IS_WIN32_DISPLAY (gtk_widget_get_display (GTK_WIDGET (self)))) {
     gtk_widget_add_css_class (GTK_WIDGET (self), "awra-win32");
     awra_surface_set_radius (priv->root_surface,

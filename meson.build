@@ -243,8 +243,13 @@ if host_machine.system() == 'windows'
     'src/platform/win32/awra-win32-effect-backend.c',
     'src/platform/win32/awra-win32-system.c',
     'src/platform/win32/awra-win32-util.c',
+    'src/platform/win32/awra-win32-window.c',
   )
-  awra_deps += [cc.find_library('dwmapi'), cc.find_library('advapi32')]
+  awra_deps += [
+    cc.find_library('dwmapi'),
+    cc.find_library('advapi32'),
+    cc.find_library('comctl32'),
+  ]
 endif
 
 # PE has no symbol versioning: MinGW exports the library's symbols itself.

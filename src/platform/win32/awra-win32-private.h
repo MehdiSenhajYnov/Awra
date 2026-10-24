@@ -21,4 +21,8 @@ guint    awra_win32_watch_system         (GtkSettings           *settings,
 /* Corner radius DWM gives windows on Windows 11, 0 on earlier versions. */
 double   awra_win32_window_corner_radius (void);
 
+/* Make @window's realized Win32 window exactly its visible area: no
+ * client-side resize margin, native resize borders and DWM corners. */
+void     awra_win32_window_attach        (GtkWindow             *window);
+
 G_END_DECLS
