@@ -3,6 +3,7 @@
 #include "awra-config.h"
 
 #include "platform/win32/awra-win32-private.h"
+#include "platform/win32/awra-win32-util-private.h"
 
 #include <windows.h>
 #include <windowsx.h>
@@ -12,7 +13,10 @@
 
 /* DWM attributes newer than some MinGW headers. */
 #define AWRA_DWMWA_WINDOW_CORNER_PREFERENCE 33
+#define AWRA_DWMWA_BORDER_COLOR 34
 #define AWRA_DWMWCP_ROUND 2
+#define AWRA_DWMWCP_ROUNDSMALL 3
+#define AWRA_DWMWA_COLOR_NONE 0xFFFFFFFEu
 
 #define SUBCLASS_ID 0x41575241 /* "AWRA" */
 
@@ -146,11 +150,26 @@ compute_size_cb (GdkToplevel     *toplevel,
 }
 
 void
+awra_win32_style_frame (gpointer handle,
+                        gboolean popup)
+{
+  HWND hwnd = handle;
+  int corner = popup ? AWRA_DWMWCP_ROUNDSMALL : AWRA_DWMWCP_ROUND;
+  COLORREF border = AWRA_DWMWA_COLOR_NONE;
+
+  if (hwnd == NULL || awra_win32_build_number () < AWRA_WIN32_BUILD_WINDOWS_11)
+    return;
+  DwmSetWindowAttribute (hwnd, AWRA_DWMWA_WINDOW_CORNER_PREFERENCE,
+                         &corner, sizeof (corner));
+  DwmSetWindowAttribute (hwnd, AWRA_DWMWA_BORDER_COLOR,
+                         &border, sizeof (border));
+}
+
+void
 awra_win32_window_attach (GtkWindow *window)
 {
   GdkSurface *surface = gtk_native_get_surface (GTK_NATIVE (window));
   HWND hwnd;
-  int corner = AWRA_DWMWCP_ROUND;
 
   if (!GDK_IS_WIN32_SURFACE (surface))
     return;
@@ -161,6 +180,5 @@ awra_win32_window_attach (GtkWindow *window)
   /* Runs after GTK's own handler, connected when the window was realized. */
   g_signal_connect (surface, "compute-size", G_CALLBACK (compute_size_cb), NULL);
   SetWindowSubclass (hwnd, window_proc, SUBCLASS_ID, (DWORD_PTR) window);
-  DwmSetWindowAttribute (hwnd, AWRA_DWMWA_WINDOW_CORNER_PREFERENCE,
-                         &corner, sizeof (corner));
+  awra_win32_style_frame (hwnd, FALSE);
 }

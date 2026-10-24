@@ -153,8 +153,13 @@ awra_window_realize (GtkWidget *widget)
 {
   GTK_WIDGET_CLASS (awra_window_parent_class)->realize (widget);
 #ifdef AWRA_HAVE_WIN32
-  if (gtk_widget_has_css_class (widget, "awra-win32"))
+  if (gtk_widget_has_css_class (widget, "awra-win32")) {
+    /* DWM shadows the window (dialogs and the palette ask for elevation):
+     * Awra's own shadow would only darken the corners inside it. */
+    awra_surface_set_elevation_level (get_priv (AWRA_WINDOW (widget))->root_surface,
+                                      AWRA_ELEVATION_FLAT);
     awra_win32_window_attach (GTK_WINDOW (widget));
+  }
 #endif
 }
 

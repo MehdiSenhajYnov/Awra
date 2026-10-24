@@ -8,6 +8,7 @@
 #include <dwmapi.h>
 #include <gdk/win32/gdkwin32.h>
 
+#include "platform/win32/awra-win32-private.h"
 #include "platform/win32/awra-win32-util-private.h"
 
 /* DWM attributes newer than some MinGW headers. */
@@ -176,6 +177,7 @@ win32_apply (AwraEffectBackend *backend,
     }
     DwmSetWindowAttribute (hwnd, AWRA_DWMWA_WINDOW_CORNER_PREFERENCE,
                            &corner, sizeof (corner));
+    awra_win32_style_frame (hwnd, GDK_IS_POPUP (surface));
   } else if (self->mode != MODE_ACCENT_BLUR ||
              !set_accent (self, hwnd, AWRA_ACCENT_ENABLE_BLURBEHIND)) {
     give_up (self, "SetWindowCompositionAttribute is unavailable", error);

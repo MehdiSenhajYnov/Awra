@@ -2685,3 +2685,14 @@ window.awra-window.awra-win32:backdrop {
 window.awra-window.awra-win32.csd:not(.maximized):not(.fullscreen) {
   margin: -12px;
 }
+
+/* Windows popups are rounded by DWM with its small radius (none on Windows
+ * 10): GtkPopover must clip its content the same way, or the backdrop shows
+ * in the corners. */
+popover.awra-popover.awra-win32-popup > contents {
+  border-radius: 4px;
+}
+
+popover.awra-popover.awra-win32-square-popup > contents {
+  border-radius: 0;
+}

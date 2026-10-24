@@ -43,6 +43,12 @@ awra_win32_window_corner_radius (void)
   return awra_win32_build_number () >= AWRA_WIN32_BUILD_WINDOWS_11 ? 8.0 : 0.0;
 }
 
+double
+awra_win32_popup_corner_radius (void)
+{
+  return awra_win32_build_number () >= AWRA_WIN32_BUILD_WINDOWS_11 ? 4.0 : 0.0;
+}
+
 static void
 set_enum_if_changed (GtkSettings *settings,
                      const char  *name,

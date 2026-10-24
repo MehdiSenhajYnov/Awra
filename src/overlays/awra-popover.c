@@ -6,8 +6,13 @@
 #include <awra/awra-popover.h>
 #include <awra/awra-layout.h>
 
+#include "awra-config.h"
 #include "core/awra-context-private.h"
 #include "awra-i18n-private.h"
+#ifdef AWRA_HAVE_WIN32
+#include <gdk/win32/gdkwin32.h>
+#include "platform/win32/awra-win32-private.h"
+#endif
 
 struct _AwraPopover {
   GtkPopover parent_instance;
@@ -94,6 +99,23 @@ awra_popover_map (GtkWidget *widget)
 
   GTK_WIDGET_CLASS (awra_popover_parent_class)->map (widget);
   self->context = awra_context_get_for_display (gtk_widget_get_display (widget));
+#ifdef AWRA_HAVE_WIN32
+  /* The popover is its own HWND there: DWM rounds and shadows it, so draw
+   * the same corner and no shadow of our own (it would square the corners). */
+  if (GDK_IS_WIN32_DISPLAY (gtk_widget_get_display (widget))) {
+    GdkSurface *native = gtk_native_get_surface (GTK_NATIVE (self));
+
+    double radius = awra_win32_popup_corner_radius ();
+
+    awra_surface_set_radius (self->surface, radius);
+    awra_surface_set_elevation_level (self->surface, AWRA_ELEVATION_FLAT);
+    /* GtkPopover clips its child to the contents' radius: match it too. */
+    gtk_widget_add_css_class (widget, radius > 0.0 ? "awra-win32-popup"
+                                                   : "awra-win32-square-popup");
+    if (GDK_IS_WIN32_SURFACE (native))
+      awra_win32_style_frame (gdk_win32_surface_get_handle (native), TRUE);
+  }
+#endif
   if (self->style_handler == 0) {
     self->style_handler = g_signal_connect (
       awra_context_get_style_manager (self->context),
