@@ -34,7 +34,8 @@ export GI_TYPELIB_PATH="$(dirname "$typelib")"
 export XDG_DATA_DIRS="$(dirname "$(dirname "$(dirname "$vapi")")"):${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
 
 stage_prefix=$(realpath "$(dirname "$pc_file")/../..")
-test "$(pkg-config --modversion awra-1)" = "1.0.0"
+project_version=$(sed -n "s/^  version: '\\(.*\\)',$/\\1/p" "$source_dir/meson.build" | head -n 1)
+test "$(pkg-config --modversion awra-1)" = "$project_version"
 cc "$source_dir/tests/integration/external-smoke.c" \
   -I"$stage_prefix/include/awra-1" -L"$(dirname "$library")" -lawra-1 \
   $(pkg-config --cflags --libs gtk4) \

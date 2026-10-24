@@ -11,8 +11,11 @@ iterate_for (guint milliseconds)
   g_main_loop_run (loop);
 }
 
+/* @nodes, when given, receives the serialized render nodes, to tell what
+ * differs when two checksums do. */
 static char *
-snapshot_checksum (GtkWidget *widget)
+snapshot_checksum (GtkWidget  *widget,
+                   char      **nodes)
 {
   g_autoptr (GtkSnapshot) snapshot = gtk_snapshot_new ();
   g_autoptr (GskRenderNode) node = NULL;
@@ -29,6 +32,11 @@ snapshot_checksum (GtkWidget *widget)
   GTK_WIDGET_GET_CLASS (widget)->snapshot (widget, snapshot);
   node = gtk_snapshot_to_node (snapshot);
   g_assert_nonnull (node);
+  if (nodes != NULL) {
+    g_autoptr (GBytes) serialized = gsk_render_node_serialize (node);
+
+    *nodes = g_strndup (g_bytes_get_data (serialized, NULL), g_bytes_get_size (serialized));
+  }
   gsk_render_node_get_bounds (node, &bounds);
   renderer = gtk_native_get_renderer (gtk_widget_get_native (widget));
   g_assert_nonnull (renderer);
@@ -41,6 +49,27 @@ snapshot_checksum (GtkWidget *widget)
   g_checksum_update (checksum, (const guchar *) &stride, sizeof stride);
   g_checksum_update (checksum, data, size);
   return g_strdup (g_checksum_get_string (checksum));
+}
+
+/* The first lines that differ between two serialized renderings. */
+static void
+report_differences (const char *before,
+                    const char *after)
+{
+  g_auto (GStrv) old_lines = g_strsplit (before, "\n", -1);
+  g_auto (GStrv) new_lines = g_strsplit (after, "\n", -1);
+  guint shown = 0;
+
+  for (guint i = 0; old_lines[i] != NULL && new_lines[i] != NULL && shown < 12; i++) {
+    if (g_strcmp0 (old_lines[i], new_lines[i]) == 0)
+      continue;
+    g_printerr ("ERROR: render differs at line %u:\n  active:   %s\n  inactive: %s\n", i,
+                g_strstrip (old_lines[i]), g_strstrip (new_lines[i]));
+    shown++;
+  }
+  if (shown == 0)
+    g_printerr ("ERROR: same render nodes, different pixels (%u and %u lines)\n",
+                g_strv_length (old_lines), g_strv_length (new_lines));
 }
 
 static void
@@ -138,6 +167,8 @@ test_page_focus_and_material_invariants (void)
   int height_before;
   g_autofree char *active = NULL;
   g_autofree char *inactive = NULL;
+  g_autofree char *active_nodes = NULL;
+  g_autofree char *inactive_nodes = NULL;
 
   g_assert_true (g_application_register (G_APPLICATION (app), NULL, &error));
   g_assert_no_error (error);
@@ -169,10 +200,12 @@ test_page_focus_and_material_invariants (void)
   gtk_test_widget_wait_for_draw (window);
   width_before = gtk_widget_get_width (composition);
   height_before = gtk_widget_get_height (composition);
-  active = snapshot_checksum (composition);
+  active = snapshot_checksum (composition, &active_nodes);
   gtk_widget_set_state_flags (window, GTK_STATE_FLAG_BACKDROP, FALSE);
   iterate_for (180);
-  inactive = snapshot_checksum (composition);
+  inactive = snapshot_checksum (composition, &inactive_nodes);
+  if (g_strcmp0 (active, inactive) != 0)
+    report_differences (active_nodes, inactive_nodes);
   g_assert_cmpint (gtk_widget_get_width (composition), ==, width_before);
   g_assert_cmpint (gtk_widget_get_height (composition), ==, height_before);
   g_assert_cmpstr (active, ==, inactive);

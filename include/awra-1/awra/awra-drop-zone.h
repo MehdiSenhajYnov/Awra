@@ -5,15 +5,27 @@
 
 G_BEGIN_DECLS
 
+/**
+ * AwraDropZone:
+ *
+ * Since: 1.1
+ */
 #define AWRA_TYPE_DROP_ZONE (awra_drop_zone_get_type ())
 G_DECLARE_FINAL_TYPE (AwraDropZone, awra_drop_zone, AWRA, DROP_ZONE, GtkWidget)
 
+/**
+ * awra_drop_zone_new:
+ *
+ * Since: 1.1
+ */
 GtkWidget  *awra_drop_zone_new                     (void);
 /**
  * awra_drop_zone_get_child:
  * @self: an Awra drop zone
  *
  * Returns: (transfer none) (nullable): the content
+ *
+ * Since: 1.1
  */
 GtkWidget  *awra_drop_zone_get_child               (AwraDropZone *self);
 /**
@@ -21,6 +33,8 @@ GtkWidget  *awra_drop_zone_get_child               (AwraDropZone *self);
  * @self: an Awra drop zone
  * @child: (nullable): the content; without content the zone presents its
  *   empty-state well
+ *
+ * Since: 1.1
  */
 void        awra_drop_zone_set_child               (AwraDropZone *self,
                                                     GtkWidget    *child);
@@ -29,12 +43,16 @@ void        awra_drop_zone_set_child               (AwraDropZone *self,
  * @self: an Awra drop zone
  *
  * Returns: (transfer none) (nullable): the empty-state title
+ *
+ * Since: 1.1
  */
 const char *awra_drop_zone_get_title               (AwraDropZone *self);
 /**
  * awra_drop_zone_set_title:
  * @self: an Awra drop zone
  * @title: (nullable): the empty-state title
+ *
+ * Since: 1.1
  */
 void        awra_drop_zone_set_title               (AwraDropZone *self,
                                                     const char   *title);
@@ -43,12 +61,16 @@ void        awra_drop_zone_set_title               (AwraDropZone *self,
  * @self: an Awra drop zone
  *
  * Returns: (transfer none) (nullable): the empty-state subtitle
+ *
+ * Since: 1.1
  */
 const char *awra_drop_zone_get_subtitle            (AwraDropZone *self);
 /**
  * awra_drop_zone_set_subtitle:
  * @self: an Awra drop zone
  * @subtitle: (nullable): the empty-state subtitle
+ *
+ * Since: 1.1
  */
 void        awra_drop_zone_set_subtitle            (AwraDropZone *self,
                                                     const char   *subtitle);
@@ -58,12 +80,16 @@ void        awra_drop_zone_set_subtitle            (AwraDropZone *self,
  *
  * Returns: (transfer none) (nullable): the icon of the empty state and drop
  *   overlay
+ *
+ * Since: 1.1
  */
 const char *awra_drop_zone_get_icon_name           (AwraDropZone *self);
 /**
  * awra_drop_zone_set_icon_name:
  * @self: an Awra drop zone
  * @icon_name: (nullable): a symbolic icon name, or %NULL for the default
+ *
+ * Since: 1.1
  */
 void        awra_drop_zone_set_icon_name           (AwraDropZone *self,
                                                     const char   *icon_name);
@@ -72,16 +98,30 @@ void        awra_drop_zone_set_icon_name           (AwraDropZone *self,
  * @self: an Awra drop zone
  *
  * Returns: (transfer none): the message shown while acceptable files hover
+ *
+ * Since: 1.1
  */
 const char *awra_drop_zone_get_drop_message        (AwraDropZone *self);
 /**
  * awra_drop_zone_set_drop_message:
  * @self: an Awra drop zone
  * @message: (nullable): the hover message, or %NULL for the default
+ *
+ * Since: 1.1
  */
 void        awra_drop_zone_set_drop_message        (AwraDropZone *self,
                                                     const char   *message);
+/**
+ * awra_drop_zone_get_show_browse_button:
+ *
+ * Since: 1.1
+ */
 gboolean    awra_drop_zone_get_show_browse_button  (AwraDropZone *self);
+/**
+ * awra_drop_zone_set_show_browse_button:
+ *
+ * Since: 1.1
+ */
 void        awra_drop_zone_set_show_browse_button  (AwraDropZone *self,
                                                     gboolean      show);
 /**
@@ -89,12 +129,16 @@ void        awra_drop_zone_set_show_browse_button  (AwraDropZone *self,
  * @self: an Awra drop zone
  *
  * Returns: (transfer none): the browse button label
+ *
+ * Since: 1.1
  */
 const char *awra_drop_zone_get_browse_label        (AwraDropZone *self);
 /**
  * awra_drop_zone_set_browse_label:
  * @self: an Awra drop zone
  * @label: (nullable): the browse button label, or %NULL for the default
+ *
+ * Since: 1.1
  */
 void        awra_drop_zone_set_browse_label        (AwraDropZone *self,
                                                     const char   *label);
@@ -104,6 +148,8 @@ void        awra_drop_zone_set_browse_label        (AwraDropZone *self,
  *
  * Returns: (transfer none) (array zero-terminated=1) (nullable): accepted
  *   lowercase extensions without a leading dot
+ *
+ * Since: 1.1
  */
 const char * const *awra_drop_zone_get_accepted_extensions (AwraDropZone *self);
 /**
@@ -111,6 +157,8 @@ const char * const *awra_drop_zone_get_accepted_extensions (AwraDropZone *self);
  * @self: an Awra drop zone
  * @extensions: (array zero-terminated=1) (nullable): file extensions such as
  *   `mp3` or `.ogg`, compared case-insensitively, or %NULL
+ *
+ * Since: 1.1
  */
 void        awra_drop_zone_set_accepted_extensions (AwraDropZone       *self,
                                                     const char * const *extensions);
@@ -120,6 +168,8 @@ void        awra_drop_zone_set_accepted_extensions (AwraDropZone       *self,
  *
  * Returns: (transfer none) (array zero-terminated=1) (nullable): accepted
  *   MIME types
+ *
+ * Since: 1.1
  */
 const char * const *awra_drop_zone_get_accepted_mime_types (AwraDropZone *self);
 /**
@@ -129,6 +179,8 @@ const char * const *awra_drop_zone_get_accepted_mime_types (AwraDropZone *self);
  *   `audio/mpeg` or a whole family such as `audio/` followed by an asterisk, or %NULL
  *
  * Types are guessed from file names only, so the check never blocks on I/O.
+ *
+ * Since: 1.1
  */
 void        awra_drop_zone_set_accepted_mime_types (AwraDropZone       *self,
                                                     const char * const *mime_types);
@@ -141,9 +193,16 @@ void        awra_drop_zone_set_accepted_mime_types (AwraDropZone       *self,
  * either list, or when no filter is set.
  *
  * Returns: whether @file would be delivered by #AwraDropZone::files-dropped
+ *
+ * Since: 1.1
  */
 gboolean    awra_drop_zone_accepts_file            (AwraDropZone *self,
                                                     GFile        *file);
+/**
+ * awra_drop_zone_get_drop_active:
+ *
+ * Since: 1.1
+ */
 gboolean    awra_drop_zone_get_drop_active         (AwraDropZone *self);
 
 G_END_DECLS

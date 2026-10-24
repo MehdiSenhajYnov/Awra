@@ -36,6 +36,8 @@ void       awra_toast_overlay_show_message (AwraToastOverlay *self,
  * Activating the button runs the action, then dismisses the toast.
  *
  * Returns: a non-zero identifier for awra_toast_overlay_dismiss()
+ *
+ * Since: 1.1
  */
 guint      awra_toast_overlay_show_with_action (AwraToastOverlay *self,
                                                 const char       *message,
@@ -49,6 +51,8 @@ guint      awra_toast_overlay_show_with_action (AwraToastOverlay *self,
  *
  * Hides the toast if it is still the visible one; stale identifiers are
  * ignored.
+ *
+ * Since: 1.1
  */
 void       awra_toast_overlay_dismiss      (AwraToastOverlay *self,
                                             guint             toast_id);
@@ -57,6 +61,8 @@ void       awra_toast_overlay_dismiss      (AwraToastOverlay *self,
  * @self: an Awra toast overlay
  *
  * Returns: the identifier of the visible toast, or 0
+ *
+ * Since: 1.1
  */
 guint      awra_toast_overlay_get_current_toast_id (AwraToastOverlay *self);
 gboolean   awra_toast_overlay_get_revealed (AwraToastOverlay *self);

@@ -1882,14 +1882,22 @@ test_extended_components (void)
                                    awra_token_set_get_accent (default_tokens)));
   awra_style_manager_set_accent_source (manager, AWRA_ACCENT_SOURCE_DEFAULT);
 
-  g_assert_cmpuint (awra_motion_get_duration (manager,
-                                              AWRA_MOTION_PRESET_FAST),
-                    >=,
-                    90);
-  g_assert_cmpuint (awra_motion_get_duration (manager,
-                                              AWRA_MOTION_PRESET_FAST),
-                    <=,
-                    140);
+  /* Durations follow the system's animation preference. */
+  if (awra_style_manager_get_reduced_motion (manager)) {
+    g_assert_cmpuint (awra_motion_get_duration (manager,
+                                                AWRA_MOTION_PRESET_FAST),
+                      ==,
+                      0);
+  } else {
+    g_assert_cmpuint (awra_motion_get_duration (manager,
+                                                AWRA_MOTION_PRESET_FAST),
+                      >=,
+                      90);
+    g_assert_cmpuint (awra_motion_get_duration (manager,
+                                                AWRA_MOTION_PRESET_FAST),
+                      <=,
+                      140);
+  }
   awra_style_manager_set_reduced_motion (manager, TRUE);
   g_assert_cmpuint (awra_motion_get_duration (manager,
                                               AWRA_MOTION_PRESET_SLOW),

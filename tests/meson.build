@@ -178,11 +178,23 @@ if gir.length() > 0
     args: [files('api/test-gir-contract.py'), gir[0]],
     depends: gir,
   )
+  # The current API, exactly; and every 1.0.0 API still there, unchanged.
   test(
-    'api-1.0-baseline',
+    'api-baseline',
     python,
     args: [
       files('api/test-api-baseline.py'),
+      gir[0],
+      files('api/awra-api.json'),
+    ],
+    depends: gir,
+  )
+  test(
+    'api-1.0-compatible',
+    python,
+    args: [
+      files('api/test-api-baseline.py'),
+      '--compatible',
       gir[0],
       files('api/awra-1.0-api.json'),
     ],

@@ -22,12 +22,16 @@ void        awra_navigation_item_set_icon_name (AwraNavigationItem *self,
  * @self: an Awra navigation item
  *
  * Returns: (transfer none) (nullable): the trailing widget
+ *
+ * Since: 1.1
  */
 GtkWidget  *awra_navigation_item_get_suffix    (AwraNavigationItem *self);
 /**
  * awra_navigation_item_set_suffix:
  * @self: an Awra navigation item
  * @suffix: (transfer none) (nullable): an unparented trailing widget
+ *
+ * Since: 1.1
  */
 void        awra_navigation_item_set_suffix    (AwraNavigationItem *self,
                                                  GtkWidget          *suffix);

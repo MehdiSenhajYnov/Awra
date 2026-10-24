@@ -17,8 +17,8 @@ log=$(mktemp)
 status=${PIPESTATUS[0]}
 
 if [[ $status -ne 0 && -n "${GITHUB_ACTIONS:-}" ]]; then
-  summary=$(grep -E 'error|Error|ERROR|FAIL|not ok|assertion|CRITICAL|WARNING \*\*|Bail out|undefined reference|No such file' "$log" |
-            grep -vE '^\s*$' | tail -n 60)
+  summary=$(grep -A 4 -E 'error|Error|ERROR|FAIL|not ok|assertion|CRITICAL|WARNING \*\*|Bail out|undefined reference|No such file' "$log" |
+            grep -vE '^\s*$|^--$' | tail -n 80)
   [[ -n "$summary" ]] || summary=$(tail -n 40 "$log")
   # Annotations take one line: encode the newlines and percent signs.
   summary=${summary//'%'/'%25'}

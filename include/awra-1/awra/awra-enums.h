@@ -332,6 +332,8 @@ GType awra_motion_preset_get_type (void) G_GNUC_CONST;
  *
  * The physical key arrangement presented by #AwraKeyboardView. Key legends
  * follow the active logical layout independently of this choice.
+ *
+ * Since: 1.1
  */
 typedef enum {
   AWRA_KEYBOARD_PHYSICAL_LAYOUT_ANSI,
@@ -339,6 +341,11 @@ typedef enum {
 } AwraKeyboardPhysicalLayout;
 
 #define AWRA_TYPE_KEYBOARD_PHYSICAL_LAYOUT (awra_keyboard_physical_layout_get_type ())
+/**
+ * awra_keyboard_physical_layout_get_type:
+ *
+ * Since: 1.1
+ */
 GType awra_keyboard_physical_layout_get_type (void) G_GNUC_CONST;
 
 G_END_DECLS

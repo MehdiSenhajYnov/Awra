@@ -2,7 +2,26 @@
 
 # Changelog
 
-## Unreleased
+## 1.1.0 — unreleased
+
+API added in this release is documented `Since: 1.1`; every 1.0.0 API is
+unchanged (checked against the frozen 1.0.0 contract).
+
+- Responsive layout: `AwraMasterDetail`, `AwraFilterBar` and `AwraFormRow`
+  are measured in the layout their width gives, so no frame is drawn with the
+  previous layout's sizes after creation or a resize across a breakpoint.
+  `AwraMasterDetail` takes the pane hidden in compact mode off screen without
+  changing its visibility, and stays compact while both panes do not fit.
+- `AwraSplitView` keeps a divider the user dragged until its mode changes.
+- `AwraResponsiveBin` and `AwraSplitView` accept their compact and expanded
+  widths in either order.
+- `AwraNavigationView` slides forward on push and back on pop.
+- Windows: Win+arrows snap and resize windows (Snap, FancyZones); system
+  preferences follow Windows' change broadcasts instead of a poll, and no
+  longer override an application's own GTK settings; the DLL exports only
+  the public API; a Windows CI job builds and tests Awra.
+- `AWRA_CHECK_VERSION ()`; the version header is checked against the
+  project's version.
 
 - Windows support: a `win32-dwm` effect backend (Acrylic system backdrop on
   Windows 11 22H2+, accent-policy blur on Windows 10), Windows dark mode,

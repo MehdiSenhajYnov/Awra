@@ -64,6 +64,8 @@ void        awra_tab_view_set_page_title    (AwraTabView *self,
  * Sets the optional icon displayed by the page's tab. Pinned pages do not
  * receive an implicit icon; applications choose whether they represent a
  * home page, a tool, or another permanent destination.
+ *
+ * Since: 1.1
  */
 void        awra_tab_view_set_page_icon_name (AwraTabView *self,
                                               GtkWidget   *page,
@@ -81,6 +83,8 @@ void        awra_tab_view_set_page_icon_name (AwraTabView *self,
  *
  * @icon must be unparented. It is parented by the tab until it is replaced,
  * cleared or the page is removed.
+ *
+ * Since: 1.1
  */
 void        awra_tab_view_set_page_icon      (AwraTabView *self,
                                               GtkWidget   *page,
@@ -92,6 +96,8 @@ void        awra_tab_view_set_page_icon      (AwraTabView *self,
  * @visible: whether the tab title is visible
  *
  * Controls title visibility without changing the accessible tab label.
+ *
+ * Since: 1.1
  */
 void        awra_tab_view_set_page_title_visible (AwraTabView *self,
                                                   GtkWidget   *page,

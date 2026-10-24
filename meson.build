@@ -3,7 +3,7 @@
 project(
   'awra',
   'c',
-  version: '1.0.0',
+  version: '1.1.0',
   license: 'LGPL-2.1-or-later',
   meson_version: '>= 1.3.0',
   default_options: [
@@ -16,6 +16,7 @@ project(
 gnome = import('gnome')
 i18n = import('i18n')
 pkgconfig = import('pkgconfig')
+fs = import('fs')
 vala_available = add_languages('vala', native: false, required: false)
 
 cc = meson.get_compiler('c')
@@ -46,6 +47,14 @@ add_project_arguments(
 
 inc_public = include_directories('include/awra-1')
 inc_private = include_directories('src', 'src/platform')
+
+# The version header is read by every consumer as is (no generated header
+# to find): it must say the project's version.
+if not fs.read('include/awra-1/awra/awra-version.h').contains(
+    '#define AWRA_VERSION_S "' + meson.project_version() + '"')
+  error('include/awra-1/awra/awra-version.h does not match version ' +
+        meson.project_version())
+endif
 
 public_headers = files(
   'include/awra-1/awra/awra.h',
@@ -256,7 +265,7 @@ endif
 # the same public symbols instead (MinGW would otherwise export them all).
 awra_link_args = []
 awra_link_depends = []
-awra_module_defs = []
+awra_library_kwargs = {}
 if host_machine.system() == 'windows'
   awra_module_defs = custom_target(
     'awra-module-defs',
@@ -270,6 +279,7 @@ if host_machine.system() == 'windows'
       '@INPUT@',
     ],
   )
+  awra_library_kwargs += {'vs_module_defs': awra_module_defs}
 else
   awra_link_args += '-Wl,--version-script=' + meson.project_build_root() / 'awra.map'
   awra_link_depends += awra_symbol_map
@@ -285,8 +295,8 @@ libawra = library(
   include_directories: [inc_public, inc_private],
   link_args: awra_link_args,
   link_depends: awra_link_depends,
-  vs_module_defs: awra_module_defs,
   install: true,
+  kwargs: awra_library_kwargs,
 )
 
 awra_dep = declare_dependency(

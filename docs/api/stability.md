@@ -3,10 +3,14 @@
 # API stability and ownership
 
 Awra 1.0 provides a stable source and binary compatibility contract. The full
-non-documentation GIR surface is recorded in
-`tests/api/awra-1.0-api.json`; exported symbols must match the installed public
+non-documentation GIR surface of 1.0.0 is frozen in
+`tests/api/awra-1.0-api.json`, and a test checks that the current API still
+contains all of it unchanged; the current surface, additions included, is
+`tests/api/awra-api.json`. Exported symbols must match the installed public
 headers. Compatible 1.x releases may add API, but cannot remove or reinterpret
-existing symbols, properties, enum values, ownership or nullability.
+existing symbols, properties, enum values, ownership or nullability. API added
+after 1.0 is documented with the release that ships it (`Since: 1.1`); see
+`versioning.md`.
 
 ## Ownership rules
 
@@ -36,8 +40,8 @@ Rust consumer is intentionally early: it catches APIs that are legal C but
 would otherwise project as raw pointers or ambiguous ownership.
 
 The shared library exports only declarations found in installed public headers;
-private effect coordinator, Wayland and resolver symbols are hidden by the ELF
-version map.
+private effect coordinator, Wayland, Win32 and resolver symbols are hidden by
+the ELF version map, and on Windows by the DLL's module-definition file.
 
 ## Deprecation policy
 
