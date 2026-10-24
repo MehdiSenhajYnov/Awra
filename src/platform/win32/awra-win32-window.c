@@ -225,6 +225,24 @@ window_proc (HWND      hwnd,
     if (LOWORD (wparam) == WA_INACTIVE)
       lend_snap_styles (window, hwnd, FALSE);
     break;
+  case WM_SYSCOMMAND:
+    /* Maximized or restored by Windows (Win+Up, Win+Down, the system menu):
+     * through GTK, which otherwise lays the window out at its normal size
+     * again, not knowing it is maximized. GTK sizes the window from its
+     * style: the lent frame goes first, or the size it restores grows by
+     * that frame each time. */
+    if ((wparam & 0xFFF0) == SC_MAXIMIZE && gtk_window_get_resizable (window)) {
+      lend_snap_styles (window, hwnd, FALSE);
+      gtk_window_maximize (window);
+      return 0;
+    }
+    if ((wparam & 0xFFF0) == SC_RESTORE && gtk_window_is_maximized (window) &&
+        !IsIconic (hwnd)) {
+      lend_snap_styles (window, hwnd, FALSE);
+      gtk_window_unmaximize (window);
+      return 0;
+    }
+    break;
   case WM_NCHITTEST:
     hit = resize_hit_test (window, hwnd, lparam);
     if (hit != HTNOWHERE)
