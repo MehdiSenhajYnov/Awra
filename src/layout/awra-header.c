@@ -450,6 +450,8 @@ update_surface_grammar (AwraHeader *self)
     awra_surface_set_role (self->surface, AWRA_SURFACE_ROLE_TOOLBAR);
     awra_surface_set_corner_mask (self->surface, AWRA_SURFACE_CORNER_ALL);
     awra_surface_set_edge_mask (self->surface, AWRA_SURFACE_EDGE_ALL);
+    /* Back to the material radius when no longer blended. */
+    awra_surface_set_radius (self->surface, -1.0);
   }
 }
 
