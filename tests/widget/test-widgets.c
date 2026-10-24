@@ -1406,6 +1406,137 @@ test_form_row_measured_for_its_layout (void)
   g_assert_cmpint (row_height, >=, label_height + field_height);
 }
 
+/* A divider the user dragged stays put while the mode does not change. */
+static void
+test_split_view_keeps_dragged_divider (void)
+{
+  g_autoptr (GtkWidget) split = g_object_ref_sink (awra_split_view_new ());
+  GtkPaned *paned;
+
+  awra_split_view_set_sidebar (AWRA_SPLIT_VIEW (split), gtk_label_new ("Sidebar"));
+  awra_split_view_set_content (AWRA_SPLIT_VIEW (split), gtk_label_new ("Content"));
+  paned = GTK_PANED (gtk_widget_get_first_child (split));
+
+  awra_split_view_update_for_width (AWRA_SPLIT_VIEW (split), 1200);
+  g_assert_cmpint (gtk_paned_get_position (paned), ==, 244);
+  gtk_paned_set_position (paned, 400);
+  awra_split_view_update_for_width (AWRA_SPLIT_VIEW (split), 1300);
+  g_assert_cmpint (gtk_paned_get_position (paned), ==, 400);
+  awra_split_view_update_for_width (AWRA_SPLIT_VIEW (split), 800);
+  g_assert_cmpint (gtk_paned_get_position (paned), ==, 220);
+  awra_split_view_update_for_width (AWRA_SPLIT_VIEW (split), 1300);
+  g_assert_cmpint (gtk_paned_get_position (paned), ==, 244);
+}
+
+/* The two widths of a responsive container can be set in either order. */
+static void
+test_responsive_widths_in_any_order (void)
+{
+  g_autoptr (GtkWidget) bin = g_object_ref_sink (awra_responsive_bin_new ());
+  g_autoptr (GtkWidget) split = g_object_ref_sink (awra_split_view_new ());
+
+  g_object_set (bin, "compact-width", 1000, "expanded-width", 800, NULL);
+  g_assert_cmpuint (awra_responsive_bin_get_compact_width (AWRA_RESPONSIVE_BIN (bin)), ==, 1000);
+  g_assert_cmpuint (awra_responsive_bin_get_expanded_width (AWRA_RESPONSIVE_BIN (bin)), ==, 800);
+  g_object_set (split, "compact-width", 1000, "expanded-width", 700, NULL);
+  awra_split_view_update_for_width (AWRA_SPLIT_VIEW (split), 900);
+  g_assert_cmpint (awra_split_view_get_layout_mode (AWRA_SPLIT_VIEW (split)), ==,
+                   AWRA_LAYOUT_MODE_COMPACT);
+  awra_split_view_update_for_width (AWRA_SPLIT_VIEW (split), 1100);
+  g_assert_cmpint (awra_split_view_get_layout_mode (AWRA_SPLIT_VIEW (split)), ==,
+                   AWRA_LAYOUT_MODE_EXPANDED);
+}
+
+static GtkWidget *
+sized_box (int width,
+           int height)
+{
+  GtkWidget *box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
+
+  gtk_widget_set_size_request (box, width, height);
+  return box;
+}
+
+/* A master-detail is measured as the width it gets lays it out: one pane
+ * alone when narrow, both side by side when wide; the hidden pane keeps
+ * its own visibility. */
+static void
+test_master_detail_measured_for_its_layout (void)
+{
+  g_autoptr (GtkWidget) view = g_object_ref_sink (awra_master_detail_new ());
+  GtkWidget *master = sized_box (200, 100);
+  GtkWidget *detail = sized_box (450, 150);
+  int minimum = 0, natural = 0;
+
+  awra_master_detail_set_master (AWRA_MASTER_DETAIL (view), master);
+  awra_master_detail_set_detail (AWRA_MASTER_DETAIL (view), detail);
+
+  gtk_widget_measure (view, GTK_ORIENTATION_HORIZONTAL, -1, &minimum, &natural, NULL, NULL);
+  g_assert_cmpint (minimum, ==, 200);
+  g_assert_cmpint (natural, >=, 320 + 450);
+  g_assert_cmpint (gtk_widget_get_request_mode (view), ==, GTK_SIZE_REQUEST_HEIGHT_FOR_WIDTH);
+  gtk_widget_measure (view, GTK_ORIENTATION_VERTICAL, 500, &minimum, NULL, NULL, NULL);
+  g_assert_cmpint (minimum, ==, 100);
+  gtk_widget_measure (view, GTK_ORIENTATION_VERTICAL, 1200, &minimum, NULL, NULL, NULL);
+  g_assert_cmpint (minimum, ==, 150);
+  /* Wider than compact, but too narrow for both panes: still one. */
+  gtk_widget_measure (view, GTK_ORIENTATION_VERTICAL, 700, &minimum, NULL, NULL, NULL);
+  g_assert_cmpint (minimum, ==, 100);
+
+  awra_master_detail_show_detail (AWRA_MASTER_DETAIL (view));
+  gtk_widget_measure (view, GTK_ORIENTATION_HORIZONTAL, -1, &minimum, NULL, NULL, NULL);
+  g_assert_cmpint (minimum, ==, 450);
+  gtk_widget_measure (view, GTK_ORIENTATION_VERTICAL, 500, &minimum, NULL, NULL, NULL);
+  g_assert_cmpint (minimum, ==, 150);
+  g_assert_true (gtk_widget_get_visible (master));
+}
+
+/* A new filter bar, still side by side, is measured as the width it gets
+ * will lay it out. */
+static void
+test_filter_bar_measured_for_its_layout (void)
+{
+  g_autoptr (GtkWidget) bar = g_object_ref_sink (awra_filter_bar_new ());
+  int stacked = 0, side = 0, minimum = 0;
+
+  awra_filter_bar_set_search (AWRA_FILTER_BAR (bar), sized_box (300, 40));
+  awra_filter_bar_append_filter (AWRA_FILTER_BAR (bar), sized_box (200, 40));
+  awra_filter_bar_set_summary (AWRA_FILTER_BAR (bar), sized_box (100, 20));
+  awra_filter_bar_set_reset_widget (AWRA_FILTER_BAR (bar), sized_box (80, 30));
+  g_assert_false (awra_filter_bar_get_compact (AWRA_FILTER_BAR (bar)));
+
+  gtk_widget_measure (bar, GTK_ORIENTATION_HORIZONTAL, -1, &minimum, NULL, NULL, NULL);
+  g_assert_cmpint (minimum, <, 300 + 200 + 100 + 80);
+  gtk_widget_measure (bar, GTK_ORIENTATION_VERTICAL, 400, &stacked, NULL, NULL, NULL);
+  gtk_widget_measure (bar, GTK_ORIENTATION_VERTICAL, 1200, &side, NULL, NULL, NULL);
+  g_assert_cmpint (stacked, >=, 40 + 40 + 30);
+  g_assert_cmpint (side, <, stacked);
+}
+
+/* Pushing slides in from the end, popping goes back from the start,
+ * whatever order the pages were added in. */
+static void
+test_navigation_direction (void)
+{
+  g_autoptr (GtkWidget) view = g_object_ref_sink (awra_navigation_view_new ());
+  GtkStack *stack = awra_navigation_view_get_stack (AWRA_NAVIGATION_VIEW (view));
+
+  awra_navigation_view_add (AWRA_NAVIGATION_VIEW (view), gtk_label_new ("Detail"), "detail");
+  awra_navigation_view_add (AWRA_NAVIGATION_VIEW (view), gtk_label_new ("Home"), "home");
+  gtk_stack_set_transition_duration (stack, 200);
+  gtk_widget_set_direction (view, GTK_TEXT_DIR_LTR);
+
+  g_assert_true (awra_navigation_view_push (AWRA_NAVIGATION_VIEW (view), "home"));
+  g_assert_true (awra_navigation_view_push (AWRA_NAVIGATION_VIEW (view), "detail"));
+  g_assert_cmpint (gtk_stack_get_transition_type (stack), ==,
+                   GTK_STACK_TRANSITION_TYPE_SLIDE_LEFT);
+  g_assert_true (awra_navigation_view_pop (AWRA_NAVIGATION_VIEW (view)));
+  g_assert_cmpint (gtk_stack_get_transition_type (stack), ==,
+                   GTK_STACK_TRANSITION_TYPE_SLIDE_RIGHT);
+  g_assert_cmpstr (awra_navigation_view_get_visible_page_name (AWRA_NAVIGATION_VIEW (view)),
+                   ==, "home");
+}
+
 /* Interactive suffix controls must see clicks before the row claims them. */
 static void
 test_action_row_suffix_receives_clicks (void)
@@ -2515,6 +2646,16 @@ main (int   argc,
                    test_form_alignment_and_control_width);
   g_test_add_func ("/awra/widgets/form-row-measured-for-its-layout",
                    test_form_row_measured_for_its_layout);
+  g_test_add_func ("/awra/widgets/split-view-keeps-dragged-divider",
+                   test_split_view_keeps_dragged_divider);
+  g_test_add_func ("/awra/widgets/responsive-widths-in-any-order",
+                   test_responsive_widths_in_any_order);
+  g_test_add_func ("/awra/widgets/master-detail-measured-for-its-layout",
+                   test_master_detail_measured_for_its_layout);
+  g_test_add_func ("/awra/widgets/filter-bar-measured-for-its-layout",
+                   test_filter_bar_measured_for_its_layout);
+  g_test_add_func ("/awra/widgets/navigation-direction",
+                   test_navigation_direction);
   g_test_add_func ("/awra/widgets/action-row-suffix-receives-clicks",
                    test_action_row_suffix_receives_clicks);
   g_test_add_func ("/awra/widgets/window-popover", test_window_and_popover);

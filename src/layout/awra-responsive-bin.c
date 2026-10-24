@@ -265,7 +265,9 @@ awra_responsive_bin_set_compact_width (AwraResponsiveBin *self,
                                        guint              width)
 {
   g_return_if_fail (AWRA_IS_RESPONSIVE_BIN (self));
-  g_return_if_fail (width >= 240 && width < self->expanded_width);
+  /* Either width may be set first (a .ui file sets them in its own order):
+   * when they cross, the compact one wins. */
+  g_return_if_fail (width >= 240 && width <= 1600);
   if (self->compact_width == width)
     return;
   self->compact_width = width;
@@ -285,7 +287,7 @@ awra_responsive_bin_set_expanded_width (AwraResponsiveBin *self,
                                         guint              width)
 {
   g_return_if_fail (AWRA_IS_RESPONSIVE_BIN (self));
-  g_return_if_fail (width > self->compact_width && width <= 3200);
+  g_return_if_fail (width >= 360 && width <= 3200);
   if (self->expanded_width == width)
     return;
   self->expanded_width = width;

@@ -133,7 +133,8 @@ update_validation (AwraFormRow *self)
   update_accessibility (self);
 }
 
-/* Narrower than this, the label goes above its control. */
+/* Narrower than this, or than side by side needs, the label goes above its
+ * control. */
 #define COMPACT_BELOW 560
 /* A common minimum keeps label columns aligned across the forms of a page;
  * AwraForm widens it to its longest label. */
@@ -141,10 +142,8 @@ update_validation (AwraFormRow *self)
 
 static void
 update_responsive_layout (AwraFormRow *self,
-                          int          width)
+                          gboolean     compact)
 {
-  gboolean compact = width < COMPACT_BELOW;
-
   if (self->compact == compact)
     return;
   self->compact = compact;
@@ -184,6 +183,30 @@ measure_part (GtkWidget      *part,
     gtk_widget_measure (part, orientation, for_size, minimum, natural, NULL, NULL);
 }
 
+/* The width side by side needs: the label column, then the control. */
+static int
+side_by_side_minimum (AwraFormRow *self)
+{
+  GtkWidget *label = GTK_WIDGET (self->label_widget);
+  int label_min = 0, label_nat, field_min, field_nat, spacing = 0;
+
+  if (gtk_widget_should_layout (label)) {
+    measure_part (label, GTK_ORIENTATION_HORIZONTAL, -1, &label_min, &label_nat);
+    label_min = MAX (label_min, LABEL_WIDTH);
+    spacing = awra_spacing_resolve (GTK_WIDGET (self), AWRA_SPACING_LG);
+  }
+  measure_part (GTK_WIDGET (self->field), GTK_ORIENTATION_HORIZONTAL, -1, &field_min,
+                &field_nat);
+  return label_min + spacing + field_min;
+}
+
+static gboolean
+compact_for_width (AwraFormRow *self,
+                   int          width)
+{
+  return width < COMPACT_BELOW || width < side_by_side_minimum (self);
+}
+
 /* The layout only changes once the row is allocated: until then, it is
  * measured as the width it gets will lay it out. Otherwise a new row, side
  * by side, would widen its column for a frame, and stacked rows would get
@@ -210,7 +233,7 @@ awra_form_row_measure (GtkWidget *widget, GtkOrientation orientation,
     }
     return;
   }
-  if (for_size < 0 || (for_size < COMPACT_BELOW) == self->compact) {
+  if (for_size < 0 || compact_for_width (self, for_size) == self->compact) {
     gtk_widget_measure (GTK_WIDGET (self->root), orientation, for_size, minimum,
                         natural, minimum_baseline, natural_baseline);
     return;
@@ -220,7 +243,7 @@ awra_form_row_measure (GtkWidget *widget, GtkOrientation orientation,
     *minimum_baseline = -1;
   if (natural_baseline != NULL)
     *natural_baseline = -1;
-  if (for_size < COMPACT_BELOW) {
+  if (!self->compact) {
     spacing = has_label ? awra_spacing_resolve (widget, AWRA_SPACING_SM) : 0;
     measure_part (field, GTK_ORIENTATION_HORIZONTAL, -1, &field_min, &field_nat);
     measure_part (field, orientation, MAX (for_size, field_min), &field_min, &field_nat);
@@ -250,7 +273,7 @@ awra_form_row_allocate (GtkWidget *widget, int width, int height,
 {
   AwraFormRow *self = AWRA_FORM_ROW (widget);
 
-  update_responsive_layout (self, width);
+  update_responsive_layout (self, compact_for_width (self, width));
   gtk_widget_allocate (GTK_WIDGET (self->root), width, height, baseline, NULL);
 }
 

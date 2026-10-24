@@ -15,6 +15,10 @@ struct _AwraSplitView {
   AwraLayoutMode layout_mode;
   guint compact_width;
   guint expanded_width;
+  /* The mode and inset the divider was last placed for: in between, it
+   * stays where the user dragged it. */
+  AwraLayoutMode placed_mode;
+  int placed_inset;
 };
 
 typedef struct _AwraSplitLayout      AwraSplitLayout;
@@ -71,6 +75,7 @@ void
 awra_split_view_update_for_width (AwraSplitView *self, int width)
 {
   guint inset = get_sidebar_inset (self);
+  /* The two widths may be set in any order: the compact one wins. */
   AwraLayoutMode mode = width < (int) self->compact_width
                           ? AWRA_LAYOUT_MODE_COMPACT
                           : width < (int) self->expanded_width
@@ -83,6 +88,10 @@ awra_split_view_update_for_width (AwraSplitView *self, int width)
     self->layout_mode = mode;
     g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_LAYOUT_MODE]);
   }
+  if (mode == self->placed_mode && (int) inset == self->placed_inset)
+    return;
+  self->placed_mode = mode;
+  self->placed_inset = (int) inset;
   if (mode == AWRA_LAYOUT_MODE_MEDIUM) {
     if (self->sidebar != NULL)
       gtk_widget_set_size_request (self->sidebar, 210 + (int) inset * 2, -1);
@@ -242,7 +251,7 @@ awra_split_view_class_init (AwraSplitViewClass *klass)
 
 static void awra_split_view_init (AwraSplitView *self) {
   self->show_sidebar = TRUE; self->layout_mode = AWRA_LAYOUT_MODE_EXPANDED;
-  self->compact_width = 600; self->expanded_width = 900;
+  self->compact_width = 600; self->expanded_width = 900; self->placed_inset = -1;
   self->paned = GTK_PANED (gtk_paned_new (GTK_ORIENTATION_HORIZONTAL));
   gtk_paned_set_shrink_start_child (self->paned, FALSE);
   gtk_paned_set_shrink_end_child (self->paned, FALSE);
@@ -263,6 +272,7 @@ void awra_split_view_set_sidebar (AwraSplitView *self, GtkWidget *sidebar) {
       sidebar, "notify::inset", G_CALLBACK (sidebar_inset_changed_cb), self);
   if (sidebar != NULL) {
     gtk_widget_set_visible (sidebar, self->show_sidebar && self->layout_mode != AWRA_LAYOUT_MODE_COMPACT);
+    self->placed_inset = -1;
     update_for_current_width (self);
   }
   g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_SIDEBAR]);
@@ -282,11 +292,11 @@ void awra_split_view_set_show_sidebar (AwraSplitView *self, gboolean show_sideba
 AwraLayoutMode awra_split_view_get_layout_mode (AwraSplitView *self) { g_return_val_if_fail (AWRA_IS_SPLIT_VIEW (self), AWRA_LAYOUT_MODE_COMPACT); return self->layout_mode; }
 guint awra_split_view_get_compact_width (AwraSplitView *self) { g_return_val_if_fail (AWRA_IS_SPLIT_VIEW (self), 0); return self->compact_width; }
 void awra_split_view_set_compact_width (AwraSplitView *self, guint width) {
-  g_return_if_fail (AWRA_IS_SPLIT_VIEW (self)); g_return_if_fail (width < self->expanded_width); if (self->compact_width == width) return;
+  g_return_if_fail (AWRA_IS_SPLIT_VIEW (self)); g_return_if_fail (width >= 320 && width <= 1200); if (self->compact_width == width) return;
   self->compact_width = width; update_for_current_width (self); g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_COMPACT_WIDTH]);
 }
 guint awra_split_view_get_expanded_width (AwraSplitView *self) { g_return_val_if_fail (AWRA_IS_SPLIT_VIEW (self), 0); return self->expanded_width; }
 void awra_split_view_set_expanded_width (AwraSplitView *self, guint width) {
-  g_return_if_fail (AWRA_IS_SPLIT_VIEW (self)); g_return_if_fail (width > self->compact_width); if (self->expanded_width == width) return;
+  g_return_if_fail (AWRA_IS_SPLIT_VIEW (self)); g_return_if_fail (width >= 480 && width <= 2400); if (self->expanded_width == width) return;
   self->expanded_width = width; update_for_current_width (self); g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_EXPANDED_WIDTH]);
 }
