@@ -1629,6 +1629,8 @@ test_accessibility_semantics (void)
   GtkWidget *entry = awra_entry_new ();
   GtkWidget *first;
   GtkWidget *second;
+  g_autoptr (GtkATContext) context = NULL;
+  gboolean states;
 
   awra_segmented_control_append (AWRA_SEGMENTED_CONTROL (segmented), "Day");
   awra_segmented_control_append (AWRA_SEGMENTED_CONTROL (segmented), "Week");
@@ -1638,20 +1640,26 @@ test_accessibility_semantics (void)
   second = gtk_widget_get_next_sibling (first);
   g_assert_cmpint (gtk_accessible_get_accessible_role (GTK_ACCESSIBLE (first)), ==,
                    GTK_ACCESSIBLE_ROLE_RADIO);
-  gtk_test_accessible_assert_state (first, GTK_ACCESSIBLE_STATE_CHECKED,
-                                    GTK_ACCESSIBLE_TRISTATE_TRUE);
+  /* States and properties live in an AT context, absent with GTK_A11Y=none. */
+  context = gtk_accessible_get_at_context (GTK_ACCESSIBLE (first));
+  states = context != NULL;
+  if (states)
+    gtk_test_accessible_assert_state (first, GTK_ACCESSIBLE_STATE_CHECKED,
+                                      GTK_ACCESSIBLE_TRISTATE_TRUE);
   g_assert_true (gtk_widget_get_focusable (first));
   g_assert_false (gtk_widget_get_focusable (second));
   awra_segmented_control_set_selected (AWRA_SEGMENTED_CONTROL (segmented), 1);
-  gtk_test_accessible_assert_state (second, GTK_ACCESSIBLE_STATE_CHECKED,
-                                    GTK_ACCESSIBLE_TRISTATE_TRUE);
+  if (states)
+    gtk_test_accessible_assert_state (second, GTK_ACCESSIBLE_STATE_CHECKED,
+                                      GTK_ACCESSIBLE_TRISTATE_TRUE);
   g_assert_false (gtk_widget_get_focusable (first));
   g_assert_true (gtk_widget_get_focusable (second));
 
   awra_form_row_set_label (AWRA_FORM_ROW (row), "Name");
   awra_form_row_set_control (AWRA_FORM_ROW (row), entry);
   awra_form_row_set_required (AWRA_FORM_ROW (row), TRUE);
-  gtk_test_accessible_assert_property (entry, GTK_ACCESSIBLE_PROPERTY_REQUIRED, TRUE);
+  if (states)
+    gtk_test_accessible_assert_property (entry, GTK_ACCESSIBLE_PROPERTY_REQUIRED, TRUE);
 
   g_assert_nonnull (find_role (toasts, GTK_ACCESSIBLE_ROLE_STATUS));
 

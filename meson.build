@@ -228,7 +228,8 @@ awra_symbol_map = custom_target(
   ],
 )
 
-awra_deps = [gtk_dep, gio_dep]
+# ceil, floor and round: libm is a library of its own on Linux.
+awra_deps = [gtk_dep, gio_dep, cc.find_library('m', required: false)]
 if wayland_dep.found() and wayland_scanner.found()
   protocol_xml = files('protocols/ext-background-effect-v1.xml')
   protocol_header = custom_target(
