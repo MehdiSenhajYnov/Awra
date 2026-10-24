@@ -24,6 +24,7 @@
 typedef struct {
   const AwraKeyCodeInfo *info;
   AwraKeyCap *cap;
+  GtkEventController *drop_target; /* owned by cap */
   double x;
   double y;
   double width;
@@ -781,8 +782,8 @@ add_key_drop_target (AwraKeyboardView *self,
   g_signal_connect (target, "enter", G_CALLBACK (key_drop_enter_cb), self);
   g_signal_connect (target, "leave", G_CALLBACK (key_drop_leave_cb), self);
   g_signal_connect (target, "drop", G_CALLBACK (key_drop_cb), self);
-  gtk_widget_add_controller (GTK_WIDGET (slot->cap),
-                             GTK_EVENT_CONTROLLER (target));
+  slot->drop_target = GTK_EVENT_CONTROLLER (target);
+  gtk_widget_add_controller (GTK_WIDGET (slot->cap), slot->drop_target);
 }
 
 /* GtkWidget ------------------------------------------------------------ */
@@ -872,6 +873,11 @@ awra_keyboard_view_dispose (GObject *object)
 
       if (slot->cap != NULL) {
         g_signal_handlers_disconnect_by_data (slot->cap, self);
+        /* Its callbacks point at this view and at the slot freed below. */
+        if (slot->drop_target != NULL) {
+          gtk_widget_remove_controller (GTK_WIDGET (slot->cap), slot->drop_target);
+          slot->drop_target = NULL;
+        }
         gtk_widget_unparent (GTK_WIDGET (slot->cap));
         slot->cap = NULL;
       }

@@ -99,8 +99,10 @@ awra_popover_show (GtkWidget *widget)
 {
   AwraPopover *self = AWRA_POPOVER (widget);
 
-  if (self->menu_model != NULL)
+  if (self->menu_model != NULL) {
     rebuild_menu (self);
+    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_CHILD]);
+  }
   GTK_WIDGET_CLASS (awra_popover_parent_class)->show (widget);
 }
 
