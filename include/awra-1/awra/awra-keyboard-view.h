@@ -80,6 +80,9 @@ void        awra_keyboard_view_unselect_all               (AwraKeyboardView     
 gboolean    awra_keyboard_view_get_accepts_file_drops     (AwraKeyboardView           *self);
 void        awra_keyboard_view_set_accepts_file_drops     (AwraKeyboardView           *self,
                                                            gboolean                    accepts);
+gboolean    awra_keyboard_view_get_keys_movable           (AwraKeyboardView           *self);
+void        awra_keyboard_view_set_keys_movable           (AwraKeyboardView           *self,
+                                                           gboolean                    movable);
 
 /**
  * awra_keyboard_code_from_hardware_keycode:

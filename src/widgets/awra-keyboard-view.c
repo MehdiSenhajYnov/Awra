@@ -25,6 +25,7 @@ typedef struct {
   const AwraKeyCodeInfo *info;
   AwraKeyCap *cap;
   GtkEventController *drop_target; /* owned by cap */
+  GtkEventController *drag_source; /* owned by cap */
   double x;
   double y;
   double width;
@@ -52,6 +53,7 @@ struct _AwraKeyboardView {
   KeySlot *cursor;
 
   gboolean accepts_file_drops;
+  gboolean keys_movable;
   KeySlot *drop_slot;
 
   GdkDevice *keyboard;
@@ -67,6 +69,7 @@ enum {
   PROP_SHOW_NUMPAD,
   PROP_SELECTION_MODE,
   PROP_ACCEPTS_FILE_DROPS,
+  PROP_KEYS_MOVABLE,
   N_PROPS,
 };
 
@@ -74,6 +77,7 @@ enum {
   SIGNAL_KEY_ACTIVATED,
   SIGNAL_SELECTION_CHANGED,
   SIGNAL_FILES_DROPPED,
+  SIGNAL_KEY_MOVED,
   N_SIGNALS,
 };
 
@@ -712,18 +716,29 @@ drop_target_slot (GtkDropTarget *target)
   return g_object_get_data (G_OBJECT (target), "awra-key-slot");
 }
 
+#define KEY_DRAG_PREFIX "awra-key:"
+
+/* A key dragged from this view (not text from another app). */
+static gboolean
+drop_is_key (GdkDrop *drop)
+{
+  return gdk_drop_get_drag (drop) != NULL &&
+         gdk_content_formats_contain_gtype (gdk_drop_get_formats (drop), G_TYPE_STRING) &&
+         !gdk_content_formats_contain_gtype (gdk_drop_get_formats (drop), GDK_TYPE_FILE_LIST);
+}
+
 static gboolean
 key_drop_accept_cb (GtkDropTarget    *target,
                     GdkDrop          *drop,
                     AwraKeyboardView *self)
 {
-  if (!self->accepts_file_drops || !slot_selectable (drop_target_slot (target)))
+  if (!slot_selectable (drop_target_slot (target)))
     return FALSE;
-  if ((gdk_drop_get_actions (drop) & GDK_ACTION_COPY) == 0)
+  if (drop_is_key (drop))
+    return self->keys_movable && (gdk_drop_get_actions (drop) & GDK_ACTION_MOVE) != 0;
+  if (!self->accepts_file_drops || (gdk_drop_get_actions (drop) & GDK_ACTION_COPY) == 0)
     return FALSE;
-  return gdk_content_formats_match_gtype (gtk_drop_target_get_formats (target),
-                                          gdk_drop_get_formats (drop))
-         != G_TYPE_INVALID;
+  return gdk_content_formats_contain_gtype (gdk_drop_get_formats (drop), GDK_TYPE_FILE_LIST);
 }
 
 static GdkDragAction
@@ -732,10 +747,21 @@ key_drop_enter_cb (GtkDropTarget    *target,
                    double            y,
                    AwraKeyboardView *self)
 {
+  GdkDrop *drop = gtk_drop_target_get_current_drop (target);
+
   (void) x;
   (void) y;
   set_drop_slot (self, drop_target_slot (target));
-  return GDK_ACTION_COPY;
+  return drop != NULL && drop_is_key (drop) ? GDK_ACTION_MOVE : GDK_ACTION_COPY;
+}
+
+static GdkDragAction
+key_drop_motion_cb (GtkDropTarget    *target,
+                    double            x,
+                    double            y,
+                    AwraKeyboardView *self)
+{
+  return key_drop_enter_cb (target, x, y, self);
 }
 
 static void
@@ -759,8 +785,20 @@ key_drop_cb (GtkDropTarget    *target,
   (void) x;
   (void) y;
   set_drop_slot (self, NULL);
-  if (!self->accepts_file_drops || !slot_selectable (slot) ||
-      !G_VALUE_HOLDS (value, GDK_TYPE_FILE_LIST))
+  if (!slot_selectable (slot))
+    return FALSE;
+  if (G_VALUE_HOLDS_STRING (value)) {
+    const char *text = g_value_get_string (value);
+
+    if (!self->keys_movable || text == NULL || !g_str_has_prefix (text, KEY_DRAG_PREFIX))
+      return FALSE;
+    text += strlen (KEY_DRAG_PREFIX);
+    if (g_strcmp0 (text, slot->info->code) == 0)
+      return FALSE;
+    g_signal_emit (self, signals[SIGNAL_KEY_MOVED], 0, text, slot->info->code);
+    return TRUE;
+  }
+  if (!self->accepts_file_drops || !G_VALUE_HOLDS (value, GDK_TYPE_FILE_LIST))
     return FALSE;
   files = g_value_get_boxed (value);
   if (files == NULL)
@@ -770,20 +808,52 @@ key_drop_cb (GtkDropTarget    *target,
   return TRUE;
 }
 
+/* Dragging a key (when keys are movable) carries "awra-key:<code>". */
+static GdkContentProvider *
+key_drag_prepare_cb (GtkDragSource    *source,
+                     double            x,
+                     double            y,
+                     AwraKeyboardView *self)
+{
+  KeySlot *slot = g_object_get_data (G_OBJECT (source), "awra-key-slot");
+  g_autofree char *text = NULL;
+  GdkPaintable *icon;
+
+  (void) x;
+  (void) y;
+  if (!self->keys_movable || !slot_selectable (slot))
+    return NULL;
+  icon = gtk_widget_paintable_new (GTK_WIDGET (slot->cap));
+  gtk_drag_source_set_icon (source, icon, 0, 0);
+  g_object_unref (icon);
+  text = g_strconcat (KEY_DRAG_PREFIX, slot->info->code, NULL);
+  return gdk_content_provider_new_typed (G_TYPE_STRING, text);
+}
+
 static void
 add_key_drop_target (AwraKeyboardView *self,
                      KeySlot          *slot)
 {
-  GtkDropTarget *target = gtk_drop_target_new (GDK_TYPE_FILE_LIST,
-                                               GDK_ACTION_COPY);
+  GtkDropTarget *target = gtk_drop_target_new (G_TYPE_INVALID,
+                                               GDK_ACTION_COPY | GDK_ACTION_MOVE);
+  GType types[] = { GDK_TYPE_FILE_LIST, G_TYPE_STRING };
+  GtkDragSource *source = gtk_drag_source_new ();
 
+  gtk_drop_target_set_gtypes (target, types, G_N_ELEMENTS (types));
   g_object_set_data (G_OBJECT (target), "awra-key-slot", slot);
   g_signal_connect (target, "accept", G_CALLBACK (key_drop_accept_cb), self);
   g_signal_connect (target, "enter", G_CALLBACK (key_drop_enter_cb), self);
+  g_signal_connect (target, "motion", G_CALLBACK (key_drop_motion_cb), self);
   g_signal_connect (target, "leave", G_CALLBACK (key_drop_leave_cb), self);
   g_signal_connect (target, "drop", G_CALLBACK (key_drop_cb), self);
   slot->drop_target = GTK_EVENT_CONTROLLER (target);
   gtk_widget_add_controller (GTK_WIDGET (slot->cap), slot->drop_target);
+
+  gtk_drag_source_set_actions (source, GDK_ACTION_MOVE);
+  g_object_set_data (G_OBJECT (source), "awra-key-slot", slot);
+  g_signal_connect (source, "prepare", G_CALLBACK (key_drag_prepare_cb), self);
+  slot->drag_source = GTK_EVENT_CONTROLLER (source);
+  gtk_widget_add_controller (GTK_WIDGET (slot->cap), slot->drag_source);
 }
 
 /* GtkWidget ------------------------------------------------------------ */
@@ -878,6 +948,10 @@ awra_keyboard_view_dispose (GObject *object)
           gtk_widget_remove_controller (GTK_WIDGET (slot->cap), slot->drop_target);
           slot->drop_target = NULL;
         }
+        if (slot->drag_source != NULL) {
+          gtk_widget_remove_controller (GTK_WIDGET (slot->cap), slot->drag_source);
+          slot->drag_source = NULL;
+        }
         gtk_widget_unparent (GTK_WIDGET (slot->cap));
         slot->cap = NULL;
       }
@@ -916,6 +990,9 @@ awra_keyboard_view_get_property (GObject    *object,
   case PROP_ACCEPTS_FILE_DROPS:
     g_value_set_boolean (value, self->accepts_file_drops);
     break;
+  case PROP_KEYS_MOVABLE:
+    g_value_set_boolean (value, self->keys_movable);
+    break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -950,6 +1027,9 @@ awra_keyboard_view_set_property (GObject      *object,
   case PROP_ACCEPTS_FILE_DROPS:
     awra_keyboard_view_set_accepts_file_drops (self,
                                                g_value_get_boolean (value));
+    break;
+  case PROP_KEYS_MOVABLE:
+    awra_keyboard_view_set_keys_movable (self, g_value_get_boolean (value));
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -990,6 +1070,14 @@ awra_keyboard_view_class_init (AwraKeyboardViewClass *klass)
                        GTK_SELECTION_SINGLE, flags);
   properties[PROP_ACCEPTS_FILE_DROPS] =
     g_param_spec_boolean ("accepts-file-drops", NULL, NULL, FALSE, flags);
+  /**
+   * AwraKeyboardView:keys-movable:
+   *
+   * Whether a key can be dragged onto another one, which emits
+   * #AwraKeyboardView::key-moved.
+   */
+  properties[PROP_KEYS_MOVABLE] =
+    g_param_spec_boolean ("keys-movable", NULL, NULL, FALSE, flags);
   g_object_class_install_properties (object_class, N_PROPS, properties);
 
   /**
@@ -1027,6 +1115,20 @@ awra_keyboard_view_class_init (AwraKeyboardViewClass *klass)
     g_signal_new ("files-dropped", G_TYPE_FROM_CLASS (klass),
                   G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 2,
                   G_TYPE_STRING, GDK_TYPE_FILE_LIST);
+
+  /**
+   * AwraKeyboardView::key-moved:
+   * @self: the keyboard view
+   * @from: the dragged key
+   * @to: the key it was dropped on
+   *
+   * Emitted when a key is dragged onto another one while
+   * #AwraKeyboardView:keys-movable is enabled.
+   */
+  signals[SIGNAL_KEY_MOVED] =
+    g_signal_new ("key-moved", G_TYPE_FROM_CLASS (klass),
+                  G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 2,
+                  G_TYPE_STRING, G_TYPE_STRING);
 
   gtk_widget_class_set_css_name (widget_class, "awrakeyboardview");
   gtk_widget_class_set_accessible_role (widget_class,
@@ -1345,4 +1447,23 @@ awra_keyboard_view_set_accepts_file_drops (AwraKeyboardView *self,
     set_drop_slot (self, NULL);
   g_object_notify_by_pspec (G_OBJECT (self),
                             properties[PROP_ACCEPTS_FILE_DROPS]);
+}
+
+gboolean
+awra_keyboard_view_get_keys_movable (AwraKeyboardView *self)
+{
+  g_return_val_if_fail (AWRA_IS_KEYBOARD_VIEW (self), FALSE);
+  return self->keys_movable;
+}
+
+void
+awra_keyboard_view_set_keys_movable (AwraKeyboardView *self,
+                                     gboolean          movable)
+{
+  g_return_if_fail (AWRA_IS_KEYBOARD_VIEW (self));
+  movable = !!movable;
+  if (self->keys_movable == movable)
+    return;
+  self->keys_movable = movable;
+  g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_KEYS_MOVABLE]);
 }
