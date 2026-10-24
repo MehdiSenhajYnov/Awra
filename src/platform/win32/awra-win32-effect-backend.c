@@ -40,7 +40,6 @@ typedef struct {
 typedef BOOL (WINAPI *SetWindowCompositionAttributeFunc) (HWND, CompositionAttribute *);
 
 #define PERSONALIZE_KEY L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"
-#define POLL_SECONDS 2
 
 typedef enum {
   MODE_NONE,
@@ -52,7 +51,7 @@ typedef struct {
   AwraEffectBackend parent;
   Mode mode;
   SetWindowCompositionAttributeFunc set_composition;
-  guint poll_id;
+  guint watch_id;
 } Win32Backend;
 
 static gboolean
@@ -70,7 +69,7 @@ current_capabilities (Win32Backend *self)
 {
   BOOL composition = FALSE;
 
-  if (self->mode == MODE_NONE ||
+  if (self->mode == MODE_NONE || self->parent.refusal != NULL ||
       FAILED (DwmIsCompositionEnabled (&composition)) || !composition ||
       !transparency_enabled ())
     return AWRA_EFFECT_CAPABILITY_NONE;
@@ -78,7 +77,7 @@ current_capabilities (Win32Backend *self)
 }
 
 static gboolean
-poll_capabilities (gpointer data)
+read_capabilities (gpointer data)
 {
   Win32Backend *self = data;
   AwraEffectCapability capabilities = current_capabilities (self);
@@ -93,15 +92,15 @@ poll_capabilities (gpointer data)
 }
 
 /* The system refused the effect: stop offering it, so Awra settles on the
- * opaque look instead of retrying on every frame. */
+ * opaque look instead of retrying on every frame. The mode stays, so the
+ * windows already given the effect are cleared the way they got it. */
 static void
 give_up (Win32Backend *self,
          const char   *reason,
          GError      **error)
 {
   g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, reason);
-  self->mode = MODE_NONE;
-  self->parent.interface_announced = FALSE;
+  self->parent.refusal = reason;
   if (self->parent.capabilities != AWRA_EFFECT_CAPABILITY_NONE) {
     self->parent.capabilities = AWRA_EFFECT_CAPABILITY_NONE;
     if (self->parent.capabilities_changed != NULL)
@@ -250,8 +249,8 @@ win32_destroy (AwraEffectBackend *backend)
 {
   Win32Backend *self = (Win32Backend *) backend;
 
-  if (self->poll_id != 0)
-    g_source_remove (self->poll_id);
+  if (self->watch_id != 0)
+    g_source_remove (self->watch_id);
   g_free (self);
 }
 
@@ -284,6 +283,6 @@ awra_win32_effect_backend_new (GdkDisplay *display)
   self->parent.interface_announced = self->mode != MODE_NONE;
   self->parent.capabilities = current_capabilities (self);
   /* Follow the "Transparency effects" switch and DWM restarts. */
-  self->poll_id = g_timeout_add_seconds (POLL_SECONDS, poll_capabilities, self);
+  self->watch_id = awra_win32_watch_settings (read_capabilities, self, NULL);
   return &self->parent;
 }

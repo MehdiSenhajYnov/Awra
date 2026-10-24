@@ -10,9 +10,9 @@
 #define PERSONALIZE_KEY L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"
 #define ACCENT_KEY L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Accent"
 
-/* Windows has no change notification GTK forwards for these; a cheap poll
- * of a few registry values and system parameters keeps them in step. */
-#define POLL_SECONDS 2
+/* GTK does not read these on Windows: they are read again whenever Windows
+ * announces a settings change. Only a change of the system value is written
+ * to GtkSettings, so an application that set one itself keeps it. */
 
 typedef struct {
   GtkSettings *settings;
@@ -20,6 +20,9 @@ typedef struct {
   gpointer user_data;
   GdkRGBA accent;
   gboolean have_accent;
+  int color_scheme;
+  int contrast;
+  int reduced_motion;
 } SystemWatch;
 
 gboolean
@@ -49,20 +52,25 @@ awra_win32_popup_corner_radius (void)
   return awra_win32_build_number () >= AWRA_WIN32_BUILD_WINDOWS_11 ? 4.0 : 0.0;
 }
 
+/* Writes @value when the system's own value changed since last read. */
 static void
-set_enum_if_changed (GtkSettings *settings,
-                     const char  *name,
-                     int          value)
+follow_system (GtkSettings *settings,
+               const char  *name,
+               int         *last,
+               int          value)
 {
   int current = 0;
 
+  if (*last == value)
+    return;
+  *last = value;
   g_object_get (settings, name, &current, NULL);
   if (current != value)
     g_object_set (settings, name, value, NULL);
 }
 
 static gboolean
-poll_system (gpointer data)
+read_system (gpointer data)
 {
   SystemWatch *watch = data;
   DWORD light = 1;
@@ -71,20 +79,20 @@ poll_system (gpointer data)
   GdkRGBA accent;
 
   awra_win32_read_dword (PERSONALIZE_KEY, L"AppsUseLightTheme", &light);
-  set_enum_if_changed (watch->settings, "gtk-interface-color-scheme",
-                       light ? GTK_INTERFACE_COLOR_SCHEME_LIGHT
-                             : GTK_INTERFACE_COLOR_SCHEME_DARK);
+  follow_system (watch->settings, "gtk-interface-color-scheme", &watch->color_scheme,
+                 light ? GTK_INTERFACE_COLOR_SCHEME_LIGHT
+                       : GTK_INTERFACE_COLOR_SCHEME_DARK);
 
   if (SystemParametersInfoW (SPI_GETHIGHCONTRAST, sizeof (contrast), &contrast, 0))
-    set_enum_if_changed (watch->settings, "gtk-interface-contrast",
-                         (contrast.dwFlags & HCF_HIGHCONTRASTON)
-                           ? GTK_INTERFACE_CONTRAST_MORE
-                           : GTK_INTERFACE_CONTRAST_NO_PREFERENCE);
+    follow_system (watch->settings, "gtk-interface-contrast", &watch->contrast,
+                   (contrast.dwFlags & HCF_HIGHCONTRASTON)
+                     ? GTK_INTERFACE_CONTRAST_MORE
+                     : GTK_INTERFACE_CONTRAST_NO_PREFERENCE);
 
   if (SystemParametersInfoW (SPI_GETCLIENTAREAANIMATION, 0, &animations, 0))
-    set_enum_if_changed (watch->settings, "gtk-interface-reduced-motion",
-                         animations ? GTK_REDUCED_MOTION_NO_PREFERENCE
-                                    : GTK_REDUCED_MOTION_REDUCE);
+    follow_system (watch->settings, "gtk-interface-reduced-motion", &watch->reduced_motion,
+                   animations ? GTK_REDUCED_MOTION_NO_PREFERENCE
+                              : GTK_REDUCED_MOTION_REDUCE);
 
   if (awra_win32_read_accent (&accent) &&
       (!watch->have_accent || !gdk_rgba_equal (&accent, &watch->accent))) {
@@ -107,7 +115,7 @@ awra_win32_watch_system (GtkSettings           *settings,
   watch->accent_changed = accent_changed;
   watch->user_data = user_data;
   watch->have_accent = awra_win32_read_accent (&watch->accent);
-  poll_system (watch);
-  return g_timeout_add_seconds_full (G_PRIORITY_LOW, POLL_SECONDS,
-                                     poll_system, watch, g_free);
+  watch->color_scheme = watch->contrast = watch->reduced_motion = -1;
+  read_system (watch);
+  return awra_win32_watch_settings (read_system, watch, g_free);
 }

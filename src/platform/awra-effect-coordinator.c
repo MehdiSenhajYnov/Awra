@@ -49,6 +49,8 @@ fallback_reason (AwraEffectCoordinator *self)
     return g_str_equal (self->backend->name, "win32-dwm")
              ? "this Windows version has no DWM blur"
              : "ext-background-effect-v1 is not announced";
+  if (self->backend->refusal != NULL)
+    return self->backend->refusal;
   if (!(self->backend->capabilities & AWRA_EFFECT_CAPABILITY_BLUR))
     return g_str_equal (self->backend->name, "win32-dwm")
              ? "Windows transparency effects are off"

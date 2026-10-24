@@ -13,6 +13,8 @@ typedef void (*AwraBackendCapabilitiesChanged) (AwraEffectBackend     *backend,
 struct _AwraEffectBackend {
   const char *name;
   gboolean interface_announced;
+  /* Set when the platform refused the effect for good: why it fell back. */
+  const char *refusal;
   AwraEffectCapability capabilities;
   AwraBackendCapabilitiesChanged capabilities_changed;
   gpointer capabilities_changed_data;
