@@ -133,11 +133,17 @@ update_validation (AwraFormRow *self)
   update_accessibility (self);
 }
 
+/* Narrower than this, the label goes above its control. */
+#define COMPACT_BELOW 560
+/* A common minimum keeps label columns aligned across the forms of a page;
+ * AwraForm widens it to its longest label. */
+#define LABEL_WIDTH 224
+
 static void
 update_responsive_layout (AwraFormRow *self,
                           int          width)
 {
-  gboolean compact = width < 560;
+  gboolean compact = width < COMPACT_BELOW;
 
   if (self->compact == compact)
     return;
@@ -150,7 +156,7 @@ update_responsive_layout (AwraFormRow *self,
   awra_box_set_spacing (self->root,
                         compact ? AWRA_SPACING_SM : AWRA_SPACING_LG);
   gtk_widget_set_size_request (GTK_WIDGET (self->label_widget),
-                               compact ? -1 : 176, -1);
+                               compact ? -1 : LABEL_WIDTH, -1);
   gtk_widget_set_valign (GTK_WIDGET (self->label_widget),
                          compact ? GTK_ALIGN_START : GTK_ALIGN_CENTER);
   if (compact)
@@ -159,21 +165,83 @@ update_responsive_layout (AwraFormRow *self,
     gtk_widget_remove_css_class (GTK_WIDGET (self), "awra-compact");
 }
 
+/* Its height depends on its width at least through its layout. */
 static GtkSizeRequestMode
-awra_form_row_request_mode (GtkWidget *widget)
+awra_form_row_request_mode (G_GNUC_UNUSED GtkWidget *widget)
 {
-  return gtk_widget_get_request_mode (
-    GTK_WIDGET (AWRA_FORM_ROW (widget)->root));
+  return GTK_SIZE_REQUEST_HEIGHT_FOR_WIDTH;
 }
 
+static void
+measure_part (GtkWidget      *part,
+              GtkOrientation  orientation,
+              int             for_size,
+              int            *minimum,
+              int            *natural)
+{
+  *minimum = *natural = 0;
+  if (gtk_widget_should_layout (part))
+    gtk_widget_measure (part, orientation, for_size, minimum, natural, NULL, NULL);
+}
+
+/* The layout only changes once the row is allocated: until then, it is
+ * measured as the width it gets will lay it out. Otherwise a new row, side
+ * by side, would widen its column for a frame, and stacked rows would get
+ * the heights of side-by-side ones. */
 static void
 awra_form_row_measure (GtkWidget *widget, GtkOrientation orientation,
                        int for_size, int *minimum, int *natural,
                        int *minimum_baseline, int *natural_baseline)
 {
-  gtk_widget_measure (GTK_WIDGET (AWRA_FORM_ROW (widget)->root), orientation,
-                      for_size, minimum, natural, minimum_baseline,
-                      natural_baseline);
+  AwraFormRow *self = AWRA_FORM_ROW (widget);
+  GtkWidget *label = GTK_WIDGET (self->label_widget);
+  GtkWidget *field = GTK_WIDGET (self->field);
+  gboolean has_label = gtk_widget_should_layout (label);
+  int label_min, label_nat, field_min, field_nat, spacing;
+
+  if (orientation == GTK_ORIENTATION_HORIZONTAL) {
+    gtk_widget_measure (GTK_WIDGET (self->root), orientation, for_size, minimum,
+                        natural, minimum_baseline, natural_baseline);
+    /* Too narrow for side by side, it stacks: no wider than that. */
+    if (!self->compact) {
+      measure_part (label, orientation, -1, &label_min, &label_nat);
+      measure_part (field, orientation, -1, &field_min, &field_nat);
+      *minimum = MIN (*minimum, MAX (label_min, field_min));
+    }
+    return;
+  }
+  if (for_size < 0 || (for_size < COMPACT_BELOW) == self->compact) {
+    gtk_widget_measure (GTK_WIDGET (self->root), orientation, for_size, minimum,
+                        natural, minimum_baseline, natural_baseline);
+    return;
+  }
+
+  if (minimum_baseline != NULL)
+    *minimum_baseline = -1;
+  if (natural_baseline != NULL)
+    *natural_baseline = -1;
+  if (for_size < COMPACT_BELOW) {
+    spacing = has_label ? awra_spacing_resolve (widget, AWRA_SPACING_SM) : 0;
+    measure_part (field, GTK_ORIENTATION_HORIZONTAL, -1, &field_min, &field_nat);
+    measure_part (field, orientation, MAX (for_size, field_min), &field_min, &field_nat);
+    measure_part (label, orientation, -1, &label_min, &label_nat);
+    *minimum = label_min + spacing + field_min;
+    *natural = label_nat + spacing + field_nat;
+  } else {
+    int label_width = 0, field_width;
+
+    spacing = has_label ? awra_spacing_resolve (widget, AWRA_SPACING_LG) : 0;
+    if (has_label) {
+      measure_part (label, GTK_ORIENTATION_HORIZONTAL, -1, &label_min, &label_nat);
+      label_width = MAX (label_min, LABEL_WIDTH);
+    }
+    measure_part (field, GTK_ORIENTATION_HORIZONTAL, -1, &field_min, &field_nat);
+    field_width = MAX (for_size - label_width - spacing, field_min);
+    measure_part (label, orientation, label_width, &label_min, &label_nat);
+    measure_part (field, orientation, field_width, &field_min, &field_nat);
+    *minimum = MAX (label_min, field_min);
+    *natural = MAX (label_nat, field_nat);
+  }
 }
 
 static void
@@ -322,9 +390,7 @@ awra_form_row_init (AwraFormRow *self)
   gtk_widget_set_valign (GTK_WIDGET (self->label_widget),
                          GTK_ALIGN_BASELINE_FILL);
   gtk_widget_set_valign (GTK_WIDGET (self->field), GTK_ALIGN_BASELINE_FILL);
-  /* A common minimum keeps label columns aligned across the forms of a
-   * page; AwraForm widens it to its longest label. */
-  gtk_widget_set_size_request (GTK_WIDGET (self->label_widget), 224, -1);
+  gtk_widget_set_size_request (GTK_WIDGET (self->label_widget), LABEL_WIDTH, -1);
   gtk_box_append (self->root, GTK_WIDGET (self->label_widget));
   gtk_box_append (self->root, GTK_WIDGET (self->field));
   gtk_box_append (self->field, GTK_WIDGET (self->help_widget));

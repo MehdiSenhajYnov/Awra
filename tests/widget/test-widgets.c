@@ -1370,6 +1370,42 @@ test_form_alignment_and_control_width (void)
                    >=, 5);
 }
 
+/* A row not allocated yet is still side by side: it is measured as the width
+ * it gets will lay it out, never wider than stacked, so a new row does not
+ * widen a narrow column nor get a side-by-side height there for a frame. */
+static void
+test_form_row_measured_for_its_layout (void)
+{
+  g_autoptr (GtkWidget) row = g_object_ref_sink (awra_form_row_new ());
+  GtkWidget *entry = awra_entry_new ();
+  GtkWidget *label;
+  int row_min = 0, label_min = 0, field_min = 0;
+  int row_height = 0, label_height = 0, field_height = 0;
+
+  awra_form_row_set_label (AWRA_FORM_ROW (row), "Lecture");
+  awra_form_row_set_control (AWRA_FORM_ROW (row), entry);
+  label = gtk_widget_get_first_child (gtk_widget_get_first_child (row));
+  g_assert_false (gtk_widget_has_css_class (row, "awra-compact"));
+
+  gtk_widget_measure (row, GTK_ORIENTATION_HORIZONTAL, -1,
+                      &row_min, NULL, NULL, NULL);
+  gtk_widget_measure (label, GTK_ORIENTATION_HORIZONTAL, -1,
+                      &label_min, NULL, NULL, NULL);
+  gtk_widget_measure (entry, GTK_ORIENTATION_HORIZONTAL, -1,
+                      &field_min, NULL, NULL, NULL);
+  g_assert_cmpint (row_min, <, label_min + field_min);
+
+  g_assert_cmpint (gtk_widget_get_request_mode (row), ==,
+                   GTK_SIZE_REQUEST_HEIGHT_FOR_WIDTH);
+  gtk_widget_measure (row, GTK_ORIENTATION_VERTICAL, 320,
+                      &row_height, NULL, NULL, NULL);
+  gtk_widget_measure (label, GTK_ORIENTATION_VERTICAL, -1,
+                      &label_height, NULL, NULL, NULL);
+  gtk_widget_measure (entry, GTK_ORIENTATION_VERTICAL, 320,
+                      &field_height, NULL, NULL, NULL);
+  g_assert_cmpint (row_height, >=, label_height + field_height);
+}
+
 /* Interactive suffix controls must see clicks before the row claims them. */
 static void
 test_action_row_suffix_receives_clicks (void)
@@ -2477,6 +2513,8 @@ main (int   argc,
                    test_action_row_and_context_menu);
   g_test_add_func ("/awra/widgets/form-alignment-and-control-width",
                    test_form_alignment_and_control_width);
+  g_test_add_func ("/awra/widgets/form-row-measured-for-its-layout",
+                   test_form_row_measured_for_its_layout);
   g_test_add_func ("/awra/widgets/action-row-suffix-receives-clicks",
                    test_action_row_suffix_receives_clicks);
   g_test_add_func ("/awra/widgets/window-popover", test_window_and_popover);
