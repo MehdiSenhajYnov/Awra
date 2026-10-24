@@ -173,22 +173,17 @@ can_snap (GtkWindow *window,
          !gtk_window_is_fullscreen (window);
 }
 
+/* Followed through the window's own key messages: keyboard raw input would
+ * take the process's only registration, which applications (global
+ * shortcuts, key listeners) may need for themselves. */
 static void
-snap_raw_input (GtkWindow *window,
-                HWND       hwnd,
-                LPARAM     lparam)
+snap_key_message (GtkWindow *window,
+                  HWND       hwnd,
+                  UINT       message,
+                  WPARAM     key)
 {
-  RAWINPUT raw;
-  UINT size = sizeof (raw);
-  USHORT key;
-  gboolean released;
+  gboolean released = message == WM_KEYUP || message == WM_SYSKEYUP;
 
-  if (GetRawInputData ((HRAWINPUT) lparam, RID_INPUT, &raw, &size,
-                       sizeof (RAWINPUTHEADER)) == (UINT) -1 ||
-      raw.header.dwType != RIM_TYPEKEYBOARD)
-    return;
-  key = raw.data.keyboard.VKey;
-  released = raw.data.keyboard.Message == WM_KEYUP || raw.data.keyboard.Message == WM_SYSKEYUP;
   /* Lent on Win's press, and again on each arrow's release (moving the
    * window gives GDK the occasion to take them back) for the next one. */
   if (key == VK_LWIN || key == VK_RWIN)
@@ -209,8 +204,11 @@ window_proc (HWND      hwnd,
   LRESULT hit;
 
   switch (message) {
-  case WM_INPUT:
-    snap_raw_input (window, hwnd, lparam);
+  case WM_KEYDOWN:
+  case WM_SYSKEYDOWN:
+  case WM_KEYUP:
+  case WM_SYSKEYUP:
+    snap_key_message (window, hwnd, message, wparam);
     break;
   case WM_WINDOWPOSCHANGING:
     if (snap_styles_returned (window, hwnd) && (((WINDOWPOS *) lparam)->flags & SWP_FRAMECHANGED))
@@ -288,17 +286,5 @@ awra_win32_window_attach (GtkWindow *window)
   /* Runs after GTK's own handler, connected when the window was realized. */
   g_signal_connect (surface, "compute-size", G_CALLBACK (compute_size_cb), NULL);
   SetWindowSubclass (hwnd, window_proc, SUBCLASS_ID, (DWORD_PTR) window);
-  /* Keyboard raw input, to see Win (sent to the focused window only; the
-   * usual key messages keep coming). */
-  {
-    RAWINPUTDEVICE keyboard = {
-      .usUsagePage = 0x01,
-      .usUsage = 0x06,
-      .dwFlags = 0,
-      .hwndTarget = NULL,
-    };
-
-    RegisterRawInputDevices (&keyboard, 1, sizeof (keyboard));
-  }
   awra_win32_style_frame (hwnd, FALSE);
 }
