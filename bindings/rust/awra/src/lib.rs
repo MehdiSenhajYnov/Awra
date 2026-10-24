@@ -131,9 +131,7 @@ pub fn set_context_menu_model(
 }
 
 /// Returns the context menu model attached with [`set_context_menu_model`].
-pub fn context_menu_model(
-    widget: &impl glib::object::IsA<gtk::Widget>,
-) -> Option<gio::MenuModel> {
+pub fn context_menu_model(widget: &impl glib::object::IsA<gtk::Widget>) -> Option<gio::MenuModel> {
     use glib::translate::{from_glib_none, ToGlibPtr};
 
     unsafe {

@@ -214,6 +214,105 @@ impl DropZone {
         }
     }
 
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "browse-label")]
+    pub fn browse_label(&self) -> Option<glib::GString> {
+        ObjectExt::property(self, "browse-label")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "browse-label")]
+    pub fn set_browse_label(&self, browse_label: Option<&str>) {
+        ObjectExt::set_property(self, "browse-label", browse_label)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn child(&self) -> Option<gtk::Widget> {
+        ObjectExt::property(self, "child")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_child<P: IsA<gtk::Widget>>(&self, child: Option<&P>) {
+        ObjectExt::set_property(self, "child", child)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "drop-active")]
+    pub fn is_drop_active(&self) -> bool {
+        ObjectExt::property(self, "drop-active")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "drop-message")]
+    pub fn drop_message(&self) -> Option<glib::GString> {
+        ObjectExt::property(self, "drop-message")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "drop-message")]
+    pub fn set_drop_message(&self, drop_message: Option<&str>) {
+        ObjectExt::set_property(self, "drop-message", drop_message)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "icon-name")]
+    pub fn icon_name(&self) -> Option<glib::GString> {
+        ObjectExt::property(self, "icon-name")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "icon-name")]
+    pub fn set_icon_name(&self, icon_name: Option<&str>) {
+        ObjectExt::set_property(self, "icon-name", icon_name)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "show-browse-button")]
+    pub fn shows_browse_button(&self) -> bool {
+        ObjectExt::property(self, "show-browse-button")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "show-browse-button")]
+    pub fn set_show_browse_button(&self, show_browse_button: bool) {
+        ObjectExt::set_property(self, "show-browse-button", show_browse_button)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn subtitle(&self) -> Option<glib::GString> {
+        ObjectExt::property(self, "subtitle")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_subtitle(&self, subtitle: Option<&str>) {
+        ObjectExt::set_property(self, "subtitle", subtitle)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn title(&self) -> Option<glib::GString> {
+        ObjectExt::property(self, "title")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_title(&self, title: Option<&str>) {
+        ObjectExt::set_property(self, "title", title)
+    }
+
     #[doc(alias = "browse-requested")]
     pub fn connect_browse_requested<F: Fn(&Self) + 'static>(&self, f: F) -> SignalHandlerId {
         unsafe extern "C" fn browse_requested_trampoline<F: Fn(&DropZone) + 'static>(
@@ -496,6 +595,8 @@ impl DropZone {
     }
 }
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 impl Default for DropZone {
     fn default() -> Self {
         Self::new()

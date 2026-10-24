@@ -20,6 +20,9 @@ unchanged (checked against the frozen 1.0.0 contract).
   preferences follow Windows' change broadcasts instead of a poll, and no
   longer override an application's own GTK settings; the DLL exports only
   the public API; a Windows CI job builds and tests Awra.
+- Rust bindings regenerated: the 1.1 API (dialogs, key caps, keyboard view,
+  media widgets...) behind the default `v1_1` feature; both crates carry
+  crates.io metadata and are ready to publish.
 - `AWRA_CHECK_VERSION ()`; the version header is checked against the
   project's version.
 

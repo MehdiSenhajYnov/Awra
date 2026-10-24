@@ -176,8 +176,8 @@ pub const AWRA_VALIDATION_STATE_ERROR: AwraValidationState = 3;
 // Constants
 pub const AWRA_MAJOR_VERSION: c_int = 1;
 pub const AWRA_MICRO_VERSION: c_int = 0;
-pub const AWRA_MINOR_VERSION: c_int = 0;
-pub const AWRA_VERSION_S: &[u8] = b"1.0.0\0";
+pub const AWRA_MINOR_VERSION: c_int = 1;
+pub const AWRA_VERSION_S: &[u8] = b"1.1.0\0";
 
 // Flags
 pub type AwraEffectCapability = c_uint;
@@ -2202,6 +2202,8 @@ unsafe extern "C" {
     //=========================================================================
     // AwraKeyboardPhysicalLayout
     //=========================================================================
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_keyboard_physical_layout_get_type() -> GType;
 
     //=========================================================================
@@ -2558,40 +2560,126 @@ unsafe extern "C" {
     //=========================================================================
     pub fn awra_dialog_get_type() -> GType;
     pub fn awra_dialog_new(parent: *mut gtk::GtkWindow) -> *mut gtk::GtkWidget;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_dialog_add_response(
+        self_: *mut AwraDialog,
+        id: *const c_char,
+        label: *const c_char,
+    );
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_dialog_get_body(self_: *mut AwraDialog) -> *mut gtk::GtkWidget;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_dialog_get_close_response(self_: *mut AwraDialog) -> *const c_char;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_dialog_get_default_response(self_: *mut AwraDialog) -> *const c_char;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_dialog_respond(self_: *mut AwraDialog, id: *const c_char);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_dialog_set_body(self_: *mut AwraDialog, body: *mut gtk::GtkWidget);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_dialog_set_close_response(self_: *mut AwraDialog, id: *const c_char);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_dialog_set_default_response(self_: *mut AwraDialog, id: *const c_char);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_dialog_set_response_appearance(
+        self_: *mut AwraDialog,
+        id: *const c_char,
+        appearance: AwraButtonAppearance,
+    );
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_dialog_set_response_enabled(
+        self_: *mut AwraDialog,
+        id: *const c_char,
+        enabled: gboolean,
+    );
 
     //=========================================================================
     // AwraDropZone
     //=========================================================================
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_drop_zone_get_type() -> GType;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_drop_zone_new() -> *mut gtk::GtkWidget;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_drop_zone_accepts_file(self_: *mut AwraDropZone, file: *mut gio::GFile)
         -> gboolean;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_drop_zone_get_accepted_extensions(self_: *mut AwraDropZone)
         -> *const *const c_char;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_drop_zone_get_accepted_mime_types(self_: *mut AwraDropZone)
         -> *const *const c_char;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_drop_zone_get_browse_label(self_: *mut AwraDropZone) -> *const c_char;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_drop_zone_get_child(self_: *mut AwraDropZone) -> *mut gtk::GtkWidget;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_drop_zone_get_drop_active(self_: *mut AwraDropZone) -> gboolean;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_drop_zone_get_drop_message(self_: *mut AwraDropZone) -> *const c_char;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_drop_zone_get_icon_name(self_: *mut AwraDropZone) -> *const c_char;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_drop_zone_get_show_browse_button(self_: *mut AwraDropZone) -> gboolean;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_drop_zone_get_subtitle(self_: *mut AwraDropZone) -> *const c_char;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_drop_zone_get_title(self_: *mut AwraDropZone) -> *const c_char;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_drop_zone_set_accepted_extensions(
         self_: *mut AwraDropZone,
         extensions: *const *const c_char,
     );
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_drop_zone_set_accepted_mime_types(
         self_: *mut AwraDropZone,
         mime_types: *const *const c_char,
     );
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_drop_zone_set_browse_label(self_: *mut AwraDropZone, label: *const c_char);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_drop_zone_set_child(self_: *mut AwraDropZone, child: *mut gtk::GtkWidget);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_drop_zone_set_drop_message(self_: *mut AwraDropZone, message: *const c_char);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_drop_zone_set_icon_name(self_: *mut AwraDropZone, icon_name: *const c_char);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_drop_zone_set_show_browse_button(self_: *mut AwraDropZone, show: gboolean);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_drop_zone_set_subtitle(self_: *mut AwraDropZone, subtitle: *const c_char);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_drop_zone_set_title(self_: *mut AwraDropZone, title: *const c_char);
 
     //=========================================================================
@@ -2771,82 +2859,180 @@ unsafe extern "C" {
     //=========================================================================
     // AwraKeyCap
     //=========================================================================
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_key_cap_get_type() -> GType;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_key_cap_new(key_code: *const c_char, label: *const c_char) -> *mut gtk::GtkWidget;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_key_cap_flash(self_: *mut AwraKeyCap);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_key_cap_get_active(self_: *mut AwraKeyCap) -> gboolean;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_key_cap_get_badge(self_: *mut AwraKeyCap) -> *const c_char;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_key_cap_get_bound(self_: *mut AwraKeyCap) -> gboolean;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_key_cap_get_dimmed(self_: *mut AwraKeyCap) -> gboolean;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_key_cap_get_edge_color(self_: *mut AwraKeyCap) -> *const gdk::GdkRGBA;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_key_cap_get_key_code(self_: *mut AwraKeyCap) -> *const c_char;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_key_cap_get_label(self_: *mut AwraKeyCap) -> *const c_char;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_key_cap_get_secondary_label(self_: *mut AwraKeyCap) -> *const c_char;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_key_cap_get_selected(self_: *mut AwraKeyCap) -> gboolean;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_key_cap_get_tint(self_: *mut AwraKeyCap) -> *const gdk::GdkRGBA;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_key_cap_get_width_units(self_: *mut AwraKeyCap) -> c_double;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_key_cap_set_active(self_: *mut AwraKeyCap, active: gboolean);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_key_cap_set_badge(self_: *mut AwraKeyCap, badge: *const c_char);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_key_cap_set_bound(self_: *mut AwraKeyCap, bound: gboolean);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_key_cap_set_dimmed(self_: *mut AwraKeyCap, dimmed: gboolean);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_key_cap_set_edge_color(self_: *mut AwraKeyCap, color: *const gdk::GdkRGBA);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_key_cap_set_key_code(self_: *mut AwraKeyCap, key_code: *const c_char);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_key_cap_set_label(self_: *mut AwraKeyCap, label: *const c_char);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_key_cap_set_secondary_label(self_: *mut AwraKeyCap, label: *const c_char);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_key_cap_set_selected(self_: *mut AwraKeyCap, selected: gboolean);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_key_cap_set_tint(self_: *mut AwraKeyCap, tint: *const gdk::GdkRGBA);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_key_cap_set_width_units(self_: *mut AwraKeyCap, width_units: c_double);
 
     //=========================================================================
     // AwraKeyboardView
     //=========================================================================
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_keyboard_view_get_type() -> GType;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_keyboard_view_new() -> *mut gtk::GtkWidget;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_keyboard_view_get_accepts_file_drops(self_: *mut AwraKeyboardView) -> gboolean;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_keyboard_view_get_codes(self_: *mut AwraKeyboardView) -> *mut *mut c_char;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_keyboard_view_get_key_cap(
         self_: *mut AwraKeyboardView,
         code: *const c_char,
     ) -> *mut AwraKeyCap;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_keyboard_view_get_keys_movable(self_: *mut AwraKeyboardView) -> gboolean;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_keyboard_view_get_physical_layout(
         self_: *mut AwraKeyboardView,
     ) -> AwraKeyboardPhysicalLayout;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_keyboard_view_get_selected_codes(self_: *mut AwraKeyboardView) -> *mut *mut c_char;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_keyboard_view_get_selection_mode(
         self_: *mut AwraKeyboardView,
     ) -> gtk::GtkSelectionMode;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_keyboard_view_get_show_function_row(self_: *mut AwraKeyboardView) -> gboolean;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_keyboard_view_get_show_navigation_cluster(self_: *mut AwraKeyboardView)
         -> gboolean;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_keyboard_view_get_show_numpad(self_: *mut AwraKeyboardView) -> gboolean;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_keyboard_view_select_all(self_: *mut AwraKeyboardView);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_keyboard_view_set_accepts_file_drops(
         self_: *mut AwraKeyboardView,
         accepts: gboolean,
     );
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_keyboard_view_set_key_label(
         self_: *mut AwraKeyboardView,
         code: *const c_char,
         label: *const c_char,
     );
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_keyboard_view_set_keys_movable(self_: *mut AwraKeyboardView, movable: gboolean);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_keyboard_view_set_physical_layout(
         self_: *mut AwraKeyboardView,
         layout: AwraKeyboardPhysicalLayout,
     );
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_keyboard_view_set_selected_codes(
         self_: *mut AwraKeyboardView,
         codes: *const *const c_char,
     );
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_keyboard_view_set_selection_mode(
         self_: *mut AwraKeyboardView,
         mode: gtk::GtkSelectionMode,
     );
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_keyboard_view_set_show_function_row(self_: *mut AwraKeyboardView, show: gboolean);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_keyboard_view_set_show_navigation_cluster(
         self_: *mut AwraKeyboardView,
         show: gboolean,
     );
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_keyboard_view_set_show_numpad(self_: *mut AwraKeyboardView, show: gboolean);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_keyboard_view_unselect_all(self_: *mut AwraKeyboardView);
 
     //=========================================================================
@@ -2859,12 +3045,16 @@ unsafe extern "C" {
     ) -> *mut gtk::GtkWidget;
     pub fn awra_list_view_get_delegate(self_: *mut AwraListView) -> *mut gtk::GtkListView;
     pub fn awra_list_view_get_factory(self_: *mut AwraListView) -> *mut gtk::GtkListItemFactory;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_list_view_get_header(self_: *mut AwraListView) -> *mut gtk::GtkWidget;
     pub fn awra_list_view_get_model(self_: *mut AwraListView) -> *mut gtk::GtkSelectionModel;
     pub fn awra_list_view_set_factory(
         self_: *mut AwraListView,
         factory: *mut gtk::GtkListItemFactory,
     );
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_list_view_set_header(self_: *mut AwraListView, header: *mut gtk::GtkWidget);
     pub fn awra_list_view_set_model(self_: *mut AwraListView, model: *mut gtk::GtkSelectionModel);
 
@@ -2949,33 +3139,89 @@ unsafe extern "C" {
     //=========================================================================
     // AwraMediaRow
     //=========================================================================
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_media_row_get_type() -> GType;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_media_row_new(title: *const c_char) -> *mut gtk::GtkWidget;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_media_row_get_accent_color(self_: *mut AwraMediaRow) -> *const gdk::GdkRGBA;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_media_row_get_duration(self_: *mut AwraMediaRow) -> c_double;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_media_row_get_icon_name(self_: *mut AwraMediaRow) -> *const c_char;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_media_row_get_playing(self_: *mut AwraMediaRow) -> gboolean;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_media_row_get_position(self_: *mut AwraMediaRow) -> c_double;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_media_row_get_seekable(self_: *mut AwraMediaRow) -> gboolean;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_media_row_get_show_play_button(self_: *mut AwraMediaRow) -> gboolean;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_media_row_get_show_stop_button(self_: *mut AwraMediaRow) -> gboolean;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_media_row_get_show_volume(self_: *mut AwraMediaRow) -> gboolean;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_media_row_get_subtitle(self_: *mut AwraMediaRow) -> *const c_char;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_media_row_get_suffix(self_: *mut AwraMediaRow) -> *mut gtk::GtkWidget;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_media_row_get_title(self_: *mut AwraMediaRow) -> *const c_char;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_media_row_get_volume(self_: *mut AwraMediaRow) -> c_double;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_media_row_set_accent_color(self_: *mut AwraMediaRow, color: *const gdk::GdkRGBA);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_media_row_set_duration(self_: *mut AwraMediaRow, duration: c_double);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_media_row_set_icon_name(self_: *mut AwraMediaRow, icon_name: *const c_char);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_media_row_set_playing(self_: *mut AwraMediaRow, playing: gboolean);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_media_row_set_position(self_: *mut AwraMediaRow, position: c_double);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_media_row_set_seekable(self_: *mut AwraMediaRow, seekable: gboolean);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_media_row_set_show_play_button(self_: *mut AwraMediaRow, show: gboolean);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_media_row_set_show_stop_button(self_: *mut AwraMediaRow, show: gboolean);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_media_row_set_show_volume(self_: *mut AwraMediaRow, show: gboolean);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_media_row_set_subtitle(self_: *mut AwraMediaRow, subtitle: *const c_char);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_media_row_set_suffix(self_: *mut AwraMediaRow, suffix: *mut gtk::GtkWidget);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_media_row_set_title(self_: *mut AwraMediaRow, title: *const c_char);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_media_row_set_volume(self_: *mut AwraMediaRow, volume: c_double);
 
     //=========================================================================
@@ -3040,6 +3286,8 @@ unsafe extern "C" {
     pub fn awra_navigation_item_get_icon_name(self_: *mut AwraNavigationItem) -> *const c_char;
     pub fn awra_navigation_item_get_label(self_: *mut AwraNavigationItem) -> *const c_char;
     pub fn awra_navigation_item_get_selected(self_: *mut AwraNavigationItem) -> gboolean;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_navigation_item_get_suffix(self_: *mut AwraNavigationItem) -> *mut gtk::GtkWidget;
     pub fn awra_navigation_item_set_group(
         self_: *mut AwraNavigationItem,
@@ -3051,6 +3299,8 @@ unsafe extern "C" {
     );
     pub fn awra_navigation_item_set_label(self_: *mut AwraNavigationItem, label: *const c_char);
     pub fn awra_navigation_item_set_selected(self_: *mut AwraNavigationItem, selected: gboolean);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_navigation_item_set_suffix(
         self_: *mut AwraNavigationItem,
         suffix: *mut gtk::GtkWidget,
@@ -3246,46 +3496,80 @@ unsafe extern "C" {
     //=========================================================================
     // AwraShortcutCapture
     //=========================================================================
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_shortcut_capture_get_type() -> GType;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_shortcut_capture_new() -> *mut gtk::GtkWidget;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_shortcut_capture_cancel(self_: *mut AwraShortcutCapture);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_shortcut_capture_clear(self_: *mut AwraShortcutCapture);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_shortcut_capture_get_allow_chords(self_: *mut AwraShortcutCapture) -> gboolean;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_shortcut_capture_get_codes(self_: *mut AwraShortcutCapture) -> *mut *mut c_char;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_shortcut_capture_get_display_labels(
         self_: *mut AwraShortcutCapture,
     ) -> *const *const c_char;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_shortcut_capture_get_keycodes(
         self_: *mut AwraShortcutCapture,
         n_keycodes: *mut c_uint,
     ) -> *const c_uint;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_shortcut_capture_get_keyvals(
         self_: *mut AwraShortcutCapture,
         n_keyvals: *mut c_uint,
     ) -> *const c_uint;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_shortcut_capture_get_listening(self_: *mut AwraShortcutCapture) -> gboolean;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_shortcut_capture_get_modifiers(
         self_: *mut AwraShortcutCapture,
     ) -> gdk::GdkModifierType;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_shortcut_capture_get_placeholder(self_: *mut AwraShortcutCapture) -> *const c_char;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_shortcut_capture_set_allow_chords(
         self_: *mut AwraShortcutCapture,
         allow_chords: gboolean,
     );
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_shortcut_capture_set_display_labels(
         self_: *mut AwraShortcutCapture,
         labels: *const *const c_char,
     );
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_shortcut_capture_set_placeholder(
         self_: *mut AwraShortcutCapture,
         placeholder: *const c_char,
     );
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_shortcut_capture_set_shortcut(
         self_: *mut AwraShortcutCapture,
         keycodes: *const c_uint,
         n_keycodes: c_uint,
         modifiers: gdk::GdkModifierType,
     );
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_shortcut_capture_start(self_: *mut AwraShortcutCapture);
 
     //=========================================================================
@@ -3554,11 +3838,15 @@ unsafe extern "C" {
     pub fn awra_tab_view_get_tab_bar(self_: *mut AwraTabView) -> *mut gtk::GtkWidget;
     pub fn awra_tab_view_remove(self_: *mut AwraTabView, page: *mut gtk::GtkWidget);
     pub fn awra_tab_view_set_content_visible(self_: *mut AwraTabView, visible: gboolean);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_tab_view_set_page_icon(
         self_: *mut AwraTabView,
         page: *mut gtk::GtkWidget,
         icon: *mut gtk::GtkImage,
     );
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_tab_view_set_page_icon_name(
         self_: *mut AwraTabView,
         page: *mut gtk::GtkWidget,
@@ -3569,6 +3857,8 @@ unsafe extern "C" {
         page: *mut gtk::GtkWidget,
         title: *const c_char,
     );
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_tab_view_set_page_title_visible(
         self_: *mut AwraTabView,
         page: *mut gtk::GtkWidget,
@@ -3615,8 +3905,12 @@ unsafe extern "C" {
     //=========================================================================
     pub fn awra_toast_overlay_get_type() -> GType;
     pub fn awra_toast_overlay_new() -> *mut gtk::GtkWidget;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_toast_overlay_dismiss(self_: *mut AwraToastOverlay, toast_id: c_uint);
     pub fn awra_toast_overlay_get_child(self_: *mut AwraToastOverlay) -> *mut gtk::GtkWidget;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_toast_overlay_get_current_toast_id(self_: *mut AwraToastOverlay) -> c_uint;
     pub fn awra_toast_overlay_get_revealed(self_: *mut AwraToastOverlay) -> gboolean;
     pub fn awra_toast_overlay_set_child(self_: *mut AwraToastOverlay, child: *mut gtk::GtkWidget);
@@ -3625,6 +3919,8 @@ unsafe extern "C" {
         message: *const c_char,
         timeout_ms: c_uint,
     );
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_toast_overlay_show_with_action(
         self_: *mut AwraToastOverlay,
         message: *const c_char,
@@ -3716,43 +4012,91 @@ unsafe extern "C" {
     //=========================================================================
     // AwraVolumeControl
     //=========================================================================
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_volume_control_get_type() -> GType;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_volume_control_new() -> *mut gtk::GtkWidget;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_volume_control_get_effective_volume(self_: *mut AwraVolumeControl) -> c_double;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_volume_control_get_muted(self_: *mut AwraVolumeControl) -> gboolean;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_volume_control_get_slider(self_: *mut AwraVolumeControl) -> *mut gtk::GtkRange;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_volume_control_get_volume(self_: *mut AwraVolumeControl) -> c_double;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_volume_control_set_muted(self_: *mut AwraVolumeControl, muted: gboolean);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_volume_control_set_volume(self_: *mut AwraVolumeControl, volume: c_double);
 
     //=========================================================================
     // AwraWaveformView
     //=========================================================================
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_waveform_view_get_type() -> GType;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_waveform_view_new() -> *mut gtk::GtkWidget;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_waveform_view_get_duration(self_: *mut AwraWaveformView) -> c_double;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_waveform_view_get_expected_peaks(self_: *mut AwraWaveformView) -> c_uint;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_waveform_view_get_hint_position(self_: *mut AwraWaveformView) -> c_double;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_waveform_view_get_marker_editable(self_: *mut AwraWaveformView) -> gboolean;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_waveform_view_get_marker_position(self_: *mut AwraWaveformView) -> c_double;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_waveform_view_get_peaks(
         self_: *mut AwraWaveformView,
         n_peaks: *mut size_t,
     ) -> *const c_float;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_waveform_view_get_position(self_: *mut AwraWaveformView) -> c_double;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_waveform_view_set_duration(self_: *mut AwraWaveformView, duration: c_double);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_waveform_view_set_expected_peaks(
         self_: *mut AwraWaveformView,
         expected_peaks: c_uint,
     );
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_waveform_view_set_hint_position(self_: *mut AwraWaveformView, position: c_double);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_waveform_view_set_marker_editable(self_: *mut AwraWaveformView, editable: gboolean);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_waveform_view_set_marker_position(self_: *mut AwraWaveformView, position: c_double);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_waveform_view_set_peaks(
         self_: *mut AwraWaveformView,
         peaks: *const c_float,
         n_peaks: size_t,
     );
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_waveform_view_set_position(self_: *mut AwraWaveformView, position: c_double);
 
     //=========================================================================
@@ -3783,11 +4127,17 @@ unsafe extern "C" {
         column_spacing: AwraSpacing,
     );
     pub fn awra_init();
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_keyboard_code_from_hardware_keycode(keycode: c_uint) -> *const c_char;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_keyboard_code_get_label(
         display: *mut gdk::GdkDisplay,
         code: *const c_char,
     ) -> *mut c_char;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_keyboard_code_to_hardware_keycode(code: *const c_char) -> c_uint;
     pub fn awra_motion_ease_in_out_cubic(progress: c_double) -> c_double;
     pub fn awra_motion_ease_out_cubic(progress: c_double) -> c_double;

@@ -3,8 +3,17 @@
 // from subprojects/gir-files
 // DO NOT EDIT
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+use crate::ButtonAppearance;
 use crate::{ffi, Window};
-use glib::{prelude::*, translate::*};
+use glib::{
+    object::ObjectType as _,
+    prelude::*,
+    signal::{connect_raw, SignalHandlerId},
+    translate::*,
+};
+use std::boxed::Box as Box_;
 
 #[cfg(feature = "gtk_v4_10")]
 #[cfg_attr(docsrs, doc(cfg(feature = "gtk_v4_10")))]
@@ -46,6 +55,264 @@ impl Dialog {
     pub fn builder() -> DialogBuilder {
         DialogBuilder::new()
     }
+
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    #[doc(alias = "awra_dialog_add_response")]
+    pub fn add_response(&self, id: &str, label: &str) {
+        unsafe {
+            ffi::awra_dialog_add_response(
+                self.to_glib_none().0,
+                id.to_glib_none().0,
+                label.to_glib_none().0,
+            );
+        }
+    }
+
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    #[doc(alias = "awra_dialog_get_body")]
+    #[doc(alias = "get_body")]
+    pub fn body(&self) -> Option<gtk::Widget> {
+        unsafe { from_glib_none(ffi::awra_dialog_get_body(self.to_glib_none().0)) }
+    }
+
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    #[doc(alias = "awra_dialog_get_close_response")]
+    #[doc(alias = "get_close_response")]
+    #[doc(alias = "close-response")]
+    pub fn close_response(&self) -> Option<glib::GString> {
+        unsafe { from_glib_none(ffi::awra_dialog_get_close_response(self.to_glib_none().0)) }
+    }
+
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    #[doc(alias = "awra_dialog_get_default_response")]
+    #[doc(alias = "get_default_response")]
+    #[doc(alias = "default-response")]
+    pub fn default_response(&self) -> Option<glib::GString> {
+        unsafe { from_glib_none(ffi::awra_dialog_get_default_response(self.to_glib_none().0)) }
+    }
+
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    #[doc(alias = "awra_dialog_respond")]
+    pub fn respond(&self, id: &str) {
+        unsafe {
+            ffi::awra_dialog_respond(self.to_glib_none().0, id.to_glib_none().0);
+        }
+    }
+
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    #[doc(alias = "awra_dialog_set_body")]
+    #[doc(alias = "body")]
+    pub fn set_body(&self, body: Option<&impl IsA<gtk::Widget>>) {
+        unsafe {
+            ffi::awra_dialog_set_body(
+                self.to_glib_none().0,
+                body.map(|p| p.as_ref()).to_glib_none().0,
+            );
+        }
+    }
+
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    #[doc(alias = "awra_dialog_set_close_response")]
+    #[doc(alias = "close-response")]
+    pub fn set_close_response(&self, id: Option<&str>) {
+        unsafe {
+            ffi::awra_dialog_set_close_response(self.to_glib_none().0, id.to_glib_none().0);
+        }
+    }
+
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    #[doc(alias = "awra_dialog_set_default_response")]
+    #[doc(alias = "default-response")]
+    pub fn set_default_response(&self, id: Option<&str>) {
+        unsafe {
+            ffi::awra_dialog_set_default_response(self.to_glib_none().0, id.to_glib_none().0);
+        }
+    }
+
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    #[doc(alias = "awra_dialog_set_response_appearance")]
+    pub fn set_response_appearance(&self, id: &str, appearance: ButtonAppearance) {
+        unsafe {
+            ffi::awra_dialog_set_response_appearance(
+                self.to_glib_none().0,
+                id.to_glib_none().0,
+                appearance.into_glib(),
+            );
+        }
+    }
+
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    #[doc(alias = "awra_dialog_set_response_enabled")]
+    pub fn set_response_enabled(&self, id: &str, enabled: bool) {
+        unsafe {
+            ffi::awra_dialog_set_response_enabled(
+                self.to_glib_none().0,
+                id.to_glib_none().0,
+                enabled.into_glib(),
+            );
+        }
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn body(&self) -> Option<gtk::Widget> {
+        ObjectExt::property(self, "body")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_body<P: IsA<gtk::Widget>>(&self, body: Option<&P>) {
+        ObjectExt::set_property(self, "body", body)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "close-response")]
+    pub fn close_response(&self) -> Option<glib::GString> {
+        ObjectExt::property(self, "close-response")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "close-response")]
+    pub fn set_close_response(&self, close_response: Option<&str>) {
+        ObjectExt::set_property(self, "close-response", close_response)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "default-response")]
+    pub fn default_response(&self) -> Option<glib::GString> {
+        ObjectExt::property(self, "default-response")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "default-response")]
+    pub fn set_default_response(&self, default_response: Option<&str>) {
+        ObjectExt::set_property(self, "default-response", default_response)
+    }
+
+    #[doc(alias = "response")]
+    pub fn connect_response<F: Fn(&Self, &str) + 'static>(
+        &self,
+        detail: Option<&str>,
+        f: F,
+    ) -> SignalHandlerId {
+        unsafe extern "C" fn response_trampoline<F: Fn(&Dialog, &str) + 'static>(
+            this: *mut ffi::AwraDialog,
+            object: *mut std::ffi::c_char,
+            f: glib::ffi::gpointer,
+        ) {
+            unsafe {
+                let f: &F = &*(f as *const F);
+                f(
+                    &from_glib_borrow(this),
+                    &glib::GString::from_glib_borrow(object),
+                )
+            }
+        }
+        unsafe {
+            let f: Box_<F> = Box_::new(f);
+            let detailed_signal_name = detail.map(|name| format!("response::{name}\0"));
+            let signal_name = detailed_signal_name.as_ref().map_or(c"response", |n| {
+                std::ffi::CStr::from_bytes_with_nul_unchecked(n.as_bytes())
+            });
+            connect_raw(
+                self.as_ptr() as *mut _,
+                signal_name.as_ptr(),
+                Some(std::mem::transmute::<*const (), unsafe extern "C" fn()>(
+                    response_trampoline::<F> as *const (),
+                )),
+                Box_::into_raw(f),
+            )
+        }
+    }
+
+    #[doc(alias = "body")]
+    pub fn connect_body_notify<F: Fn(&Self) + 'static>(&self, f: F) -> SignalHandlerId {
+        unsafe extern "C" fn notify_body_trampoline<F: Fn(&Dialog) + 'static>(
+            this: *mut ffi::AwraDialog,
+            _param_spec: glib::ffi::gpointer,
+            f: glib::ffi::gpointer,
+        ) {
+            unsafe {
+                let f: &F = &*(f as *const F);
+                f(&from_glib_borrow(this))
+            }
+        }
+        unsafe {
+            let f: Box_<F> = Box_::new(f);
+            connect_raw(
+                self.as_ptr() as *mut _,
+                c"notify::body".as_ptr(),
+                Some(std::mem::transmute::<*const (), unsafe extern "C" fn()>(
+                    notify_body_trampoline::<F> as *const (),
+                )),
+                Box_::into_raw(f),
+            )
+        }
+    }
+
+    #[doc(alias = "close-response")]
+    pub fn connect_close_response_notify<F: Fn(&Self) + 'static>(&self, f: F) -> SignalHandlerId {
+        unsafe extern "C" fn notify_close_response_trampoline<F: Fn(&Dialog) + 'static>(
+            this: *mut ffi::AwraDialog,
+            _param_spec: glib::ffi::gpointer,
+            f: glib::ffi::gpointer,
+        ) {
+            unsafe {
+                let f: &F = &*(f as *const F);
+                f(&from_glib_borrow(this))
+            }
+        }
+        unsafe {
+            let f: Box_<F> = Box_::new(f);
+            connect_raw(
+                self.as_ptr() as *mut _,
+                c"notify::close-response".as_ptr(),
+                Some(std::mem::transmute::<*const (), unsafe extern "C" fn()>(
+                    notify_close_response_trampoline::<F> as *const (),
+                )),
+                Box_::into_raw(f),
+            )
+        }
+    }
+
+    #[doc(alias = "default-response")]
+    pub fn connect_default_response_notify<F: Fn(&Self) + 'static>(&self, f: F) -> SignalHandlerId {
+        unsafe extern "C" fn notify_default_response_trampoline<F: Fn(&Dialog) + 'static>(
+            this: *mut ffi::AwraDialog,
+            _param_spec: glib::ffi::gpointer,
+            f: glib::ffi::gpointer,
+        ) {
+            unsafe {
+                let f: &F = &*(f as *const F);
+                f(&from_glib_borrow(this))
+            }
+        }
+        unsafe {
+            let f: Box_<F> = Box_::new(f);
+            connect_raw(
+                self.as_ptr() as *mut _,
+                c"notify::default-response".as_ptr(),
+                Some(std::mem::transmute::<*const (), unsafe extern "C" fn()>(
+                    notify_default_response_trampoline::<F> as *const (),
+                )),
+                Box_::into_raw(f),
+            )
+        }
+    }
 }
 
 impl Default for Dialog {
@@ -67,6 +334,28 @@ impl DialogBuilder {
     fn new() -> Self {
         Self {
             builder: glib::object::Object::builder(),
+        }
+    }
+
+    pub fn body(self, body: &impl IsA<gtk::Widget>) -> Self {
+        Self {
+            builder: self.builder.property("body", body.clone().upcast()),
+        }
+    }
+
+    pub fn close_response(self, close_response: impl Into<glib::GString>) -> Self {
+        Self {
+            builder: self
+                .builder
+                .property("close-response", close_response.into()),
+        }
+    }
+
+    pub fn default_response(self, default_response: impl Into<glib::GString>) -> Self {
+        Self {
+            builder: self
+                .builder
+                .property("default-response", default_response.into()),
         }
     }
 

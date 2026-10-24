@@ -68,6 +68,8 @@ impl ListView {
         unsafe { from_glib_none(ffi::awra_list_view_get_factory(self.to_glib_none().0)) }
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     #[doc(alias = "awra_list_view_get_header")]
     #[doc(alias = "get_header")]
     pub fn header(&self) -> Option<gtk::Widget> {
@@ -91,6 +93,8 @@ impl ListView {
         }
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     #[doc(alias = "awra_list_view_set_header")]
     #[doc(alias = "header")]
     pub fn set_header(&self, header: Option<&impl IsA<gtk::Widget>>) {
@@ -108,6 +112,18 @@ impl ListView {
         unsafe {
             ffi::awra_list_view_set_model(self.to_glib_none().0, model.as_ref().to_glib_none().0);
         }
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn header(&self) -> Option<gtk::Widget> {
+        ObjectExt::property(self, "header")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_header<P: IsA<gtk::Widget>>(&self, header: Option<&P>) {
+        ObjectExt::set_property(self, "header", header)
     }
 
     #[doc(alias = "factory")]

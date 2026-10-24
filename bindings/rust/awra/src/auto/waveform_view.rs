@@ -168,6 +168,86 @@ impl WaveformView {
         }
     }
 
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn duration(&self) -> f64 {
+        ObjectExt::property(self, "duration")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_duration(&self, duration: f64) {
+        ObjectExt::set_property(self, "duration", duration)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "expected-peaks")]
+    pub fn expected_peaks(&self) -> u32 {
+        ObjectExt::property(self, "expected-peaks")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "expected-peaks")]
+    pub fn set_expected_peaks(&self, expected_peaks: u32) {
+        ObjectExt::set_property(self, "expected-peaks", expected_peaks)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "hint-position")]
+    pub fn hint_position(&self) -> f64 {
+        ObjectExt::property(self, "hint-position")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "hint-position")]
+    pub fn set_hint_position(&self, hint_position: f64) {
+        ObjectExt::set_property(self, "hint-position", hint_position)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "marker-editable")]
+    pub fn is_marker_editable(&self) -> bool {
+        ObjectExt::property(self, "marker-editable")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "marker-editable")]
+    pub fn set_marker_editable(&self, marker_editable: bool) {
+        ObjectExt::set_property(self, "marker-editable", marker_editable)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "marker-position")]
+    pub fn marker_position(&self) -> f64 {
+        ObjectExt::property(self, "marker-position")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "marker-position")]
+    pub fn set_marker_position(&self, marker_position: f64) {
+        ObjectExt::set_property(self, "marker-position", marker_position)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn position(&self) -> f64 {
+        ObjectExt::property(self, "position")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_position(&self, position: f64) {
+        ObjectExt::set_property(self, "position", position)
+    }
+
     #[doc(alias = "marker-committed")]
     pub fn connect_marker_committed<F: Fn(&Self, f64) + 'static>(&self, f: F) -> SignalHandlerId {
         unsafe extern "C" fn marker_committed_trampoline<F: Fn(&WaveformView, f64) + 'static>(
@@ -394,6 +474,8 @@ impl WaveformView {
     }
 }
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 impl Default for WaveformView {
     fn default() -> Self {
         Self::new()

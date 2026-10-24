@@ -87,6 +87,8 @@ impl NavigationItem {
         }
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     #[doc(alias = "awra_navigation_item_get_suffix")]
     #[doc(alias = "get_suffix")]
     pub fn suffix(&self) -> Option<gtk::Widget> {
@@ -127,6 +129,8 @@ impl NavigationItem {
         }
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     #[doc(alias = "awra_navigation_item_set_suffix")]
     #[doc(alias = "suffix")]
     pub fn set_suffix(&self, suffix: Option<&impl IsA<gtk::Widget>>) {
@@ -136,6 +140,18 @@ impl NavigationItem {
                 suffix.map(|p| p.as_ref()).to_glib_none().0,
             );
         }
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn suffix(&self) -> Option<gtk::Widget> {
+        ObjectExt::property(self, "suffix")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_suffix<P: IsA<gtk::Widget>>(&self, suffix: Option<&P>) {
+        ObjectExt::set_property(self, "suffix", suffix)
     }
 
     #[doc(alias = "selected")]

@@ -80,6 +80,17 @@ impl KeyboardView {
         }
     }
 
+    #[doc(alias = "awra_keyboard_view_get_keys_movable")]
+    #[doc(alias = "get_keys_movable")]
+    #[doc(alias = "keys-movable")]
+    pub fn is_keys_movable(&self) -> bool {
+        unsafe {
+            from_glib(ffi::awra_keyboard_view_get_keys_movable(
+                self.to_glib_none().0,
+            ))
+        }
+    }
+
     #[doc(alias = "awra_keyboard_view_get_physical_layout")]
     #[doc(alias = "get_physical_layout")]
     #[doc(alias = "physical-layout")]
@@ -174,6 +185,14 @@ impl KeyboardView {
         }
     }
 
+    #[doc(alias = "awra_keyboard_view_set_keys_movable")]
+    #[doc(alias = "keys-movable")]
+    pub fn set_keys_movable(&self, movable: bool) {
+        unsafe {
+            ffi::awra_keyboard_view_set_keys_movable(self.to_glib_none().0, movable.into_glib());
+        }
+    }
+
     #[doc(alias = "awra_keyboard_view_set_physical_layout")]
     #[doc(alias = "physical-layout")]
     pub fn set_physical_layout(&self, layout: KeyboardPhysicalLayout) {
@@ -232,6 +251,104 @@ impl KeyboardView {
         unsafe {
             ffi::awra_keyboard_view_unselect_all(self.to_glib_none().0);
         }
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "accepts-file-drops")]
+    pub fn accepts_file_drops(&self) -> bool {
+        ObjectExt::property(self, "accepts-file-drops")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "accepts-file-drops")]
+    pub fn set_accepts_file_drops(&self, accepts_file_drops: bool) {
+        ObjectExt::set_property(self, "accepts-file-drops", accepts_file_drops)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "keys-movable")]
+    pub fn is_keys_movable(&self) -> bool {
+        ObjectExt::property(self, "keys-movable")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "keys-movable")]
+    pub fn set_keys_movable(&self, keys_movable: bool) {
+        ObjectExt::set_property(self, "keys-movable", keys_movable)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "physical-layout")]
+    pub fn physical_layout(&self) -> KeyboardPhysicalLayout {
+        ObjectExt::property(self, "physical-layout")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "physical-layout")]
+    pub fn set_physical_layout(&self, physical_layout: KeyboardPhysicalLayout) {
+        ObjectExt::set_property(self, "physical-layout", physical_layout)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "selection-mode")]
+    pub fn selection_mode(&self) -> gtk::SelectionMode {
+        ObjectExt::property(self, "selection-mode")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "selection-mode")]
+    pub fn set_selection_mode(&self, selection_mode: gtk::SelectionMode) {
+        ObjectExt::set_property(self, "selection-mode", selection_mode)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "show-function-row")]
+    pub fn shows_function_row(&self) -> bool {
+        ObjectExt::property(self, "show-function-row")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "show-function-row")]
+    pub fn set_show_function_row(&self, show_function_row: bool) {
+        ObjectExt::set_property(self, "show-function-row", show_function_row)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "show-navigation-cluster")]
+    pub fn shows_navigation_cluster(&self) -> bool {
+        ObjectExt::property(self, "show-navigation-cluster")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "show-navigation-cluster")]
+    pub fn set_show_navigation_cluster(&self, show_navigation_cluster: bool) {
+        ObjectExt::set_property(self, "show-navigation-cluster", show_navigation_cluster)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "show-numpad")]
+    pub fn shows_numpad(&self) -> bool {
+        ObjectExt::property(self, "show-numpad")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "show-numpad")]
+    pub fn set_show_numpad(&self, show_numpad: bool) {
+        ObjectExt::set_property(self, "show-numpad", show_numpad)
     }
 
     #[doc(alias = "files-dropped")]
@@ -304,6 +421,36 @@ impl KeyboardView {
         }
     }
 
+    #[doc(alias = "key-moved")]
+    pub fn connect_key_moved<F: Fn(&Self, &str, &str) + 'static>(&self, f: F) -> SignalHandlerId {
+        unsafe extern "C" fn key_moved_trampoline<F: Fn(&KeyboardView, &str, &str) + 'static>(
+            this: *mut ffi::AwraKeyboardView,
+            object: *mut std::ffi::c_char,
+            p0: *mut std::ffi::c_char,
+            f: glib::ffi::gpointer,
+        ) {
+            unsafe {
+                let f: &F = &*(f as *const F);
+                f(
+                    &from_glib_borrow(this),
+                    &glib::GString::from_glib_borrow(object),
+                    &glib::GString::from_glib_borrow(p0),
+                )
+            }
+        }
+        unsafe {
+            let f: Box_<F> = Box_::new(f);
+            connect_raw(
+                self.as_ptr() as *mut _,
+                c"key-moved".as_ptr(),
+                Some(std::mem::transmute::<*const (), unsafe extern "C" fn()>(
+                    key_moved_trampoline::<F> as *const (),
+                )),
+                Box_::into_raw(f),
+            )
+        }
+    }
+
     #[doc(alias = "selection-changed")]
     pub fn connect_selection_changed<F: Fn(&Self) + 'static>(&self, f: F) -> SignalHandlerId {
         unsafe extern "C" fn selection_changed_trampoline<F: Fn(&KeyboardView) + 'static>(
@@ -352,6 +499,31 @@ impl KeyboardView {
                 c"notify::accepts-file-drops".as_ptr(),
                 Some(std::mem::transmute::<*const (), unsafe extern "C" fn()>(
                     notify_accepts_file_drops_trampoline::<F> as *const (),
+                )),
+                Box_::into_raw(f),
+            )
+        }
+    }
+
+    #[doc(alias = "keys-movable")]
+    pub fn connect_keys_movable_notify<F: Fn(&Self) + 'static>(&self, f: F) -> SignalHandlerId {
+        unsafe extern "C" fn notify_keys_movable_trampoline<F: Fn(&KeyboardView) + 'static>(
+            this: *mut ffi::AwraKeyboardView,
+            _param_spec: glib::ffi::gpointer,
+            f: glib::ffi::gpointer,
+        ) {
+            unsafe {
+                let f: &F = &*(f as *const F);
+                f(&from_glib_borrow(this))
+            }
+        }
+        unsafe {
+            let f: Box_<F> = Box_::new(f);
+            connect_raw(
+                self.as_ptr() as *mut _,
+                c"notify::keys-movable".as_ptr(),
+                Some(std::mem::transmute::<*const (), unsafe extern "C" fn()>(
+                    notify_keys_movable_trampoline::<F> as *const (),
                 )),
                 Box_::into_raw(f),
             )
@@ -492,6 +664,8 @@ impl KeyboardView {
     }
 }
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 impl Default for KeyboardView {
     fn default() -> Self {
         Self::new()
@@ -519,6 +693,12 @@ impl KeyboardViewBuilder {
             builder: self
                 .builder
                 .property("accepts-file-drops", accepts_file_drops),
+        }
+    }
+
+    pub fn keys_movable(self, keys_movable: bool) -> Self {
+        Self {
+            builder: self.builder.property("keys-movable", keys_movable),
         }
     }
 

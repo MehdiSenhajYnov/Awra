@@ -48,6 +48,8 @@ impl ToastOverlay {
         ToastOverlayBuilder::new()
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     #[doc(alias = "awra_toast_overlay_dismiss")]
     pub fn dismiss(&self, toast_id: u32) {
         unsafe {
@@ -61,6 +63,8 @@ impl ToastOverlay {
         unsafe { from_glib_none(ffi::awra_toast_overlay_get_child(self.to_glib_none().0)) }
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     #[doc(alias = "awra_toast_overlay_get_current_toast_id")]
     #[doc(alias = "get_current_toast_id")]
     pub fn current_toast_id(&self) -> u32 {
@@ -96,6 +100,8 @@ impl ToastOverlay {
         }
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     #[doc(alias = "awra_toast_overlay_show_with_action")]
     pub fn show_with_action(
         &self,
