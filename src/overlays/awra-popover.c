@@ -92,6 +92,18 @@ style_changed_cb (AwraStyleManager *manager,
   sync_native_effect (self);
 }
 
+static void rebuild_menu (AwraPopover *self);
+
+static void
+awra_popover_show (GtkWidget *widget)
+{
+  AwraPopover *self = AWRA_POPOVER (widget);
+
+  if (self->menu_model != NULL)
+    rebuild_menu (self);
+  GTK_WIDGET_CLASS (awra_popover_parent_class)->show (widget);
+}
+
 static void
 awra_popover_map (GtkWidget *widget)
 {
@@ -232,6 +244,7 @@ awra_popover_class_init (AwraPopoverClass *klass)
   object_class->dispose = awra_popover_dispose;
   object_class->get_property = awra_popover_get_property;
   object_class->set_property = awra_popover_set_property;
+  widget_class->show = awra_popover_show;
   widget_class->map = awra_popover_map;
   widget_class->unmap = awra_popover_unmap;
   widget_class->size_allocate = awra_popover_size_allocate;
@@ -466,6 +479,19 @@ append_menu_model (AwraPopover *self,
   }
 }
 
+/* Items are built from the model as it is when the menu opens: models
+ * filled or changed after awra_popover_set_menu_model() show up too. */
+static void
+rebuild_menu (AwraPopover *self)
+{
+  GtkWidget *box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
+
+  awra_box_set_spacing (GTK_BOX (box), AWRA_SPACING_XS);
+  gtk_widget_add_css_class (box, "awra-menu");
+  append_menu_model (self, GTK_BOX (box), self->menu_model);
+  awra_surface_set_child (self->surface, box);
+}
+
 GMenuModel *
 awra_popover_get_menu_model (AwraPopover *self)
 {
@@ -477,8 +503,6 @@ void
 awra_popover_set_menu_model (AwraPopover *self,
                              GMenuModel   *model)
 {
-  GtkWidget *box;
-
   g_return_if_fail (AWRA_IS_POPOVER (self));
   g_return_if_fail (model == NULL || G_IS_MENU_MODEL (model));
 
@@ -493,11 +517,7 @@ awra_popover_set_menu_model (AwraPopover *self,
      * outside click, GTK also closes its parent instead of leaving a detached
      * menu behind. Arbitrary-content popovers keep the GTK default. */
     gtk_popover_set_cascade_popdown (GTK_POPOVER (self), TRUE);
-    box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
-    awra_box_set_spacing (GTK_BOX (box), AWRA_SPACING_XS);
-    gtk_widget_add_css_class (box, "awra-menu");
-    append_menu_model (self, GTK_BOX (box), model);
-    awra_surface_set_child (self->surface, box);
+    rebuild_menu (self);
   }
   g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_CHILD]);
   g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_MENU_MODEL]);
