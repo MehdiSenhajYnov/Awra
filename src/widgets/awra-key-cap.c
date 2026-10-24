@@ -351,14 +351,23 @@ awra_key_cap_unmap (GtkWidget *widget)
 }
 
 static void
+unparent_child (GtkWidget **child)
+{
+  if (*child != NULL) {
+    gtk_widget_unparent (*child);
+    *child = NULL;
+  }
+}
+
+static void
 awra_key_cap_dispose (GObject *object)
 {
   AwraKeyCap *self = AWRA_KEY_CAP (object);
 
   disconnect_style (self);
-  g_clear_pointer ((GtkWidget **) &self->label, gtk_widget_unparent);
-  g_clear_pointer ((GtkWidget **) &self->secondary, gtk_widget_unparent);
-  g_clear_pointer ((GtkWidget **) &self->badge, gtk_widget_unparent);
+  unparent_child ((GtkWidget **) (gpointer) &self->label);
+  unparent_child ((GtkWidget **) (gpointer) &self->secondary);
+  unparent_child ((GtkWidget **) (gpointer) &self->badge);
   G_OBJECT_CLASS (awra_key_cap_parent_class)->dispose (object);
 }
 

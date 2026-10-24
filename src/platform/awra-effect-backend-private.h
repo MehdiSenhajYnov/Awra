@@ -30,6 +30,11 @@ struct _AwraEffectBackend {
                       int                height,
                       int                radius,
                       GError           **error);
+  /* Optional: follow the light/dark appearance (e.g. tinted backdrops). */
+  void     (*set_dark) (AwraEffectBackend *backend,
+                        gpointer           handle,
+                        GdkSurface        *surface,
+                        gboolean           dark);
   void     (*clear)   (AwraEffectBackend *backend,
                       gpointer           handle,
                       GdkSurface        *surface);
@@ -37,6 +42,10 @@ struct _AwraEffectBackend {
 };
 
 AwraEffectBackend *awra_generic_effect_backend_new (void);
+
+#ifdef AWRA_HAVE_WIN32
+AwraEffectBackend *awra_win32_effect_backend_new (GdkDisplay *display);
+#endif
 
 #ifdef AWRA_HAVE_WAYLAND_EFFECTS
 AwraEffectBackend *awra_wayland_effect_backend_new (GdkDisplay *display,

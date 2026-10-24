@@ -5,6 +5,10 @@
 #include "awra-i18n-private.h"
 #include "widgets/awra-key-codes-private.h"
 
+#ifdef G_OS_WIN32
+#include <windows.h>
+#endif
+
 #define EVDEV_TO_HARDWARE 8
 
 #define FIXED(code, evdev, label) { code, evdev, label, AWRA_KEY_LABEL_FIXED }
@@ -121,6 +125,67 @@ static const AwraKeyCodeInfo key_codes[] = {
 #undef FIXED
 #undef LAYOUT
 
+#ifdef G_OS_WIN32
+/* evdev numbers the main block like AT set-1 scan codes; the keys below are
+ * E0-prefixed ("extended") scan codes on Windows. */
+static const struct {
+  guint evdev;
+  guint scan;
+} extended_keys[] = {
+  { 96, 0x1C }, { 97, 0x1D }, { 98, 0x35 }, { 99, 0x37 }, { 100, 0x38 },
+  { 102, 0x47 }, { 103, 0x48 }, { 104, 0x49 }, { 105, 0x4B }, { 106, 0x4D },
+  { 107, 0x4F }, { 108, 0x50 }, { 109, 0x51 }, { 110, 0x52 }, { 111, 0x53 },
+  { 125, 0x5B }, { 126, 0x5C }, { 127, 0x5D },
+};
+
+static guint
+evdev_to_scan (guint evdev)
+{
+  for (guint i = 0; i < G_N_ELEMENTS (extended_keys); i++) {
+    if (extended_keys[i].evdev == evdev)
+      return 0xE000 | extended_keys[i].scan;
+  }
+  return evdev < 0x59 ? evdev : 0;
+}
+
+static guint
+scan_to_evdev (guint scan)
+{
+  if ((scan & 0xFF00) == 0xE000) {
+    for (guint i = 0; i < G_N_ELEMENTS (extended_keys); i++) {
+      if (extended_keys[i].scan == (scan & 0xFF))
+        return extended_keys[i].evdev;
+    }
+    return 0;
+  }
+  return scan;
+}
+#endif
+
+/* GDK's hardware keycode for a physical key: evdev + 8 on Linux (X11 and
+ * Wayland numbering), the layout's virtual key on Windows. */
+static guint
+hardware_keycode_for (const AwraKeyCodeInfo *info)
+{
+#ifdef G_OS_WIN32
+  guint scan = evdev_to_scan (info->evdev);
+
+  return scan != 0 ? MapVirtualKeyW (scan, MAPVK_VSC_TO_VK_EX) : 0;
+#else
+  return info->evdev + EVDEV_TO_HARDWARE;
+#endif
+}
+
+static guint
+evdev_for_hardware_keycode (guint keycode)
+{
+#ifdef G_OS_WIN32
+  return scan_to_evdev (MapVirtualKeyW (keycode, MAPVK_VK_TO_VSC_EX));
+#else
+  return keycode >= EVDEV_TO_HARDWARE ? keycode - EVDEV_TO_HARDWARE : 0;
+#endif
+}
+
 const AwraKeyCodeInfo *
 awra_key_code_info_lookup (const char *code)
 {
@@ -136,10 +201,12 @@ awra_key_code_info_lookup (const char *code)
 const AwraKeyCodeInfo *
 awra_key_code_info_lookup_keycode (guint hardware_keycode)
 {
-  if (hardware_keycode < EVDEV_TO_HARDWARE)
+  guint evdev = evdev_for_hardware_keycode (hardware_keycode);
+
+  if (evdev == 0)
     return NULL;
   for (guint i = 0; i < G_N_ELEMENTS (key_codes); i++) {
-    if (key_codes[i].evdev + EVDEV_TO_HARDWARE == hardware_keycode)
+    if (key_codes[i].evdev == evdev)
       return &key_codes[i];
   }
   return NULL;
@@ -256,7 +323,7 @@ awra_key_code_info_dup_label (const AwraKeyCodeInfo *info,
     return g_strdup (_(info->fallback_label));
 
   if (!gdk_display_translate_key (display,
-                                  info->evdev + EVDEV_TO_HARDWARE,
+                                  hardware_keycode_for (info),
                                   0, layout_index,
                                   &keyval, NULL, NULL, NULL) ||
       keyval == 0 || keyval == GDK_KEY_VoidSymbol) {
@@ -299,7 +366,7 @@ awra_keyboard_code_to_hardware_keycode (const char *code)
 
   g_return_val_if_fail (code != NULL, 0);
   info = awra_key_code_info_lookup (code);
-  return info != NULL ? info->evdev + EVDEV_TO_HARDWARE : 0;
+  return info != NULL ? hardware_keycode_for (info) : 0;
 }
 
 char *

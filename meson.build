@@ -35,6 +35,7 @@ conf = configuration_data()
 conf.set_quoted('AWRA_VERSION', meson.project_version())
 conf.set_quoted('AWRA_LOCALEDIR', get_option('prefix') / get_option('localedir'))
 conf.set('AWRA_HAVE_WAYLAND_EFFECTS', wayland_dep.found() and wayland_scanner.found())
+conf.set('AWRA_HAVE_WIN32', host_machine.system() == 'windows')
 conf.set('AWRA_DEVELOPER_MODE', get_option('developer'))
 configure_file(output: 'awra-config.h', configuration: conf)
 
@@ -237,6 +238,22 @@ if wayland_dep.found() and wayland_scanner.found()
   awra_sources += [protocol_header, protocol_code]
   awra_deps += wayland_dep
 endif
+if host_machine.system() == 'windows'
+  awra_sources += files(
+    'src/platform/win32/awra-win32-effect-backend.c',
+    'src/platform/win32/awra-win32-system.c',
+    'src/platform/win32/awra-win32-util.c',
+  )
+  awra_deps += [cc.find_library('dwmapi'), cc.find_library('advapi32')]
+endif
+
+# PE has no symbol versioning: MinGW exports the library's symbols itself.
+awra_link_args = []
+awra_link_depends = []
+if host_machine.system() != 'windows'
+  awra_link_args += '-Wl,--version-script=' + meson.project_build_root() / 'awra.map'
+  awra_link_depends += awra_symbol_map
+endif
 
 libawra = library(
   'awra-1',
@@ -246,10 +263,8 @@ libawra = library(
   soversion: '1',
   dependencies: awra_deps,
   include_directories: [inc_public, inc_private],
-  link_args: [
-    '-Wl,--version-script=' + meson.project_build_root() / 'awra.map',
-  ],
-  link_depends: awra_symbol_map,
+  link_args: awra_link_args,
+  link_depends: awra_link_depends,
   install: true,
 )
 

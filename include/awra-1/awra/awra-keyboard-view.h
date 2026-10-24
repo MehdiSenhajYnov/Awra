@@ -83,7 +83,8 @@ void        awra_keyboard_view_set_accepts_file_drops     (AwraKeyboardView     
 
 /**
  * awra_keyboard_code_from_hardware_keycode:
- * @keycode: a GDK hardware keycode (the Linux evdev code plus 8)
+ * @keycode: a GDK hardware keycode (the evdev code plus 8 on Linux, the
+ *   virtual key on Windows)
  *
  * Returns: (transfer none) (nullable): the matching `KeyboardEvent.code`
  *   style identifier, or %NULL when Awra does not know the key
@@ -93,7 +94,8 @@ const char *awra_keyboard_code_from_hardware_keycode     (guint                 
  * awra_keyboard_code_to_hardware_keycode:
  * @code: a physical key identifier such as `KeyA`
  *
- * Returns: the GDK hardware keycode (Linux evdev code plus 8), or 0
+ * Returns: the GDK hardware keycode (evdev code plus 8 on Linux, the
+ *   virtual key of the current layout on Windows), or 0
  */
 guint       awra_keyboard_code_to_hardware_keycode       (const char                 *code);
 /**

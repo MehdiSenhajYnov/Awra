@@ -2669,3 +2669,12 @@ awrasidebar .awra-navigation-item {
 .awra-reduced-motion .awra-slider slider {
   transition-duration: 0s;
 }
+
+/* Windows: DWM provides the window shadow and corner rounding. */
+window.awra-window.awra-win32,
+window.awra-window.awra-win32.csd,
+window.awra-window.awra-win32:backdrop {
+  margin: 0;
+  box-shadow: none;
+  border-radius: 0;
+}

@@ -1,8 +1,14 @@
 /* SPDX-License-Identifier: LGPL-2.1-or-later */
 
+#include "awra-config.h"
+
 #include <math.h>
 #include <string.h>
 #include <gtk/gtk.h>
+#ifdef AWRA_HAVE_WIN32
+#include <gdk/win32/gdkwin32.h>
+#include "platform/win32/awra-win32-private.h"
+#endif
 #include <awra/awra-style-manager.h>
 
 #include "core/awra-style-manager-private.h"
@@ -19,6 +25,7 @@ struct _AwraStyleManager {
   gboolean system_accent_available;
   GDBusConnection *session_bus;
   guint portal_subscription;
+  guint win32_watch;
   gboolean high_contrast;
   gboolean reduced_motion;
   gboolean reduced_transparency;
@@ -155,6 +162,10 @@ static gboolean
 resolve_system_accent (AwraStyleManager *self,
                        GdkRGBA          *accent)
 {
+#ifdef AWRA_HAVE_WIN32
+  if (self->win32_watch != 0)
+    return awra_win32_read_accent (accent);
+#endif
   return read_settings_accent (self, accent) ||
          read_portal_accent (self, accent);
 }
@@ -255,6 +266,9 @@ settings_changed_cb (GtkSettings      *settings,
   }
 }
 
+static void system_accent_changed (const GdkRGBA *changed,
+                                   gpointer       user_data);
+
 static void
 portal_setting_changed_cb (GDBusConnection *connection,
                            const char      *sender_name,
@@ -281,6 +295,16 @@ portal_setting_changed_cb (GDBusConnection *connection,
       !variant_to_accent (value, &accent))
     return;
 
+  system_accent_changed (&accent, self);
+}
+
+static void
+system_accent_changed (const GdkRGBA *changed,
+                       gpointer       user_data)
+{
+  AwraStyleManager *self = user_data;
+  GdkRGBA accent = *changed;
+
   self->system_accent = accent;
   if (!self->system_accent_available) {
     self->system_accent_available = TRUE;
@@ -306,6 +330,10 @@ awra_style_manager_dispose (GObject *object)
     g_dbus_connection_signal_unsubscribe (self->session_bus,
                                           self->portal_subscription);
     self->portal_subscription = 0;
+  }
+  if (self->win32_watch != 0) {
+    g_source_remove (self->win32_watch);
+    self->win32_watch = 0;
   }
   g_clear_object (&self->settings);
   g_clear_object (&self->session_bus);
@@ -477,6 +505,13 @@ awra_style_manager_new_for_display (GdkDisplay *display)
 
   self = g_object_new (AWRA_TYPE_STYLE_MANAGER, NULL);
   self->settings = g_object_ref (gtk_settings_get_for_display (display));
+#ifdef AWRA_HAVE_WIN32
+  /* Windows has no portal or session bus: read its preferences directly. */
+  if (GDK_IS_WIN32_DISPLAY (display))
+    self->win32_watch = awra_win32_watch_system (self->settings,
+                                                 system_accent_changed, self);
+  else
+#endif
   self->session_bus = g_bus_get_sync (G_BUS_TYPE_SESSION, NULL, NULL);
   if (self->session_bus != NULL) {
     self->portal_subscription = g_dbus_connection_signal_subscribe (

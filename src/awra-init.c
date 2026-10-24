@@ -7,6 +7,10 @@
 #include "awra-i18n-private.h"
 #include "awra-init-private.h"
 
+#ifdef G_OS_WIN32
+#include <windows.h>
+#endif
+
 static GQuark provider_quark;
 
 #define AWRA_STYLE_PROVIDER_PRIORITY_IDENTITY \
@@ -209,6 +213,24 @@ awra_update_css_for_display (GdkDisplay  *display,
   gtk_css_provider_load_from_string (provider, stylesheet);
 }
 
+#ifdef G_OS_WIN32
+/* Windows installs are relocatable: translations sit in share/locale next to
+ * the bin/ folder holding this DLL, wherever the user installed it. */
+static char *
+relocated_localedir (void)
+{
+  HMODULE module = NULL;
+  g_autofree char *root = NULL;
+
+  if (!GetModuleHandleExW (GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                             GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                           (LPCWSTR) (gpointer) relocated_localedir, &module))
+    return g_strdup (AWRA_LOCALEDIR);
+  root = g_win32_get_package_installation_directory_of_module (module);
+  return g_build_filename (root, "share", "locale", NULL);
+}
+#endif
+
 /* Awra's visible defaults live in the awra-1 gettext domain. Bind it to the
  * install prefix, or to $AWRA_LOCALEDIR when running from a build tree. */
 static void
@@ -218,10 +240,15 @@ ensure_translations (void)
 
   if (g_once_init_enter (&bound)) {
     const char *override = g_getenv ("AWRA_LOCALEDIR");
+#ifdef G_OS_WIN32
+    g_autofree char *installed = relocated_localedir ();
+#else
+    const char *installed = AWRA_LOCALEDIR;
+#endif
 
     bindtextdomain (GETTEXT_PACKAGE,
                     override != NULL && *override != '\0'
-                      ? override : AWRA_LOCALEDIR);
+                      ? override : installed);
     bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
     g_once_init_leave (&bound, 1);
   }

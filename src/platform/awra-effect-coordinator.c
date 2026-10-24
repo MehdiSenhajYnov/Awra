@@ -46,9 +46,13 @@ fallback_reason (AwraEffectCoordinator *self)
   if (!awra_style_manager_get_native_blur_enabled (self->style_manager))
     return "native blur is disabled by the application";
   if (!self->backend->interface_announced)
-    return "ext-background-effect-v1 is not announced";
+    return g_str_equal (self->backend->name, "win32-dwm")
+             ? "this Windows version has no DWM blur"
+             : "ext-background-effect-v1 is not announced";
   if (!(self->backend->capabilities & AWRA_EFFECT_CAPABILITY_BLUR))
-    return "the compositor did not advertise blur";
+    return g_str_equal (self->backend->name, "win32-dwm")
+             ? "Windows transparency effects are off"
+             : "the compositor did not advertise blur";
   if (awra_style_manager_get_reduced_transparency (self->style_manager))
     return "reduced transparency is enabled";
 
@@ -136,6 +140,18 @@ remove_tracked (AwraEffectCoordinator *self,
 }
 
 static void
+sync_appearance (AwraEffectCoordinator *self,
+                 TrackedNative         *tracked,
+                 GdkSurface            *surface)
+{
+  AwraTokenSet *tokens = awra_style_manager_get_token_set (self->style_manager);
+
+  if (self->backend->set_dark != NULL && tracked->backend_handle != NULL)
+    self->backend->set_dark (self->backend, tracked->backend_handle, surface,
+                             awra_token_set_get_dark (tokens));
+}
+
+static void
 sync_tracked (AwraEffectCoordinator *self,
               TrackedNative         *tracked)
 {
@@ -192,8 +208,10 @@ sync_tracked (AwraEffectCoordinator *self,
     if (tracked->applied)
       self->region_updates++;
   } else {
-    if (!geometry_changed && tracked->applied)
+    if (!geometry_changed && tracked->applied) {
+      sync_appearance (self, tracked, surface);
       return;
+    }
     tracked->applied = self->backend->update (self->backend,
                                               tracked->backend_handle,
                                               surface,
@@ -205,6 +223,8 @@ sync_tracked (AwraEffectCoordinator *self,
       self->region_updates++;
   }
   tracked->geometry_valid = TRUE;
+  if (tracked->applied)
+    sync_appearance (self, tracked, surface);
 
   if (error != NULL) {
     g_message ("Native background effect failed: %s; using solid fallback",
@@ -274,6 +294,10 @@ awra_effect_coordinator_new (GdkDisplay       *display,
 #ifdef AWRA_HAVE_WAYLAND_EFFECTS
   if (g_getenv ("AWRA_FORCE_FALLBACK") == NULL)
     self->backend = awra_wayland_effect_backend_new (display, &error);
+#endif
+#ifdef AWRA_HAVE_WIN32
+  if (self->backend == NULL && g_getenv ("AWRA_FORCE_FALLBACK") == NULL)
+    self->backend = awra_win32_effect_backend_new (display);
 #endif
   if (self->backend == NULL) {
     if (error != NULL)

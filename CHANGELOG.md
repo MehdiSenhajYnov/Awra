@@ -4,6 +4,15 @@
 
 ## Unreleased
 
+- Windows support: a `win32-dwm` effect backend (Acrylic system backdrop on
+  Windows 11 22H2+, accent-policy blur on Windows 10), Windows dark mode,
+  accent colour, high contrast and animation preferences mirrored into GTK,
+  native DWM shadow and corners for Awra windows, relocatable translations,
+  and a MinGW cross file (`build-aux/windows/mingw64.meson`).
+- Keyboard helpers map physical keys to the platform's hardware keycodes
+  (virtual keys on Windows), so layout-aware legends work there too.
+- The command palette shows icons, accelerators and section headings.
+
 - Added `AwraKeyCap`, `AwraKeyboardView` (ANSI/ISO, layout-aware legends,
   selection, roving focus, per-key file drops) and `AwraShortcutCapture`,
   plus public `KeyboardEvent.code` ↔ hardware keycode helpers.

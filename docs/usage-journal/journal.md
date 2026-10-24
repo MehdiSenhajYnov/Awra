@@ -706,3 +706,35 @@ son contenu, si bien qu'une bannière qui apparaissait faisait reculer le
 clavier. Un `GtkScrolledWindow` sans défilement ni largeur naturelle propagée
 fige la colonne à sa largeur minimale. À retenir pour toute colonne latérale
 qui ne doit jamais bouger.
+
+## 02:30 — KeyToMusicAwra — Awra sous Windows
+
+L'application devait exister aussi sous Windows, avec le même verre. Awra ne
+connaissait que Wayland (`ext-background-effect-v1`) et le repli opaque.
+
+- **Backend `win32-dwm` : ajouté.** Sous Windows 11 22H2 et plus, Awra demande
+  à DWM le fond système Acrylic (`DWMWA_SYSTEMBACKDROP_TYPE`) et étend le cadre
+  à toute la zone cliente ; GTK rend déjà ses fenêtres transparentes au pixel,
+  le fond apparaît donc sous chaque surface translucide. Sous Windows 10, c'est
+  le flou d'arrière-plan de `SetWindowCompositionAttribute`. Le commutateur
+  « Effets de transparence » de Windows coupe le flou, et un refus du système
+  fait basculer une fois pour toutes sur le rendu opaque au lieu de réessayer à
+  chaque image. Le mode sombre teinte l'Acrylic (`set_dark`, nouveau crochet
+  facultatif des backends).
+- **Préférences Windows : lues.** GTK n'y suit ni le mode sombre ni la couleur
+  d'accent ; Awra lit le registre et les paramètres système (mode, accent,
+  contraste élevé, animations) et les reporte dans `GtkSettings`.
+- **Fenêtres : ombre et coins natifs.** L'ombre CSD de GTK agrandissait la
+  fenêtre et le fond système l'aurait remplie ; sous Windows, DWM dessine
+  l'ombre et arrondit les coins (8 px sous Windows 11), Awra suit ce rayon.
+- **Codes matériels : corrigés pour Windows.** Les aides clavier supposaient la
+  numérotation evdev + 8. Sous Windows le code matériel GDK est la touche
+  virtuelle de la disposition : Awra passe par le code de balayage physique,
+  si bien que les légendes AZERTY restent justes.
+- **Traductions relocalisables.** Le chemin absolu compilé sous Linux n'existe
+  pas chez l'utilisateur : la DLL cherche `share/locale` à côté de son `bin/`.
+
+GTK 4.22 est recompilé pour MinGW (Fedora fournit 4.21, et Awra utilise
+`GtkPopoverBin` et `GtkReducedMotion`). Testé sous Wine : l'interface complète
+s'affiche, en repli opaque puisque Wine n'a pas DWM. Le flou réel reste à voir
+sur un vrai Windows.

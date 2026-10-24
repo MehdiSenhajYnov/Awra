@@ -4,7 +4,12 @@
 #include <awra/awra-header.h>
 #include <awra/awra-window.h>
 
+#include "awra-config.h"
 #include "core/awra-context-private.h"
+#ifdef AWRA_HAVE_WIN32
+#include <gdk/win32/gdkwin32.h>
+#include "platform/win32/awra-win32-private.h"
+#endif
 
 typedef struct {
   AwraSurface *root_surface;
@@ -325,6 +330,15 @@ awra_window_init (AwraWindow *self)
   gtk_window_set_titlebar (GTK_WINDOW (self), priv->default_chrome);
   gtk_widget_add_css_class (GTK_WIDGET (self), "awra-window");
   gtk_window_set_default_size (GTK_WINDOW (self), 900, 620);
+#ifdef AWRA_HAVE_WIN32
+  /* DWM draws the shadow and rounds the corners natively; GTK's own shadow
+   * margin would otherwise be filled by the backdrop too. */
+  if (GDK_IS_WIN32_DISPLAY (gtk_widget_get_display (GTK_WIDGET (self)))) {
+    gtk_widget_add_css_class (GTK_WIDGET (self), "awra-win32");
+    awra_surface_set_radius (priv->root_surface,
+                             awra_win32_window_corner_radius ());
+  }
+#endif
 
   priv->material_handler = g_signal_connect (priv->root_surface,
                                              "notify::material",

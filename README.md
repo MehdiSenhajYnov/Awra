@@ -13,6 +13,22 @@ meson test -C build
 meson install -C build --destdir "$PWD/staging"
 ```
 
+### Windows
+
+Awra builds for Windows with MinGW (cross-compiled from Linux or with MSYS2)
+against GTK 4.22. Windows has no compositor protocol to negotiate: the
+`win32-dwm` backend asks DWM for the Acrylic backdrop on Windows 11 22H2 and
+later, or the accent-policy blur on Windows 10, and falls back to the opaque
+look when "Transparency effects" is off. Dark mode, accent colour, high
+contrast and animation preferences come from Windows settings.
+
+```sh
+PKG_CONFIG_LIBDIR=<gtk-prefix>/lib/pkgconfig:<mingw-sysroot>/lib/pkgconfig \
+  meson setup build-win --cross-file build-aux/windows/mingw64.meson \
+  -Dwayland-effects=disabled -Dintrospection=disabled -Dshowcase=false \
+  -Dtests=false -Dexamples=false
+```
+
 Run `build/showcase/awra-showcase` to browse eleven real routed pages. Alongside
 the component gallery, the dedicated **Application Patterns** page demonstrates
 a media workspace, launcher board and design canvas with permanent, floating
