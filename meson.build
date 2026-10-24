@@ -252,10 +252,25 @@ if host_machine.system() == 'windows'
   ]
 endif
 
-# PE has no symbol versioning: MinGW exports the library's symbols itself.
+# PE has no symbol versioning: a module-definition file limits the DLL to
+# the same public symbols instead (MinGW would otherwise export them all).
 awra_link_args = []
 awra_link_depends = []
-if host_machine.system() != 'windows'
+awra_module_defs = []
+if host_machine.system() == 'windows'
+  awra_module_defs = custom_target(
+    'awra-module-defs',
+    input: public_headers,
+    output: 'awra.def',
+    command: [
+      python,
+      files('build-aux/generate-version-script.py'),
+      '--def',
+      '@OUTPUT@',
+      '@INPUT@',
+    ],
+  )
+else
   awra_link_args += '-Wl,--version-script=' + meson.project_build_root() / 'awra.map'
   awra_link_depends += awra_symbol_map
 endif
@@ -270,6 +285,7 @@ libawra = library(
   include_directories: [inc_public, inc_private],
   link_args: awra_link_args,
   link_depends: awra_link_depends,
+  vs_module_defs: awra_module_defs,
   install: true,
 )
 

@@ -19,6 +19,21 @@ def header_symbols(paths: list[Path]) -> set[str]:
     return symbols
 
 
+def exported_symbols(library: Path) -> set[str]:
+    if library.suffix.lower() == ".dll":
+        # A PE image's export names: "[  12] +base[  13]  000c awra_button_new".
+        output = subprocess.check_output(["objdump", "-p", library], text=True)
+        return set(re.findall(r"\]\s+[0-9a-fA-F]{4}\s+(\w+)\s*$", output, re.MULTILINE))
+    output = subprocess.check_output(
+        ["nm", "-D", "--defined-only", library], text=True
+    )
+    return {
+        fields[-1].split("@", 1)[0]
+        for line in output.splitlines()
+        if (fields := line.split()) and fields[-1].startswith("awra_")
+    }
+
+
 def main() -> int:
     if len(sys.argv) < 4:
         raise SystemExit("usage: test-public-symbols.py LIB BASELINE HEADER...")
@@ -29,14 +44,7 @@ def main() -> int:
         if line.strip() and not line.startswith("#")
     }
     public = header_symbols([Path(value) for value in sys.argv[3:]])
-    output = subprocess.check_output(
-        ["nm", "-D", "--defined-only", library], text=True
-    )
-    exported = {
-        fields[-1].split("@", 1)[0]
-        for line in output.splitlines()
-        if (fields := line.split()) and fields[-1].startswith("awra_")
-    }
+    exported = exported_symbols(library)
     missing = sorted(public - exported)
     leaked = sorted(exported - public)
     broken_baseline = sorted(baseline - exported)

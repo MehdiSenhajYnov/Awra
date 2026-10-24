@@ -3,7 +3,6 @@
 #include <awra/awra.h>
 #include <glib/gstdio.h>
 #include <math.h>
-#include <unistd.h>
 
 #include "layout/awra-split-view-private.h"
 

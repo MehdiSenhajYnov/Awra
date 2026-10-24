@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: LGPL-2.1-or-later
 
-"""Generate the ELF export map from Awra's installed C headers."""
+"""Generate the export list from Awra's installed C headers.
+
+An ELF version script by default; with --def, the module-definition file
+that limits a Windows DLL to the same symbols (PE has no symbol versions).
+"""
 
 from __future__ import annotations
 
@@ -21,15 +25,24 @@ def symbols_from_headers(paths: list[Path]) -> set[str]:
 
 
 def main() -> int:
-    if len(sys.argv) < 3:
-        raise SystemExit("usage: generate-version-script.py OUTPUT HEADER...")
-    output = Path(sys.argv[1])
-    symbols = symbols_from_headers([Path(value) for value in sys.argv[2:]])
+    args = sys.argv[1:]
+    module_definition = bool(args) and args[0] == "--def"
+    if module_definition:
+        args = args[1:]
+    if len(args) < 2:
+        raise SystemExit("usage: generate-version-script.py [--def] OUTPUT HEADER...")
+    output = Path(args[0])
+    symbols = symbols_from_headers([Path(value) for value in args[1:]])
     if not symbols:
         raise SystemExit("no Awra API symbols found")
-    lines = ["AWRA_0_1 {", "  global:"]
-    lines.extend(f"    {symbol};" for symbol in sorted(symbols))
-    lines.extend(["  local:", "    *;", "};", ""])
+    if module_definition:
+        lines = ["EXPORTS"]
+        lines.extend(f"    {symbol}" for symbol in sorted(symbols))
+        lines.append("")
+    else:
+        lines = ["AWRA_0_1 {", "  global:"]
+        lines.extend(f"    {symbol};" for symbol in sorted(symbols))
+        lines.extend(["  local:", "    *;", "};", ""])
     output.write_text("\n".join(lines), encoding="utf-8")
     return 0
 

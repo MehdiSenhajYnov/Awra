@@ -3,7 +3,6 @@
 #include <awra/awra.h>
 #include <glib/gstdio.h>
 #include <string.h>
-#include <sys/wait.h>
 
 static const char *self_program;
 
@@ -604,6 +603,16 @@ run_probe (const char *program,
                                G_SPAWN_DEFAULT, NULL, NULL,
                                &stdout_text, &stderr_text, &status, &error));
   g_assert_no_error (error);
+  /* The probe's stdout is in text mode: \r\n on Windows. */
+  if (stdout_text != NULL) {
+    char *kept = stdout_text;
+
+    for (const char *read = stdout_text; *read != '\0'; read++) {
+      if (*read != '\r')
+        *kept++ = *read;
+    }
+    *kept = '\0';
+  }
   if (status_out != NULL)
     *status_out = status;
   if (stderr_text != NULL) {
@@ -651,6 +660,16 @@ remove_test_tree (const char *path)
   }
 }
 
+/* The probe exits with 77 when the theme it needs is not installed. */
+static gboolean
+probe_skipped (int status)
+{
+  g_autoptr (GError) error = NULL;
+
+  return !g_spawn_check_wait_status (status, &error) &&
+         g_error_matches (error, G_SPAWN_EXIT_ERROR, 77);
+}
+
 static void
 test_theme_and_user_provider_isolation (void)
 {
@@ -668,7 +687,7 @@ test_theme_and_user_provider_isolation (void)
   g_assert_nonnull (temporary);
   g_assert_cmpint (g_mkdir_with_parents (gtk_dir, 0700), ==, 0);
   breeze = run_probe (program, "Breeze", temporary, FALSE, &status);
-  if (WEXITSTATUS (status) == 77) {
+  if (probe_skipped (status)) {
     g_test_skip ("No display available for child style probes");
     goto cleanup;
   }

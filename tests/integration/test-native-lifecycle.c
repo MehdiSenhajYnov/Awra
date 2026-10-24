@@ -170,12 +170,18 @@ main (int   argc,
   }
 
   {
-    GtkWidget *menu_box = awra_popover_get_child (AWRA_POPOVER (popover));
-    GtkWidget *submenu_button = gtk_widget_get_first_child (menu_box);
+    GtkWidget *menu_box;
+    GtkWidget *submenu_button;
     GtkWidget *submenu_popover;
     GtkWidget *submenu_box;
     GtkWidget *nested_action;
 
+    /* Menu items are built each time the menu opens: look them up once it
+     * is open, and again after reopening it. */
+    awra_menu_button_popup (AWRA_MENU_BUTTON (menu_button));
+    g_assert_true (wait_for_mapped (popover, TRUE, 1000));
+    menu_box = awra_popover_get_child (AWRA_POPOVER (popover));
+    submenu_button = gtk_widget_get_first_child (menu_box);
     g_assert_true (AWRA_IS_MENU_BUTTON (submenu_button));
     submenu_popover = GTK_WIDGET (awra_menu_button_get_popover (
       AWRA_MENU_BUTTON (submenu_button)));
@@ -186,8 +192,6 @@ main (int   argc,
     g_assert_cmpint (gtk_popover_get_position (
                        GTK_POPOVER (submenu_popover)), ==, GTK_POS_RIGHT);
 
-    awra_menu_button_popup (AWRA_MENU_BUTTON (menu_button));
-    g_assert_true (wait_for_mapped (popover, TRUE, 1000));
     awra_menu_button_popup (AWRA_MENU_BUTTON (submenu_button));
     g_assert_true (wait_for_mapped (submenu_popover, TRUE, 1000));
     g_assert_cmpuint (awra_diagnostics_get_native_surfaces (diagnostics), ==, 3);
@@ -197,6 +201,11 @@ main (int   argc,
 
     awra_menu_button_popup (AWRA_MENU_BUTTON (menu_button));
     g_assert_true (wait_for_mapped (popover, TRUE, 1000));
+    menu_box = awra_popover_get_child (AWRA_POPOVER (popover));
+    submenu_button = gtk_widget_get_first_child (menu_box);
+    g_assert_true (AWRA_IS_MENU_BUTTON (submenu_button));
+    submenu_popover = GTK_WIDGET (awra_menu_button_get_popover (
+      AWRA_MENU_BUTTON (submenu_button)));
     awra_menu_button_popup (AWRA_MENU_BUTTON (submenu_button));
     g_assert_true (wait_for_mapped (submenu_popover, TRUE, 1000));
     submenu_box = awra_popover_get_child (AWRA_POPOVER (submenu_popover));
