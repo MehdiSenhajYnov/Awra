@@ -199,10 +199,12 @@ def main() -> int:
     if item_type is None or item_type.get("name") != "utf8":
         fail("awra_dropdown_new_from_strings must project as an array of UTF-8 strings")
 
+    # Function macros (AWRA_CHECK_VERSION) are compile-time C conveniences;
+    # bindings have the runtime awra_get_*_version () instead.
     hidden = [
         node.get(f"{{{C}}}identifier") or node.get("name")
         for node in namespace.iter()
-        if node.get("introspectable") == "0"
+        if node.get("introspectable") == "0" and not node.tag.endswith("function-macro")
     ]
     if hidden:
         fail("non-introspectable public API: " + ", ".join(sorted(hidden)))

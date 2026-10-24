@@ -71,6 +71,9 @@ WHOLE = {
 }
 
 
+# Named after the platform's library file, not part of the API.
+PLATFORM_ATTRIBUTES = {"shared-library"}
+
 # Their values follow the release.
 VERSION_CONSTANTS = {"MAJOR_VERSION", "MINOR_VERSION", "MICRO_VERSION", "VERSION_S"}
 
@@ -100,6 +103,8 @@ def compare(
     new_attributes = new.get("attributes", {})
     for name in sorted(set(old_attributes) | set(new_attributes)):
         before, after = old_attributes.get(name), new_attributes.get(name)
+        if name in PLATFORM_ATTRIBUTES:
+            continue
         if (compatible and old["tag"] == "constant" and name == "value" and
                 old_attributes.get("name") in VERSION_CONSTANTS):
             continue

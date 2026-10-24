@@ -146,6 +146,7 @@ int main () {
          capture.get_placeholder () == "Assign" &&
          waveform.get_duration () == 10.0 &&
          drop.get_title () == "Drop audio" &&
-         Awra.keyboard_code_from_hardware_keycode (38) == "KeyA" &&
+         Awra.keyboard_code_from_hardware_keycode (
+           Awra.keyboard_code_to_hardware_keycode ("KeyA")) == "KeyA" &&
          typeof (Awra.SurfaceCorner) != Type.INVALID ? 0 : 1;
 }

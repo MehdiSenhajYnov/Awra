@@ -3,6 +3,10 @@
 
 """Exercise Awra exclusively through the installed-style GI contract."""
 
+import os
+import sys
+import tempfile
+
 import gi
 
 gi.require_version("Gtk", "4.0")
@@ -136,11 +140,16 @@ def main() -> int:
     cap = keyboard.get_key_cap("KeyA")
     cap.set_bound(True)
     cap.set_secondary_label("Thunder")
-    assert Awra.keyboard_code_from_hardware_keycode(38) == "KeyA"
-    assert Awra.keyboard_code_to_hardware_keycode("Space") == 65
+    # Hardware keycodes are evdev + 8 on Linux, virtual keys on Windows.
+    key_a = Awra.keyboard_code_to_hardware_keycode("KeyA")
+    control = Awra.keyboard_code_to_hardware_keycode("ControlLeft")
+    assert Awra.keyboard_code_from_hardware_keycode(key_a) == "KeyA"
+    if sys.platform != "win32":
+        assert key_a == 38
+        assert Awra.keyboard_code_to_hardware_keycode("Space") == 65
     capture = Awra.ShortcutCapture.new()
-    capture.set_shortcut([37, 38], Gdk.ModifierType.CONTROL_MASK)
-    assert list(capture.get_keycodes()) == [37, 38]
+    capture.set_shortcut([control, key_a], Gdk.ModifierType.CONTROL_MASK)
+    assert list(capture.get_keycodes()) == [control, key_a]
     assert capture.get_codes() == ["ControlLeft", "KeyA"]
     waveform = Awra.WaveformView.new()
     waveform.set_peaks([0.1, 0.5, 0.9])
@@ -155,7 +164,7 @@ def main() -> int:
     assert volume.get_effective_volume() == 0
     drop = Awra.DropZone.new()
     drop.set_accepted_extensions(["mp3"])
-    assert drop.accepts_file(Gio.File.new_for_path("/tmp/a.MP3"))
+    assert drop.accepts_file(Gio.File.new_for_path(os.path.join(tempfile.gettempdir(), "a.MP3")))
     toast = Awra.ToastOverlay.new()
     toast_id = toast.show_with_action("Removed", "Undo", None, 0)
     toast.dismiss(toast_id)

@@ -52664,6 +52664,41 @@
     },
     {
       "attributes": {
+        "identifier": "AWRA_CHECK_VERSION",
+        "introspectable": "0",
+        "name": "CHECK_VERSION",
+        "version": "1.1"
+      },
+      "children": [
+        {
+          "attributes": {},
+          "children": [
+            {
+              "attributes": {
+                "name": "major"
+              },
+              "tag": "parameter"
+            },
+            {
+              "attributes": {
+                "name": "minor"
+              },
+              "tag": "parameter"
+            },
+            {
+              "attributes": {
+                "name": "micro"
+              },
+              "tag": "parameter"
+            }
+          ],
+          "tag": "parameters"
+        }
+      ],
+      "tag": "function-macro"
+    },
+    {
+      "attributes": {
         "is-gtype-struct-for": "ActionRow",
         "name": "ActionRowClass",
         "type": "AwraActionRowClass"
