@@ -1536,6 +1536,130 @@ test_navigation_direction (void)
                    ==, "home");
 }
 
+typedef struct {
+  guint count;
+  char *last;
+} ResponseLog;
+
+static void
+dialog_response_cb (AwraDialog  *dialog,
+                    const char  *response,
+                    ResponseLog *log)
+{
+  (void) dialog;
+  log->count++;
+  g_free (log->last);
+  log->last = g_strdup (response);
+}
+
+/* Responses: buttons below the body, a default one, and the one closing
+ * the dialog gives. */
+static void
+test_dialog_responses (void)
+{
+  ResponseLog log = { 0 };
+  ResponseLog saved = { 0 };
+  GtkWidget *dialog = awra_dialog_new (NULL);
+  GtkWidget *body = gtk_label_new ("Delete the profile?");
+
+  g_object_ref_sink (dialog);
+  awra_dialog_set_body (AWRA_DIALOG (dialog), body);
+  g_assert_true (awra_dialog_get_body (AWRA_DIALOG (dialog)) == body);
+  g_assert_true (gtk_widget_is_ancestor (body, dialog));
+  awra_dialog_add_response (AWRA_DIALOG (dialog), "cancel", "Cancel");
+  awra_dialog_add_response (AWRA_DIALOG (dialog), "delete", "Delete");
+  awra_dialog_set_response_appearance (AWRA_DIALOG (dialog), "delete",
+                                       AWRA_BUTTON_APPEARANCE_DESTRUCTIVE);
+  awra_dialog_set_default_response (AWRA_DIALOG (dialog), "delete");
+  awra_dialog_set_close_response (AWRA_DIALOG (dialog), "cancel");
+  g_assert_cmpstr (awra_dialog_get_default_response (AWRA_DIALOG (dialog)), ==, "delete");
+  g_assert_cmpstr (awra_dialog_get_close_response (AWRA_DIALOG (dialog)), ==, "cancel");
+  g_assert_nonnull (gtk_window_get_default_widget (GTK_WINDOW (dialog)));
+  g_signal_connect (dialog, "response", G_CALLBACK (dialog_response_cb), &log);
+  g_signal_connect (dialog, "response::delete", G_CALLBACK (dialog_response_cb), &saved);
+
+  /* Closing answers the close response (GTK only closes realized windows). */
+  gtk_widget_realize (dialog);
+  gtk_window_close (GTK_WINDOW (dialog));
+  g_assert_cmpuint (log.count, ==, 1);
+  g_assert_cmpstr (log.last, ==, "cancel");
+  g_assert_cmpuint (saved.count, ==, 0);
+  g_object_unref (dialog);
+
+  dialog = g_object_ref_sink (awra_dialog_new (NULL));
+  awra_dialog_add_response (AWRA_DIALOG (dialog), "delete", "Delete");
+  awra_dialog_set_close_response (AWRA_DIALOG (dialog), "cancel");
+  g_signal_connect (dialog, "response", G_CALLBACK (dialog_response_cb), &log);
+  g_signal_connect (dialog, "response::delete", G_CALLBACK (dialog_response_cb), &saved);
+  awra_dialog_respond (AWRA_DIALOG (dialog), "delete");
+  /* Once, not also as a close response. */
+  g_assert_cmpuint (log.count, ==, 2);
+  g_assert_cmpstr (log.last, ==, "delete");
+  g_assert_cmpuint (saved.count, ==, 1);
+  g_object_unref (dialog);
+  g_free (log.last);
+  g_free (saved.last);
+}
+
+static GtkWidget *
+find_role (GtkWidget         *widget,
+           GtkAccessibleRole  role)
+{
+  if (gtk_accessible_get_accessible_role (GTK_ACCESSIBLE (widget)) == role)
+    return widget;
+  for (GtkWidget *child = gtk_widget_get_first_child (widget); child != NULL;
+       child = gtk_widget_get_next_sibling (child)) {
+    GtkWidget *found = find_role (child, role);
+
+    if (found != NULL)
+      return found;
+  }
+  return NULL;
+}
+
+/* What assistive technologies are told: radio segments with one Tab stop,
+ * required form fields, toasts as status updates, tabs of a tab list. */
+static void
+test_accessibility_semantics (void)
+{
+  g_autoptr (GtkWidget) segmented = g_object_ref_sink (awra_segmented_control_new ());
+  g_autoptr (GtkWidget) row = g_object_ref_sink (awra_form_row_new ());
+  g_autoptr (GtkWidget) toasts = g_object_ref_sink (awra_toast_overlay_new ());
+  g_autoptr (GtkWidget) tabs = g_object_ref_sink (awra_tab_view_new ());
+  GtkWidget *entry = awra_entry_new ();
+  GtkWidget *first;
+  GtkWidget *second;
+
+  awra_segmented_control_append (AWRA_SEGMENTED_CONTROL (segmented), "Day");
+  awra_segmented_control_append (AWRA_SEGMENTED_CONTROL (segmented), "Week");
+  g_assert_cmpint (gtk_accessible_get_accessible_role (GTK_ACCESSIBLE (segmented)), ==,
+                   GTK_ACCESSIBLE_ROLE_RADIO_GROUP);
+  first = gtk_widget_get_first_child (gtk_widget_get_first_child (segmented));
+  second = gtk_widget_get_next_sibling (first);
+  g_assert_cmpint (gtk_accessible_get_accessible_role (GTK_ACCESSIBLE (first)), ==,
+                   GTK_ACCESSIBLE_ROLE_RADIO);
+  gtk_test_accessible_assert_state (first, GTK_ACCESSIBLE_STATE_CHECKED,
+                                    GTK_ACCESSIBLE_TRISTATE_TRUE);
+  g_assert_true (gtk_widget_get_focusable (first));
+  g_assert_false (gtk_widget_get_focusable (second));
+  awra_segmented_control_set_selected (AWRA_SEGMENTED_CONTROL (segmented), 1);
+  gtk_test_accessible_assert_state (second, GTK_ACCESSIBLE_STATE_CHECKED,
+                                    GTK_ACCESSIBLE_TRISTATE_TRUE);
+  g_assert_false (gtk_widget_get_focusable (first));
+  g_assert_true (gtk_widget_get_focusable (second));
+
+  awra_form_row_set_label (AWRA_FORM_ROW (row), "Name");
+  awra_form_row_set_control (AWRA_FORM_ROW (row), entry);
+  awra_form_row_set_required (AWRA_FORM_ROW (row), TRUE);
+  gtk_test_accessible_assert_property (entry, GTK_ACCESSIBLE_PROPERTY_REQUIRED, TRUE);
+
+  g_assert_nonnull (find_role (toasts, GTK_ACCESSIBLE_ROLE_STATUS));
+
+  awra_tab_view_append (AWRA_TAB_VIEW (tabs), gtk_label_new ("One"), "One", FALSE);
+  g_assert_nonnull (find_role (tabs, GTK_ACCESSIBLE_ROLE_TAB_LIST));
+  g_assert_nonnull (find_role (tabs, GTK_ACCESSIBLE_ROLE_TAB));
+}
+
 /* Interactive suffix controls must see clicks before the row claims them. */
 static void
 test_action_row_suffix_receives_clicks (void)
@@ -2663,6 +2787,10 @@ main (int   argc,
                    test_filter_bar_measured_for_its_layout);
   g_test_add_func ("/awra/widgets/navigation-direction",
                    test_navigation_direction);
+  g_test_add_func ("/awra/widgets/dialog-responses",
+                   test_dialog_responses);
+  g_test_add_func ("/awra/widgets/accessibility-semantics",
+                   test_accessibility_semantics);
   g_test_add_func ("/awra/widgets/action-row-suffix-receives-clicks",
                    test_action_row_suffix_receives_clicks);
   g_test_add_func ("/awra/widgets/window-popover", test_window_and_popover);

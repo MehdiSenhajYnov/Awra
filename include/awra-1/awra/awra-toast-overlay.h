@@ -19,6 +19,17 @@ GtkWidget *awra_toast_overlay_get_child    (AwraToastOverlay *self);
  */
 void       awra_toast_overlay_set_child    (AwraToastOverlay *self,
                                             GtkWidget        *child);
+/**
+ * awra_toast_overlay_show_message:
+ * @self: an Awra toast overlay
+ * @message: the message
+ * @timeout_ms: the delay before the toast hides, or 0 to keep it visible
+ *
+ * Shows a toast, replacing any visible toast. It is announced to assistive
+ * technologies, and stays while the pointer is over it or focus is in it.
+ * awra_toast_overlay_get_current_toast_id() then gives its identifier, for
+ * awra_toast_overlay_dismiss() and #AwraToastOverlay::dismissed.
+ */
 void       awra_toast_overlay_show_message (AwraToastOverlay *self,
                                             const char       *message,
                                             guint             timeout_ms);

@@ -29,6 +29,23 @@ G_DEFINE_FINAL_TYPE (AwraSegmentedControl,
                      awra_segmented_control,
                      GTK_TYPE_WIDGET)
 
+/* A radio group: one Tab stop, the selected segment, which the arrow keys
+ * move; assistive technologies hear radio buttons, checked or not. */
+static void
+update_segments (AwraSegmentedControl *self)
+{
+  for (guint i = 0; i < self->buttons->len; i++) {
+    GtkWidget *button = g_ptr_array_index (self->buttons, i);
+    gboolean selected = i == self->selected;
+
+    gtk_widget_set_focusable (button, selected || self->selected >= self->buttons->len);
+    gtk_accessible_update_state (GTK_ACCESSIBLE (button), GTK_ACCESSIBLE_STATE_CHECKED,
+                                 selected ? GTK_ACCESSIBLE_TRISTATE_TRUE
+                                          : GTK_ACCESSIBLE_TRISTATE_FALSE,
+                                 -1);
+  }
+}
+
 static void
 segment_toggled_cb (GtkToggleButton      *button,
                     AwraSegmentedControl *self)
@@ -44,8 +61,39 @@ segment_toggled_cb (GtkToggleButton      *button,
   if (selected >= self->buttons->len || selected == self->selected)
     return;
   self->selected = selected;
+  update_segments (self);
   g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_SELECTED]);
   g_signal_emit (self, signals[CHANGED], 0, selected);
+}
+
+static gboolean
+move_selection_cb (GtkWidget *widget,
+                   GVariant  *args,
+                   gpointer   user_data)
+{
+  AwraSegmentedControl *self = AWRA_SEGMENTED_CONTROL (widget);
+  int step = g_variant_get_int32 (args);
+  guint count = self->buttons->len;
+  guint target;
+
+  (void) user_data;
+  if (count == 0 || self->selected >= count)
+    return FALSE;
+  /* Left and right follow the reading direction; Home and End go to the
+   * first and last segments. */
+  if (gtk_widget_get_direction (widget) == GTK_TEXT_DIR_RTL && (step == 1 || step == -1))
+    step = -step;
+  if (step == G_MININT32)
+    target = 0;
+  else if (step == G_MAXINT32)
+    target = count - 1;
+  else
+    target = (guint) CLAMP ((int) self->selected + step, 0, (int) count - 1);
+  if (target == self->selected)
+    return TRUE;
+  awra_segmented_control_set_selected (self, target);
+  gtk_widget_grab_focus (g_ptr_array_index (self->buttons, target));
+  return TRUE;
 }
 
 static void
@@ -134,7 +182,13 @@ awra_segmented_control_class_init (AwraSegmentedControlClass *klass)
   gtk_widget_class_set_layout_manager_type (widget_class, GTK_TYPE_BIN_LAYOUT);
   gtk_widget_class_set_css_name (widget_class, "awrasegmentedcontrol");
   gtk_widget_class_set_accessible_role (widget_class,
-                                        GTK_ACCESSIBLE_ROLE_GROUP);
+                                        GTK_ACCESSIBLE_ROLE_RADIO_GROUP);
+  gtk_widget_class_add_binding (widget_class, GDK_KEY_Right, 0, move_selection_cb, "i", 1);
+  gtk_widget_class_add_binding (widget_class, GDK_KEY_KP_Right, 0, move_selection_cb, "i", 1);
+  gtk_widget_class_add_binding (widget_class, GDK_KEY_Left, 0, move_selection_cb, "i", -1);
+  gtk_widget_class_add_binding (widget_class, GDK_KEY_KP_Left, 0, move_selection_cb, "i", -1);
+  gtk_widget_class_add_binding (widget_class, GDK_KEY_Home, 0, move_selection_cb, "i", G_MININT32);
+  gtk_widget_class_add_binding (widget_class, GDK_KEY_End, 0, move_selection_cb, "i", G_MAXINT32);
 }
 
 static void
@@ -164,7 +218,8 @@ awra_segmented_control_append (AwraSegmentedControl *self,
                         GTK_INVALID_LIST_POSITION);
   g_return_val_if_fail (label != NULL, GTK_INVALID_LIST_POSITION);
   position = self->buttons->len;
-  button = awra_toggle_button_new_with_label (label);
+  button = g_object_new (AWRA_TYPE_TOGGLE_BUTTON, "label", label,
+                         "accessible-role", GTK_ACCESSIBLE_ROLE_RADIO, NULL);
   gtk_widget_add_css_class (button, "awra-segment");
   if (position > 0)
     gtk_toggle_button_set_group (GTK_TOGGLE_BUTTON (button),
@@ -178,6 +233,7 @@ awra_segmented_control_append (AwraSegmentedControl *self,
   gtk_box_append (self->box, button);
   if (position == 0)
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button), TRUE);
+  update_segments (self);
   g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_N_ITEMS]);
   return position;
 }

@@ -463,6 +463,7 @@ awra_tab_strip_class_init (AwraTabStripClass *klass)
   widget_class->size_allocate = awra_tab_strip_size_allocate;
   widget_class->snapshot = awra_tab_strip_snapshot;
   gtk_widget_class_set_css_name (widget_class, "awratabstrip");
+  gtk_widget_class_set_accessible_role (widget_class, GTK_ACCESSIBLE_ROLE_TAB_LIST);
 }
 
 static void
@@ -766,6 +767,8 @@ update_selected_tab (AwraTabView *self)
       gtk_widget_remove_css_class (info->tab, "awra-tab-selected");
     gtk_toggle_button_set_active (info->select_button,
                                   is_selected);
+    gtk_accessible_update_state (GTK_ACCESSIBLE (info->select_button),
+                                 GTK_ACCESSIBLE_STATE_SELECTED, is_selected, -1);
     if (info->close_button != NULL) {
       if (show_close)
         gtk_widget_add_css_class (info->close_button,
@@ -862,7 +865,12 @@ append_page (AwraTabView *self,
   info->title_visible = TRUE;
   info->tab = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
   info->body = GTK_OVERLAY (gtk_overlay_new ());
-  info->select_button = GTK_TOGGLE_BUTTON (gtk_toggle_button_new ());
+  /* Exposed as a tab of a tab list, controlling its page. */
+  info->select_button = GTK_TOGGLE_BUTTON (
+    g_object_new (GTK_TYPE_TOGGLE_BUTTON, "accessible-role", GTK_ACCESSIBLE_ROLE_TAB, NULL));
+  gtk_accessible_update_relation (GTK_ACCESSIBLE (info->select_button),
+                                  GTK_ACCESSIBLE_RELATION_CONTROLS, page, NULL,
+                                  -1);
   info->select_content = GTK_BOX (
     gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6));
   info->title = AWRA_TAB_TITLE (awra_tab_title_new (title));
@@ -1075,6 +1083,35 @@ awra_tab_view_set_property (GObject      *object,
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 }
 
+/* Ctrl+Tab and Ctrl+Page Down select the next tab, Ctrl+Shift+Tab and
+ * Ctrl+Page Up the previous one, around the ends. */
+static gboolean
+select_relative_cb (GtkWidget *widget,
+                    GVariant  *args,
+                    gpointer   user_data)
+{
+  AwraTabView *self = AWRA_TAB_VIEW (widget);
+  GtkWidget *selected = gtk_stack_get_visible_child (self->stack);
+  int step = g_variant_get_int32 (args);
+  guint count = self->pages->len;
+
+  (void) user_data;
+  if (count < 2)
+    return FALSE;
+  for (guint i = 0; i < count; i++) {
+    AwraTabPage *info = g_ptr_array_index (self->pages, i);
+
+    if (info->page == selected) {
+      AwraTabPage *next = g_ptr_array_index (self->pages, (i + count + step) % count);
+
+      awra_tab_view_set_selected_page (self, next->page);
+      gtk_widget_grab_focus (GTK_WIDGET (next->select_button));
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
 static void
 awra_tab_view_class_init (AwraTabViewClass *klass)
 {
@@ -1120,6 +1157,18 @@ awra_tab_view_class_init (AwraTabViewClass *klass)
                   1,
                   GTK_TYPE_WIDGET);
   gtk_widget_class_set_css_name (widget_class, "awratabview");
+  gtk_widget_class_add_binding (widget_class, GDK_KEY_Tab, GDK_CONTROL_MASK,
+                                select_relative_cb, "i", 1);
+  gtk_widget_class_add_binding (widget_class, GDK_KEY_ISO_Left_Tab,
+                                GDK_CONTROL_MASK | GDK_SHIFT_MASK,
+                                select_relative_cb, "i", -1);
+  gtk_widget_class_add_binding (widget_class, GDK_KEY_Tab,
+                                GDK_CONTROL_MASK | GDK_SHIFT_MASK,
+                                select_relative_cb, "i", -1);
+  gtk_widget_class_add_binding (widget_class, GDK_KEY_Page_Down, GDK_CONTROL_MASK,
+                                select_relative_cb, "i", 1);
+  gtk_widget_class_add_binding (widget_class, GDK_KEY_Page_Up, GDK_CONTROL_MASK,
+                                select_relative_cb, "i", -1);
 }
 
 static void
@@ -1130,7 +1179,10 @@ awra_tab_view_init (AwraTabView *self)
   self->pages = g_ptr_array_new_with_free_func (tab_page_free);
   self->box = GTK_BOX (gtk_box_new (GTK_ORIENTATION_VERTICAL, 0));
   self->tab_bar = GTK_BOX (gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0));
-  self->pinned_tabs = GTK_BOX (gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0));
+  self->pinned_tabs = GTK_BOX (g_object_new (GTK_TYPE_BOX, "orientation",
+                                             GTK_ORIENTATION_HORIZONTAL,
+                                             "accessible-role",
+                                             GTK_ACCESSIBLE_ROLE_TAB_LIST, NULL));
   self->tab_scroller = GTK_SCROLLED_WINDOW (gtk_scrolled_window_new ());
   self->tab_viewport_mask = awra_tab_viewport_mask_new (self->tab_scroller);
   self->tab_strip = awra_tab_strip_new ();

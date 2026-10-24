@@ -67,32 +67,61 @@ reset_validation_classes (GtkWidget *widget)
   gtk_widget_remove_css_class (widget, "awra-validation-error");
 }
 
-static void
-update_accessibility (AwraFormRow *self)
+/* The widget that takes focus: the control itself, or the one it wraps
+ * (switches, spin buttons and search entries wrap a GTK widget). */
+static GtkWidget *
+focus_target (GtkWidget *control)
 {
-  if (self->control == NULL)
-    return;
-  gtk_label_set_mnemonic_widget (self->label_widget, self->control);
+  if (gtk_widget_get_focusable (control))
+    return control;
+  for (GtkWidget *child = gtk_widget_get_first_child (control); child != NULL;
+       child = gtk_widget_get_next_sibling (child)) {
+    GtkWidget *target = focus_target (child);
+
+    if (target != NULL)
+      return target;
+  }
+  return NULL;
+}
+
+static void
+describe (AwraFormRow *self,
+          GtkWidget   *widget)
+{
   gtk_accessible_update_property (
-    GTK_ACCESSIBLE (self->control),
+    GTK_ACCESSIBLE (widget),
     GTK_ACCESSIBLE_PROPERTY_LABEL,
     self->label != NULL ? self->label : "",
-    -1);
-  gtk_accessible_update_state (
-    GTK_ACCESSIBLE (self->control),
-    GTK_ACCESSIBLE_STATE_INVALID,
-    self->validation_state == AWRA_VALIDATION_STATE_ERROR
-      ? GTK_ACCESSIBLE_INVALID_TRUE
-      : GTK_ACCESSIBLE_INVALID_FALSE,
-    -1);
-  gtk_accessible_update_property (
-    GTK_ACCESSIBLE (self->control),
+    GTK_ACCESSIBLE_PROPERTY_REQUIRED,
+    self->required,
     GTK_ACCESSIBLE_PROPERTY_DESCRIPTION,
     self->validation_state == AWRA_VALIDATION_STATE_ERROR &&
     self->error_message != NULL
       ? self->error_message
       : (self->help_text != NULL ? self->help_text : ""),
     -1);
+  gtk_accessible_update_state (
+    GTK_ACCESSIBLE (widget),
+    GTK_ACCESSIBLE_STATE_INVALID,
+    self->validation_state == AWRA_VALIDATION_STATE_ERROR
+      ? GTK_ACCESSIBLE_INVALID_TRUE
+      : GTK_ACCESSIBLE_INVALID_FALSE,
+    -1);
+}
+
+static void
+update_accessibility (AwraFormRow *self)
+{
+  GtkWidget *target;
+
+  if (self->control == NULL)
+    return;
+  target = focus_target (self->control);
+  gtk_label_set_mnemonic_widget (self->label_widget,
+                                 target != NULL ? target : self->control);
+  describe (self, self->control);
+  if (target != NULL && target != self->control)
+    describe (self, target);
 }
 
 static void
@@ -477,6 +506,6 @@ awra_form_row_get_label_widget (AwraFormRow *self)
   return GTK_WIDGET (self->label_widget);
 }
 gboolean awra_form_row_get_required (AwraFormRow *self) { g_return_val_if_fail (AWRA_IS_FORM_ROW (self), FALSE); return self->required; }
-void awra_form_row_set_required (AwraFormRow *self, gboolean required) { g_return_if_fail (AWRA_IS_FORM_ROW (self)); required = !!required; if (self->required == required) return; self->required = required; update_label (self); g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_REQUIRED]); }
+void awra_form_row_set_required (AwraFormRow *self, gboolean required) { g_return_if_fail (AWRA_IS_FORM_ROW (self)); required = !!required; if (self->required == required) return; self->required = required; update_label (self); update_accessibility (self); g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_REQUIRED]); }
 AwraValidationState awra_form_row_get_validation_state (AwraFormRow *self) { g_return_val_if_fail (AWRA_IS_FORM_ROW (self), AWRA_VALIDATION_STATE_NONE); return self->validation_state; }
 void awra_form_row_set_validation_state (AwraFormRow *self, AwraValidationState state) { g_return_if_fail (AWRA_IS_FORM_ROW (self)); g_return_if_fail (validation_state_is_valid (state)); if (self->validation_state == state) return; self->validation_state = state; update_validation (self); g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_VALIDATION_STATE]); }

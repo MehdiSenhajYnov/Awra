@@ -15,6 +15,10 @@ struct _AwraToastOverlay {
   GtkLabel *label;
   GtkButton *action_button;
   guint timeout_id;
+  /* The current toast's delay, kept while the pointer or focus holds it. */
+  guint timeout_ms;
+  gboolean held_by_pointer;
+  gboolean held_by_focus;
   guint current_id;
   guint last_id;
   AwraStyleManager *style_manager;
@@ -53,6 +57,61 @@ static void hide_current (AwraToastOverlay *self) {
 static gboolean hide_toast_cb (gpointer data) {
   AwraToastOverlay *self = data; self->timeout_id = 0; hide_current (self); return G_SOURCE_REMOVE;
 }
+
+/* A toast stays while the pointer is over it or focus is in it, so it can
+ * be read and its action reached; its full delay starts again after. */
+static void
+update_timeout (AwraToastOverlay *self)
+{
+  gboolean held = self->held_by_pointer || self->held_by_focus;
+
+  if (held || self->current_id == 0 || self->timeout_ms == 0) {
+    g_clear_handle_id (&self->timeout_id, g_source_remove);
+    return;
+  }
+  if (self->timeout_id == 0)
+    self->timeout_id = g_timeout_add (self->timeout_ms, hide_toast_cb, self);
+}
+
+static void
+pointer_enter_cb (GtkEventControllerMotion *controller,
+                  double                    x,
+                  double                    y,
+                  AwraToastOverlay         *self)
+{
+  (void) controller;
+  (void) x;
+  (void) y;
+  self->held_by_pointer = TRUE;
+  update_timeout (self);
+}
+
+static void
+pointer_leave_cb (GtkEventControllerMotion *controller,
+                  AwraToastOverlay         *self)
+{
+  (void) controller;
+  self->held_by_pointer = FALSE;
+  update_timeout (self);
+}
+
+static void
+focus_enter_cb (GtkEventControllerFocus *controller,
+                AwraToastOverlay        *self)
+{
+  (void) controller;
+  self->held_by_focus = TRUE;
+  update_timeout (self);
+}
+
+static void
+focus_leave_cb (GtkEventControllerFocus *controller,
+                AwraToastOverlay        *self)
+{
+  (void) controller;
+  self->held_by_focus = FALSE;
+  update_timeout (self);
+}
 static void action_clicked_cb (GtkButton *button, AwraToastOverlay *self) { (void) button; hide_current (self); }
 static guint show_toast (AwraToastOverlay *self, const char *message, const char *button_label, const char *action, guint timeout_ms) {
   guint id;
@@ -66,7 +125,11 @@ static guint show_toast (AwraToastOverlay *self, const char *message, const char
   gtk_actionable_set_detailed_action_name (GTK_ACTIONABLE (self->action_button), action);
   gtk_revealer_set_reveal_child (self->revealer, TRUE);
   g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_REVEALED]);
-  self->timeout_id = timeout_ms > 0 ? g_timeout_add (timeout_ms, hide_toast_cb, self) : 0;
+  /* Screen readers hear it without focus moving. */
+  gtk_accessible_announce (GTK_ACCESSIBLE (self), message,
+                           GTK_ACCESSIBLE_ANNOUNCEMENT_PRIORITY_MEDIUM);
+  self->timeout_ms = timeout_ms;
+  update_timeout (self);
   return id;
 }
 static void awra_toast_overlay_dispose (GObject *object) {
@@ -112,8 +175,21 @@ static void awra_toast_overlay_init (AwraToastOverlay *self) {
   GtkWidget *content;
   self->overlay = GTK_OVERLAY (gtk_overlay_new ()); self->revealer = GTK_REVEALER (gtk_revealer_new ());
   surface = awra_surface_new_with_role (AWRA_SURFACE_ROLE_HUD); awra_surface_set_elevation_level (AWRA_SURFACE (surface), AWRA_ELEVATION_FLOATING);
-  content = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+  /* A status: assistive technologies treat its text as an update. */
+  content = g_object_new (GTK_TYPE_BOX, "orientation", GTK_ORIENTATION_HORIZONTAL,
+                          "accessible-role", GTK_ACCESSIBLE_ROLE_STATUS, NULL);
   gtk_widget_add_css_class (content, "awra-toast-content");
+  {
+    GtkEventController *motion = gtk_event_controller_motion_new ();
+    GtkEventController *focus = gtk_event_controller_focus_new ();
+
+    g_signal_connect (motion, "enter", G_CALLBACK (pointer_enter_cb), self);
+    g_signal_connect (motion, "leave", G_CALLBACK (pointer_leave_cb), self);
+    g_signal_connect (focus, "enter", G_CALLBACK (focus_enter_cb), self);
+    g_signal_connect (focus, "leave", G_CALLBACK (focus_leave_cb), self);
+    gtk_widget_add_controller (content, motion);
+    gtk_widget_add_controller (content, focus);
+  }
   self->label = GTK_LABEL (gtk_label_new (NULL)); gtk_widget_add_css_class (GTK_WIDGET (self->label), "awra-toast-label");
   gtk_label_set_wrap (self->label, TRUE); gtk_label_set_max_width_chars (self->label, 60); gtk_label_set_xalign (self->label, 0.0f);
   self->action_button = GTK_BUTTON (awra_button_new_with_label (""));
