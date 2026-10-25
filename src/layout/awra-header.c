@@ -657,6 +657,10 @@ awra_header_init (AwraHeader *self)
   self->subtitle = GTK_LABEL (gtk_label_new (NULL));
   self->start_controls = gtk_window_controls_new (GTK_PACK_START);
   self->end_controls = gtk_window_controls_new (GTK_PACK_END);
+  /* The side boxes fill the header; caption buttons keep their own square
+   * allocation instead of stretching to the full height of the chrome. */
+  gtk_widget_set_valign (self->start_controls, GTK_ALIGN_CENTER);
+  gtk_widget_set_valign (self->end_controls, GTK_ALIGN_CENTER);
 
   g_signal_connect (self->start_controls, "notify::empty",
                     G_CALLBACK (window_controls_empty_changed_cb), self);

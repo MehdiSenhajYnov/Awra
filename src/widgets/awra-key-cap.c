@@ -575,9 +575,13 @@ awra_key_cap_snapshot (GtkWidget   *widget,
     color = *awra_token_set_get_accent (tokens);
     color.alpha = 0.22 + 0.30 * self->pulse;
     gsk_rounded_rect_init_from_rect (&glow, &bounds, radius);
+    /* Pulse opacity only. The Cairo renderer caches corner masks by exact
+     * blur and corner radii; animating spread/blur adds a new mask each frame.
+     * On Windows each mask owns GDI resources, eventually exhausting the
+     * process handle limit during continuous playback. Keep the geometry at
+     * the midpoint of the pulse so these masks can be reused. */
     gtk_snapshot_append_outset_shadow (snapshot, &glow, &color, 0.0f, 0.0f,
-                                       1.0f + 2.0f * (float) self->pulse,
-                                       6.0f + 4.0f * (float) self->pulse);
+                                       2.0f, 8.0f);
   }
 
   /* Raised caps cast a short contact shadow that collapses while pressed. */

@@ -880,8 +880,8 @@ awrasplitview paned > separator {
 
 .awra-titlebar windowcontrols button,
 .awra-header-controls button {
-  min-width: 24px;
-  min-height: 24px;
+  min-width: 32px;
+  min-height: 32px;
   margin: 0;
   padding: 0;
   border: 0;

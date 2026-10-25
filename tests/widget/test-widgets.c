@@ -1967,7 +1967,19 @@ test_command_palette (void)
     g_assert_nonnull (find_descendant_with_class (palette,
                                                   "awra-command-accel"));
   }
-  gtk_window_destroy (GTK_WINDOW (palette));
+  {
+    GWeakRef weak;
+    g_autoptr (GtkWidget) alive = NULL;
+
+    /* A language binding releases its transfer-full result after present().
+     * GTK must still own the palette, just as it owns other toplevels. */
+    g_weak_ref_init (&weak, palette);
+    g_object_unref (palette);
+    alive = g_weak_ref_get (&weak);
+    g_assert_nonnull (alive);
+    gtk_window_destroy (GTK_WINDOW (alive));
+    g_weak_ref_clear (&weak);
+  }
   gtk_window_destroy (GTK_WINDOW (parent));
 }
 

@@ -29,6 +29,7 @@ struct _AwraCommandPalette {
   char *placeholder_text;
   char *empty_text;
   GWeakRef previous_focus;
+  gboolean had_focus;
 };
 
 enum { PROP_0, PROP_MENU_MODEL, PROP_TITLE, PROP_QUERY,
@@ -238,6 +239,37 @@ key_pressed_cb (GtkEventControllerKey *controller, guint keyval,
   return GDK_EVENT_PROPAGATE;
 }
 
+static gboolean
+close_when_inactive (gpointer data)
+{
+  AwraCommandPalette *self = data;
+
+  if (gtk_widget_get_visible (GTK_WIDGET (self)) &&
+      !gtk_window_is_active (GTK_WINDOW (self))) {
+    /* An outside click chose a new focus target, possibly in another app.
+     * Do not move focus back to the field that opened the palette. */
+    g_weak_ref_set (&self->previous_focus, NULL);
+    awra_command_palette_close (self);
+  }
+  return G_SOURCE_REMOVE;
+}
+
+static void
+active_changed_cb (GtkWindow          *window,
+                   GParamSpec         *pspec,
+                   AwraCommandPalette *self)
+{
+  (void) pspec;
+  if (gtk_window_is_active (window)) {
+    self->had_focus = TRUE;
+  } else if (self->had_focus && gtk_widget_get_visible (GTK_WIDGET (self))) {
+    /* Defer past the current event: a command may open another window and
+     * close the palette itself. Keep self alive until that event finishes. */
+    g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, close_when_inactive,
+                     g_object_ref (self), g_object_unref);
+  }
+}
+
 static void
 awra_command_palette_dispose (GObject *object)
 {
@@ -328,10 +360,14 @@ awra_command_palette_init (AwraCommandPalette *self)
                          AWRA_SURFACE_ROLE_DIALOG);
   awra_surface_set_elevation_level (
     awra_window_get_root_surface (AWRA_WINDOW (self)), AWRA_ELEVATION_MODAL);
-  gtk_window_set_modal (GTK_WINDOW (self), TRUE);
+  /* Like a command popup, allow the parent to receive an outside click.
+   * A modal toplevel would swallow that click and never lose activation. */
+  gtk_window_set_modal (GTK_WINDOW (self), FALSE);
   gtk_window_set_resizable (GTK_WINDOW (self), FALSE);
   gtk_window_set_default_size (GTK_WINDOW (self), 560, 460);
   gtk_widget_add_css_class (GTK_WIDGET (self), "awra-command-palette");
+  g_signal_connect (self, "notify::is-active",
+                    G_CALLBACK (active_changed_cb), self);
   g_signal_connect (awra_search_entry_get_delegate (self->search),
                     "search-changed",
                     G_CALLBACK (search_changed_cb), self);
@@ -340,7 +376,19 @@ awra_command_palette_init (AwraCommandPalette *self)
   rebuild_results (self);
 }
 
-GtkWidget *awra_command_palette_new (GtkWindow *parent) { AwraCommandPalette *self; g_return_val_if_fail (parent == NULL || GTK_IS_WINDOW (parent), NULL); self = g_object_new (AWRA_TYPE_COMMAND_PALETTE, NULL); if (parent != NULL) gtk_window_set_transient_for (GTK_WINDOW (self), parent); return GTK_WIDGET (self); }
+GtkWidget *
+awra_command_palette_new (GtkWindow *parent)
+{
+  AwraCommandPalette *self;
+
+  g_return_val_if_fail (parent == NULL || GTK_IS_WINDOW (parent), NULL);
+  self = g_object_new (AWRA_TYPE_COMMAND_PALETTE, NULL);
+  if (parent != NULL)
+    gtk_window_set_transient_for (GTK_WINDOW (self), parent);
+  /* GtkWindow owns its initial reference until destruction. The constructor
+   * promises transfer-full, so callers (including Rust) need a separate ref. */
+  return GTK_WIDGET (g_object_ref (self));
+}
 GMenuModel *awra_command_palette_get_menu_model (AwraCommandPalette *self) { g_return_val_if_fail (AWRA_IS_COMMAND_PALETTE (self), NULL); return self->model; }
 void awra_command_palette_set_menu_model (AwraCommandPalette *self, GMenuModel *model) { g_return_if_fail (AWRA_IS_COMMAND_PALETTE (self)); g_return_if_fail (model == NULL || G_IS_MENU_MODEL (model)); if (self->model == model) return; g_set_object (&self->model, model); g_ptr_array_set_size (self->commands, 0); g_ptr_array_set_size (self->sections, 0); if (model != NULL) collect_commands (self, model, NULL); rebuild_results (self); g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_MENU_MODEL]); }
 const char *awra_command_palette_get_title (AwraCommandPalette *self) { g_return_val_if_fail (AWRA_IS_COMMAND_PALETTE (self), NULL); return self->title; }
@@ -352,4 +400,17 @@ void awra_command_palette_set_placeholder_text (AwraCommandPalette *self, const 
 const char *awra_command_palette_get_empty_text (AwraCommandPalette *self) { g_return_val_if_fail (AWRA_IS_COMMAND_PALETTE (self), NULL); return self->empty_text; }
 void awra_command_palette_set_empty_text (AwraCommandPalette *self, const char *text) { const char *value; g_return_if_fail (AWRA_IS_COMMAND_PALETTE (self)); value = text != NULL ? text : _("No matching command"); if (g_strcmp0 (self->empty_text, value) == 0) return; g_free (self->empty_text); self->empty_text = g_strdup (value); gtk_label_set_text (self->empty, value); g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_EMPTY_TEXT]); }
 void awra_command_palette_present (AwraCommandPalette *self) { GtkWindow *parent; GtkWidget *focus = NULL; g_return_if_fail (AWRA_IS_COMMAND_PALETTE (self)); parent = gtk_window_get_transient_for (GTK_WINDOW (self)); if (parent != NULL) focus = gtk_root_get_focus (GTK_ROOT (parent)); g_weak_ref_set (&self->previous_focus, focus); gtk_window_present (GTK_WINDOW (self)); gtk_widget_grab_focus (GTK_WIDGET (self->search)); }
-void awra_command_palette_close (AwraCommandPalette *self) { g_autoptr (GtkWidget) focus = NULL; g_return_if_fail (AWRA_IS_COMMAND_PALETTE (self)); gtk_window_close (GTK_WINDOW (self)); focus = g_weak_ref_get (&self->previous_focus); if (focus != NULL && gtk_widget_get_sensitive (focus)) gtk_widget_grab_focus (focus); g_weak_ref_set (&self->previous_focus, NULL); }
+void
+awra_command_palette_close (AwraCommandPalette *self)
+{
+  g_autoptr (GtkWidget) focus = NULL;
+
+  g_return_if_fail (AWRA_IS_COMMAND_PALETTE (self));
+  focus = g_weak_ref_get (&self->previous_focus);
+  g_weak_ref_set (&self->previous_focus, NULL);
+  self->had_focus = FALSE;
+  /* Closing may release GTK's last reference. Do not access self afterward. */
+  gtk_window_close (GTK_WINDOW (self));
+  if (focus != NULL && gtk_widget_get_sensitive (focus))
+    gtk_widget_grab_focus (focus);
+}

@@ -119,6 +119,20 @@ test(
   is_parallel: false,
 )
 
+key_cap_resources = executable(
+  'test-key-cap-resources',
+  'performance/test-key-cap-resources.c',
+  dependencies: awra_dep,
+)
+
+test(
+  'key-cap-resources',
+  key_cap_resources,
+  env: ['GSK_RENDERER=cairo', 'GTK_A11Y=none'],
+  timeout: 30,
+  is_parallel: false,
+)
+
 fallback_context = executable(
   'test-fallback-context',
   'integration/test-fallback-context.c',
