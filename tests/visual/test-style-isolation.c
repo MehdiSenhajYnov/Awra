@@ -74,6 +74,34 @@ settle_ui (void)
 }
 
 static void
+popover_mapped_cb (GtkWidget *widget,
+                   GMainLoop *loop)
+{
+  (void) widget;
+  g_main_loop_quit (loop);
+}
+
+static void
+wait_for_popover_map (GtkWidget *popover)
+{
+  g_autoptr (GMainLoop) loop = g_main_loop_new (NULL, FALSE);
+  g_autoptr (GSource) timeout = g_timeout_source_new (2000);
+  gulong map_id;
+
+  if (!gtk_widget_get_mapped (popover)) {
+    map_id = g_signal_connect (popover, "map",
+                               G_CALLBACK (popover_mapped_cb), loop);
+    g_source_set_callback (timeout, quit_loop_cb, loop, NULL);
+    g_source_attach (timeout, NULL);
+    g_main_loop_run (loop);
+    g_source_destroy (timeout);
+    g_signal_handler_disconnect (popover, map_id);
+  }
+  settle_ui ();
+  g_assert_true (gtk_widget_get_mapped (popover));
+}
+
+static void
 settle_scroll_indicators (void)
 {
   g_autoptr (GMainLoop) loop = g_main_loop_new (NULL, FALSE);
@@ -488,10 +516,10 @@ run_probe_child (void)
   dropdown_popover = awra_dropdown_get_popover (dropdown);
   gtk_popover_set_autohide (GTK_POPOVER (dropdown_popover), FALSE);
   awra_dropdown_popup (dropdown);
-  settle_ui ();
-  g_assert_true (gtk_widget_get_mapped (GTK_WIDGET (dropdown_popover)));
+  wait_for_popover_map (GTK_WIDGET (dropdown_popover));
   g_assert_true (gtk_widget_grab_focus (gtk_widget_get_first_child (scene)));
   settle_scroll_indicators ();
+  g_assert_true (gtk_widget_get_mapped (GTK_WIDGET (dropdown_popover)));
   {
     g_autofree char *active_geometry = probe_geometry (scene);
     g_autofree char *active_pixels = snapshot_checksum (scene);
@@ -539,6 +567,7 @@ run_probe_child (void)
     g_assert_cmpstr (active_children, ==, inactive_children);
     g_assert_cmpstr (active_pixels, ==, inactive_pixels);
     gtk_widget_unset_state_flags (window, GTK_STATE_FLAG_BACKDROP);
+    settle_ui ();
   }
   print_probe_checksums (scene);
   {
@@ -556,8 +585,7 @@ run_probe_child (void)
   menu_popover = awra_menu_button_get_popover (menu_button);
   gtk_popover_set_autohide (GTK_POPOVER (menu_popover), FALSE);
   awra_menu_button_popup (menu_button);
-  settle_ui ();
-  g_assert_true (gtk_widget_get_mapped (GTK_WIDGET (menu_popover)));
+  wait_for_popover_map (GTK_WIDGET (menu_popover));
   {
     g_autofree char *checksum = snapshot_checksum (GTK_WIDGET (menu_popover));
 
