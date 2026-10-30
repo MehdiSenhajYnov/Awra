@@ -738,3 +738,73 @@ GTK 4.22 est recompilé pour MinGW (Fedora fournit 4.21, et Awra utilise
 `GtkPopoverBin` et `GtkReducedMotion`). Testé sous Wine : l'interface complète
 s'affiche, en repli opaque puisque Wine n'a pas DWM. Le flou réel reste à voir
 sur un vrai Windows.
+
+## 2026-10-29 — VLC Awra
+
+A real libVLC consumer exposed a missing interval ruler. Added `AwraTimeline`
+for seek requests, point markers, zoomed viewports, hovered-time previews and
+live/committed offset editing. Subtitle parsing and decoder ownership stay in
+the consumer. The accessible range interface supports both playback and offset
+modes; cancellation restores the initial edit. The API is projected through
+GIR and gtk-rs, with a Showcase example and external Python consumer.
+
+Media libraries also need GTK's virtualized collections. Added the semantic
+`collection-view` style role instead of wrapping GtkGridView or giving VLC its
+own stylesheet. VLC Awra composes existing navigation, panels, materials,
+controls, volume and waveform widgets without framework bypasses.
+
+
+## 2026-10-30 — VLC workflow audit
+
+Real pointer/keyboard and 5,000-item queue workflows exposed gaps missed by
+constructor/render smoke tests. `AwraOverlayBar` now owns the floating surface,
+canvas geometry, idle timer, focus/hover protection and reduced-motion policy.
+The timeline owns preview positioning in native logical coordinates, including
+RTL, drag and unmap cleanup. Overlay chrome is an opt-in `AwraWindow` composition;
+its mapped transitions keep the native CSD surface intact. Toasts can reserve
+measured bottom clearance. These APIs are projected through GIR and safe Rust.
+
+The audit also exposed a native lifetime error: creating the title binding in
+instance initialization could consume a GtkWindow reference too early. Binding
+after parent construction restores top-level ownership. Dialog/palette factories
+now honor their existing full-transfer contract. Native weak-reference checks
+and retained Python wrappers with forced collection cover destruction. Dialogs
+join the parent's application, and composite inputs forward focus rather than
+requiring consumers to target delegates for ordinary keyboard workflows.
+
+Native AV1 3840×2160/60 playback exposed two further generic rendering costs:
+language-bridge pixel copies and static-image mipmap generation on each live
+frame. `AwraFramePool` leases aligned RGB, I420 or NV12 storage to native producers;
+immutable textures retain the storage until the final consumer releases it.
+Its bounded, nonblocking acquisition never overwrites a retained image. RGB
+and correctly tagged planar YUV are supported. The pool is thread safe; each
+frame has one producer and publishes an immutable texture to consumers after sealing.
+
+`AwraTextureStream` keeps one dynamic paintable across frames, invalidates
+size only when geometry changes, and uses linear GPU sampling. It can serve
+the main and mini pictures without a second copy or a separate timer.
+Actual frame-clock paints on the reference rose from about 12 to 60 per second
+on the target GL renderer, keeping native 4K pixels. Vulkan on this driver
+remains less regular; the consumer selects GL by default while respecting an
+explicit `GSK_RENDERER`. No decoder or driver policy entered Awra.
+
+A smaller video surface also exposed unnecessary full-resolution GPU transfers.
+`AwraFrame.copy_scaled()` makes an encoded-plane bilinear preview in another
+bounded pool, without changing or downloading the original texture. RGB and
+both YUV layouts have color/lifetime tests. Rust keeps each lease with its
+producer; only the pool and published textures cross threads. The consumer
+keeps a native-resolution image for capture and feeds its compact view a
+surface-sized preview. Both views sustain approximately 60 measured paints/s.
+
+## 2026-10-30 — Window frame policy
+
+VLC Awra exposed rounded gaps at the edges of a maximized window. AwraWindow
+now resolves the outer frame and native blur region from the actual GTK window
+state: square, borderless and shadowless in maximized/fullscreen states by
+default. The public `keep-rounded-corners` boolean lets applications retain
+rounding, including live changes. Stored radii and corner/edge masks survive
+restoration; floating controls and nested surfaces do not inherit this policy.
+When GTK hides its native titlebar in fullscreen, the root supplies the top
+corners for the rounded opt-in. Consumers no longer need fullscreen corner-mask
+workarounds. Native state and rendered-alpha checks cover default/opt-in,
+docked/overlay composition and restoration on a private Wayland compositor.

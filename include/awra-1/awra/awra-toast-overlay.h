@@ -2,26 +2,25 @@
 #pragma once
 #include <gtk/gtk.h>
 G_BEGIN_DECLS
-#define AWRA_TYPE_TOAST_OVERLAY (awra_toast_overlay_get_type ())
-G_DECLARE_FINAL_TYPE (AwraToastOverlay, awra_toast_overlay, AWRA, TOAST_OVERLAY, GtkWidget)
-GtkWidget *awra_toast_overlay_new          (void);
+#define AWRA_TYPE_TOAST_OVERLAY (awra_toast_overlay_get_type())
+G_DECLARE_FINAL_TYPE(AwraToastOverlay, awra_toast_overlay, AWRA, TOAST_OVERLAY,
+                     GtkWidget)
+GtkWidget *awra_toast_overlay_new(void);
 /**
  * awra_toast_overlay_get_child:
  * @self: an Awra toast overlay
  *
  * Returns: (transfer none) (nullable): the main content
  */
-GtkWidget *awra_toast_overlay_get_child    (AwraToastOverlay *self);
+GtkWidget *awra_toast_overlay_get_child(AwraToastOverlay *self);
 /**
  * awra_toast_overlay_set_child:
  * @self: an Awra toast overlay
  * @child: (nullable): the main content, or %NULL
  */
-void       awra_toast_overlay_set_child    (AwraToastOverlay *self,
-                                            GtkWidget        *child);
-void       awra_toast_overlay_show_message (AwraToastOverlay *self,
-                                            const char       *message,
-                                            guint             timeout_ms);
+void awra_toast_overlay_set_child(AwraToastOverlay *self, GtkWidget *child);
+void awra_toast_overlay_show_message(AwraToastOverlay *self,
+                                     const char *message, guint timeout_ms);
 /**
  * awra_toast_overlay_show_with_action:
  * @self: an Awra toast overlay
@@ -37,11 +36,11 @@ void       awra_toast_overlay_show_message (AwraToastOverlay *self,
  *
  * Returns: a non-zero identifier for awra_toast_overlay_dismiss()
  */
-guint      awra_toast_overlay_show_with_action (AwraToastOverlay *self,
-                                                const char       *message,
-                                                const char       *button_label,
-                                                const char       *detailed_action_name,
-                                                guint             timeout_ms);
+guint awra_toast_overlay_show_with_action(AwraToastOverlay *self,
+                                          const char *message,
+                                          const char *button_label,
+                                          const char *detailed_action_name,
+                                          guint timeout_ms);
 /**
  * awra_toast_overlay_dismiss:
  * @self: an Awra toast overlay
@@ -50,14 +49,22 @@ guint      awra_toast_overlay_show_with_action (AwraToastOverlay *self,
  * Hides the toast if it is still the visible one; stale identifiers are
  * ignored.
  */
-void       awra_toast_overlay_dismiss      (AwraToastOverlay *self,
-                                            guint             toast_id);
+void awra_toast_overlay_dismiss(AwraToastOverlay *self, guint toast_id);
 /**
  * awra_toast_overlay_get_current_toast_id:
  * @self: an Awra toast overlay
  *
  * Returns: the identifier of the visible toast, or 0
  */
-guint      awra_toast_overlay_get_current_toast_id (AwraToastOverlay *self);
-gboolean   awra_toast_overlay_get_revealed (AwraToastOverlay *self);
+guint awra_toast_overlay_get_current_toast_id(AwraToastOverlay *self);
+gboolean awra_toast_overlay_get_revealed(AwraToastOverlay *self);
+/**
+ * awra_toast_overlay_set_bottom_inset:
+ * @self: a toast overlay
+ * @pixels: clearance from the lower edge, in logical pixels
+ *
+ * Keeps messages clear of floating toolbars or other application controls.
+ */
+void awra_toast_overlay_set_bottom_inset(AwraToastOverlay *self, guint pixels);
+guint awra_toast_overlay_get_bottom_inset(AwraToastOverlay *self);
 G_END_DECLS

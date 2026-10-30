@@ -258,3 +258,6 @@ msgstr "Zone de dépôt"
 #: src/widgets/awra-drop-zone.c:691
 msgid "Drop files to add them"
 msgstr "Dépose des fichiers pour les ajouter"
+
+msgid "Timeline"
+msgstr "Chronologie"

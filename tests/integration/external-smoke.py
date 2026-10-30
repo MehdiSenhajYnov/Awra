@@ -3,6 +3,7 @@
 
 """Exercise Awra exclusively through the installed-style GI contract."""
 
+import gc
 import gi
 
 gi.require_version("Gtk", "4.0")
@@ -153,12 +154,52 @@ def main() -> int:
     volume = Awra.VolumeControl.new()
     volume.set_muted(True)
     assert volume.get_effective_volume() == 0
+    timeline = Awra.Timeline.new()
+    timeline.set_duration(120)
+    timeline.add_interval(10, 15, "Cue")
+    timeline.set_offset(-0.5)
+    assert timeline.get_n_intervals() == 1
+    assert timeline.get_offset() == -0.5
     drop = Awra.DropZone.new()
     drop.set_accepted_extensions(["mp3"])
     assert drop.accepts_file(Gio.File.new_for_path("/tmp/a.MP3"))
     toast = Awra.ToastOverlay.new()
     toast_id = toast.show_with_action("Removed", "Undo", None, 0)
     toast.dismiss(toast_id)
+    source = Gdk.Paintable.new_empty(720, 576)
+    aspect = Awra.AspectPaintable.new(source, 16 / 9)
+    assert abs(aspect.get_intrinsic_aspect_ratio() - 16 / 9) < .001
+    assert aspect.get_paintable() is source
+    overlay = Awra.OverlayBar.new()
+    overlay.set_content(Gtk.Label(label="Canvas"))
+    overlay.set_bar(Awra.Button.new_with_label("Controls"))
+    overlay.set_inset(Awra.Spacing.NONE)
+    timeline.set_preview(Gtk.Label(label="Preview"))
+    assert timeline.get_preview() is not None
+    assert timeline.get_preview_popover() is not None
+    timeline.set_preview(None)
+    app = Gtk.Application(application_id="org.awra.GILifetime", flags=Gio.ApplicationFlags.NON_UNIQUE)
+    app.register()
+    window = Awra.Window.new(app)
+    assert not window.get_keep_rounded_corners()
+    window.set_keep_rounded_corners(True)
+    assert window.props.keep_rounded_corners
+    window.props.keep_rounded_corners = False
+    assert not window.get_keep_rounded_corners()
+    window.set_overlay_chrome(True)
+    window.set_overlay_chrome(False)
+    for _ in range(10):
+        for create in (Awra.Dialog.new, Awra.CommandPalette.new):
+            dialog = create(window)
+            dialog.destroy()
+            gc.collect()
+            dialog.get_title()  # A retained binding still owns a valid native object.
+            del dialog
+        gc.collect()
+    palette.destroy()
+    window.destroy()
+    gc.collect()
+    window.get_title()
     return 0
 
 

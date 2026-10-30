@@ -224,6 +224,13 @@ const RUST_LAYOUTS: &[(&str, Layout)] = &[
         },
     ),
     (
+        "AwraAspectPaintableClass",
+        Layout {
+            size: size_of::<AwraAspectPaintableClass>(),
+            alignment: align_of::<AwraAspectPaintableClass>(),
+        },
+    ),
+    (
         "AwraBadgeAppearance",
         Layout {
             size: size_of::<AwraBadgeAppearance>(),
@@ -434,6 +441,20 @@ const RUST_LAYOUTS: &[(&str, Layout)] = &[
         },
     ),
     (
+        "AwraFrameClass",
+        Layout {
+            size: size_of::<AwraFrameClass>(),
+            alignment: align_of::<AwraFrameClass>(),
+        },
+    ),
+    (
+        "AwraFramePoolClass",
+        Layout {
+            size: size_of::<AwraFramePoolClass>(),
+            alignment: align_of::<AwraFramePoolClass>(),
+        },
+    ),
+    (
         "AwraHeaderClass",
         Layout {
             size: size_of::<AwraHeaderClass>(),
@@ -585,6 +606,13 @@ const RUST_LAYOUTS: &[(&str, Layout)] = &[
         Layout {
             size: size_of::<AwraNavigationViewClass>(),
             alignment: align_of::<AwraNavigationViewClass>(),
+        },
+    ),
+    (
+        "AwraOverlayBarClass",
+        Layout {
+            size: size_of::<AwraOverlayBarClass>(),
+            alignment: align_of::<AwraOverlayBarClass>(),
         },
     ),
     (
@@ -802,6 +830,20 @@ const RUST_LAYOUTS: &[(&str, Layout)] = &[
         Layout {
             size: size_of::<AwraTextAreaClass>(),
             alignment: align_of::<AwraTextAreaClass>(),
+        },
+    ),
+    (
+        "AwraTextureStreamClass",
+        Layout {
+            size: size_of::<AwraTextureStreamClass>(),
+            alignment: align_of::<AwraTextureStreamClass>(),
+        },
+    ),
+    (
+        "AwraTimelineClass",
+        Layout {
+            size: size_of::<AwraTimelineClass>(),
+            alignment: align_of::<AwraTimelineClass>(),
         },
     ),
     (

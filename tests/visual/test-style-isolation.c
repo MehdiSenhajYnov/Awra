@@ -22,7 +22,7 @@ static const char hostile_css[] =
   "awradataview, awraselectiontoolbar, awratextarea, awrapasswordentry,"
   "awratagentry, awrachoicegroup, awrastatusbanner,"
   "awrakeycap, awrakeycap label, awrakeyboardview, awrashortcutcapture,"
-  "awrashortcutcapture label, awrawaveformview, awravolumecontrol,"
+  "awrashortcutcapture label, awrawaveformview, awratimeline, awravolumecontrol,"
   "awramediarow, awramediarow label, awradropzone, awradropzone label,"
   "awradropzone box,"
   "awradataview columnview,"
@@ -362,6 +362,11 @@ make_probe_scene (void)
     gtk_box_append (GTK_BOX (media), waveform);
     gtk_box_append (GTK_BOX (media), row);
     gtk_box_append (GTK_BOX (media), drop);
+    GtkWidget *timeline = awra_timeline_new ();
+    awra_timeline_set_duration (AWRA_TIMELINE (timeline), 60);
+    awra_timeline_set_position (AWRA_TIMELINE (timeline), 24);
+    awra_timeline_add_interval (AWRA_TIMELINE (timeline), 10, 20, "Cue");
+    gtk_box_append (GTK_BOX (media), timeline);
     gtk_grid_attach (GTK_GRID (grid), media, 0, 14, 3, 1);
   }
   g_object_set_data (G_OBJECT (grid), "awra-probe-dropdown", dropdown);

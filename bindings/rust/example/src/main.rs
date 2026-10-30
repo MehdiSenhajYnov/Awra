@@ -93,6 +93,47 @@ fn exercise_media_input_components() {
     waveform.set_marker_position(4.0);
     waveform.connect_marker_committed(|_, position| assert!(position >= 0.0));
 
+    let timeline = awra::Timeline::builder()
+        .duration(120.0)
+        .editable(true)
+        .build();
+    timeline.add_interval(10.0, 14.0, Some("Cue"));
+    timeline.set_offset(-0.5);
+    timeline.connect_offset_committed(|_, offset| assert!(offset.is_finite()));
+    assert_eq!(timeline.n_intervals(), 1);
+    assert_eq!(timeline.offset(), -0.5);
+    timeline.set_preview(Some(&awra::gtk::Label::new(Some("Preview"))));
+    assert!(timeline.preview().is_some());
+    let source = awra::gdk::Paintable::new_empty(720, 576);
+    let aspect = awra::AspectPaintable::new(&source, 16.0 / 9.0);
+    assert!((aspect.intrinsic_aspect_ratio() - 16.0 / 9.0).abs() < 0.001);
+    let pool = std::thread::spawn(|| {
+        awra::FramePool::new(4, 2, awra::gdk::MemoryFormat::R8g8b8a8, 2, None)
+            .expect("bounded frame pool")
+    })
+    .join()
+    .expect("frame producer");
+    let producer = pool.clone();
+    let texture = std::thread::spawn(move || {
+        let frame = producer.acquire().expect("frame lease");
+        assert_ne!(frame.address(0), 0);
+        let texture = frame.create_texture().expect("immutable texture");
+        assert_eq!(frame.address(0), 0);
+        texture
+    })
+    .join()
+    .expect("texture producer");
+    let stream = awra::TextureStream::new();
+    stream.set_frame(Some(&texture), 16.0 / 9.0);
+    assert!((stream.intrinsic_aspect_ratio() - 16.0 / 9.0).abs() < 0.001);
+    assert!(stream.texture().is_some());
+    stream.set_frame(None::<&awra::gdk::Texture>, 0.0);
+    let overlay = awra::OverlayBar::builder().auto_hide(true).build();
+    overlay.set_content(Some(&awra::gtk::Label::new(Some("Canvas"))));
+    overlay.set_bar(Some(&timeline));
+    overlay.set_inhibit_auto_hide(true);
+    assert!(overlay.is_inhibit_auto_hide());
+
     let row = awra::MediaRow::builder()
         .title("Rain")
         .duration(90.0)
@@ -140,6 +181,12 @@ fn main() {
     awra::init();
     exercise_projected_gtk_types();
     exercise_media_input_components();
+
+    let window = awra::Window::builder().keep_rounded_corners(true).build();
+    assert!(window.is_keep_rounded_corners());
+    window.set_keep_rounded_corners(false);
+    assert!(!window.is_keep_rounded_corners());
+    window.destroy();
 
     let header = awra::PageHeader::builder()
         .title("Safe generated bindings")

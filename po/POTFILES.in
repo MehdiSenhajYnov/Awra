@@ -13,3 +13,4 @@ src/widgets/awra-waveform-view.c
 src/widgets/awra-volume-control.c
 src/widgets/awra-media-row.c
 src/widgets/awra-drop-zone.c
+src/widgets/awra-timeline.c

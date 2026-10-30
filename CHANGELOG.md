@@ -4,6 +4,35 @@
 
 ## Unreleased
 
+- Make the outer window frame square and undecorated by default when maximized
+  or fullscreen. Add `AwraWindow:keep-rounded-corners` (default false) to retain
+  rounding per application, including live changes and fullscreen with a hidden
+  native titlebar. Restoration preserves the configured surface geometry;
+  floating controls and overlay chrome retain their own rounding.
+
+- Add decoder-independent `AwraFramePool` / `AwraFrame` for bounded aligned
+  RGB and planar YUV storage, immutable texture leases without pixel copies,
+  safe producer-to-consumer lifetime, and alpha-correct bilinear previews in
+  another bounded pool. `AwraTextureStream` updates multiple
+  pictures without per-frame layout or CPU mipmap generation;
+  `AwraAspectPaintable` handles non-square source pixels. C, GI and Rust
+  consumers cover ownership, color conversion and threaded production.
+
+- Add `AwraOverlayBar` with full-canvas allocation, floating controls, idle
+  policy, hover/focus protection and reduced-motion support.
+- Add opt-in overlay chrome to `AwraWindow`, timeline-owned pointer previews
+  and toast bottom clearance. Dock/overlay transitions preserve native surfaces.
+- Fix early window title bindings and full-transfer dialog/palette constructors
+  so retained language bindings remain valid after destruction. Transient
+  dialogs join their parent's application and support Escape dismissal.
+- Forward focus through search, spin, switch and password composites.
+
+- Add the introspectable `AwraTimeline` for backend-independent seeking,
+  interval/point markers, viewports, hover previews and cancellable offset edits.
+  Keyboard, RTL and `GtkAccessibleRange` semantics are included.
+- Add the `collection-view` style role for virtualized GTK grid/list factories.
+- Exercise the additions in Showcase, native tests and Python/Rust consumers.
+
 - Windows support: a `win32-dwm` effect backend (Acrylic system backdrop on
   Windows 11 22H2+, accent-policy blur on Windows 10), Windows dark mode,
   accent colour, high contrast and animation preferences mirrored into GTK,

@@ -34,6 +34,30 @@ external-consumer tests.
 
 ## Rendering and layout
 
+- `AwraWindow` uses a square outer frame without borders or shadow when
+  maximized or fullscreen, filling the compositor's entire allocation. Set
+  `keep-rounded-corners=true` to retain frame rounding in those states; the
+  default is `false`. The flag can change while the window is visible and is
+  available in GtkBuilder, C, Python and Rust. For example, Python uses
+  `window.set_keep_rounded_corners(True)`, and Rust uses
+  `window.set_keep_rounded_corners(true)`. Restoring the window preserves the
+  configured radius and corner/edge masks. Nested surfaces and floating chrome
+  keep their own geometry. Maximization respects the desktop work area;
+  fullscreen covers the monitor, following ordinary GTK window behavior.
+
+- `AwraFramePool` provides bounded, aligned RGB/YUV frame leases independent of
+  media engines. `AwraFrame` publishes immutable textures without copying pixels.
+  `AwraTextureStream` feeds live pictures without repeated layout or CPU mipmaps;
+  `AwraAspectPaintable` supplies a display ratio for non-square source pixels.
+  See [live-frames.md](../guides/live-frames.md).
+
+- `AwraOverlayBar` places idle-aware floating controls over full-size content.
+  `AwraWindow:overlay-chrome` composes headers without reserving canvas height.
+  Enable that composition before first presentation; later mode changes preserve
+  the native surface. Timeline-owned previews follow logical pointer coordinates,
+  and `AwraToastOverlay:bottom-inset` keeps messages clear of overlay controls.
+  See [timelines.md](../guides/timelines.md).
+
 - `AwraMaterial` keeps low-level Solid, Translucent and Frosted intent and adds
   Canvas, Content, Chrome, Layer, Floating and Opaque semantic presets.
 - `AwraSurface` renders the resolved material, clipping and elevation with GSK.
@@ -199,3 +223,6 @@ ordinary `GMenuModel` commands and restores focus after dismissal. See
 
 `AwraInspector` reports widget/surface state and can outline the native effect
 region for developer diagnostics.
+
+See [timelines and interval editing](../guides/timelines.md) for seeking, markers,
+viewport control and backend-independent synchronization.

@@ -82,6 +82,20 @@ impl DialogBuilder {
         }
     }
 
+    pub fn keep_rounded_corners(self, keep_rounded_corners: bool) -> Self {
+        Self {
+            builder: self
+                .builder
+                .property("keep-rounded-corners", keep_rounded_corners),
+        }
+    }
+
+    pub fn overlay_chrome(self, overlay_chrome: bool) -> Self {
+        Self {
+            builder: self.builder.property("overlay-chrome", overlay_chrome),
+        }
+    }
+
     pub fn show_menubar(self, show_menubar: bool) -> Self {
         Self {
             builder: self.builder.property("show-menubar", show_menubar),

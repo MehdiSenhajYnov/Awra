@@ -15,6 +15,7 @@
 #define AWRA_DWMWA_WINDOW_CORNER_PREFERENCE 33
 #define AWRA_DWMWA_SYSTEMBACKDROP_TYPE 38
 #define AWRA_DWMWCP_ROUND 2
+#define AWRA_DWMWCP_DONOTROUND 1
 #define AWRA_DWMSBT_NONE 1
 #define AWRA_DWMSBT_TRANSIENTWINDOW 3 /* Acrylic: blurs what is behind */
 
@@ -155,7 +156,6 @@ win32_apply (AwraEffectBackend *backend,
 
   (void) width;
   (void) height;
-  (void) radius;
 
   if (hwnd == NULL)
     return NULL;
@@ -165,7 +165,7 @@ win32_apply (AwraEffectBackend *backend,
      * wherever GTK draws translucent pixels; DWM also rounds the corners
      * and draws the native shadow. */
     MARGINS margins = { -1, -1, -1, -1 };
-    int corner = AWRA_DWMWCP_ROUND;
+    int corner = radius > 0 ? AWRA_DWMWCP_ROUND : AWRA_DWMWCP_DONOTROUND;
     int backdrop = AWRA_DWMSBT_TRANSIENTWINDOW;
 
     if (FAILED (DwmExtendFrameIntoClientArea (hwnd, &margins)) ||
@@ -193,14 +193,16 @@ win32_update (AwraEffectBackend *backend,
               int                radius,
               GError           **error)
 {
-  (void) backend;
-  (void) handle;
   (void) surface;
   (void) width;
   (void) height;
-  (void) radius;
   (void) error;
-  /* DWM follows the window's size and shape by itself. */
+  Win32Backend *self = (Win32Backend *) backend;
+  if (self->mode == MODE_SYSTEM_BACKDROP) {
+    int corner = radius > 0 ? AWRA_DWMWCP_ROUND : AWRA_DWMWCP_DONOTROUND;
+    DwmSetWindowAttribute ((HWND) handle, AWRA_DWMWA_WINDOW_CORNER_PREFERENCE,
+                           &corner, sizeof (corner));
+  }
   return TRUE;
 }
 

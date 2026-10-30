@@ -17,6 +17,8 @@ generate = [
   "Awra.AccentSource",
   "Awra.ActionRow",
   "Awra.Appearance",
+  "Awra.AspectPaintable",
+  "Awra.TextureStream",
   "Awra.Badge",
   "Awra.BadgeAppearance",
   "Awra.BadgeGroup",
@@ -39,6 +41,7 @@ generate = [
   "Awra.DropZone",
   "Awra.Dropdown",
   "Awra.EdgePanel",
+  "Awra.OverlayBar",
   "Awra.EffectCapability",
   "Awra.Elevation",
   "Awra.EmptyState",
@@ -100,6 +103,7 @@ generate = [
   "Awra.TagEntry",
   "Awra.TextArea",
   "Awra.ToastOverlay",
+  "Awra.Timeline",
   "Awra.ToggleButton",
   "Awra.TokenSet",
   "Awra.Toolbar",
@@ -117,8 +121,13 @@ manual = [
   "Gio.ListModel",
   "Gio.MenuModel",
   "Gdk.Display",
+  "Gdk.Paintable",
+  "Gdk.Texture",
+  "Gdk.ColorState",
+  "Gdk.MemoryFormat",
   "Gdk.RGBA",
   "Gtk.Accessible",
+  "Gtk.AccessibleRange",
   "Gtk.Actionable",
   "Gtk.Align",
   "Gtk.Application",
@@ -146,7 +155,6 @@ manual = [
   "Gtk.Popover",
   "Gtk.ProgressBar",
   "Gtk.Range",
-  "Gtk.AccessibleRange",
   "Gtk.Root",
   "Gtk.Scale",
   "Gtk.SearchEntry",
@@ -166,6 +174,18 @@ manual = [
   "Gtk.SelectionMode",
   "Gio.File",
 ]
+
+[[object]]
+name = "Awra.FramePool"
+status = "generate"
+concurrency = "send+sync"
+    [[object.function]]
+    name = "new"
+    assertion = "none"
+
+[[object]]
+name = "Awra.Frame"
+status = "generate"
 
 [[object]]
 name = "Awra.Inspector"

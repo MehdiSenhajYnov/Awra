@@ -275,3 +275,18 @@ test(
   timeout: 45,
   is_parallel: false,
 )
+
+timeline_test = executable(
+  'test-timeline', 'widget/test-timeline.c',
+  dependencies: awra_dep,
+)
+test('timeline', timeline_test, env: ['G_DEBUG=fatal-warnings'], is_parallel: false)
+
+overlay_bar_test = executable('test-overlay-bar', 'widget/test-overlay-bar.c', dependencies: awra_dep)
+test('overlay-bar-workflows', overlay_bar_test, env: ['G_DEBUG=fatal-warnings', 'GTK_A11Y=none'], is_parallel: false)
+
+frame_pool_test = executable('test-frame-pool', 'widget/test-frame-pool.c', dependencies: awra_dep)
+test('frame-pool', frame_pool_test, env: ['G_DEBUG=fatal-warnings', 'GTK_A11Y=none'], is_parallel: false)
+
+window_frame_test = executable('test-window-frame', 'integration/test-window-frame.c', dependencies: awra_dep)
+test('window-frame-states', window_frame_test, env: ['G_DEBUG=fatal-warnings', 'GTK_A11Y=none'], is_parallel: false)

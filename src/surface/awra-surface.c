@@ -193,6 +193,30 @@ draws_over_window_content (AwraSurface *self)
   return TRUE;
 }
 
+/* Only the outer frame participates in the window policy. Nested surfaces
+ * and native popovers retain their own rounded geometry. */
+static gboolean
+is_window_frame (AwraSurface *self, AwraWindow *window)
+{
+  GtkWidget *widget = GTK_WIDGET (self);
+  if (gtk_widget_get_native (widget) != GTK_NATIVE (window))
+    return FALSE;
+  if (self == awra_window_get_root_surface (window))
+    return TRUE;
+  if (awra_window_get_overlay_chrome (window))
+    return FALSE;
+  GtkWidget *chrome = awra_window_get_chrome (window);
+  if (widget == chrome)
+    return TRUE;
+  if (chrome == NULL || !gtk_widget_is_ancestor (widget, chrome))
+    return FALSE;
+  for (GtkWidget *parent = gtk_widget_get_parent (widget); parent != chrome;
+       parent = gtk_widget_get_parent (parent))
+    if (AWRA_IS_SURFACE (parent))
+      return FALSE;
+  return TRUE;
+}
+
 static void
 awra_surface_snapshot (GtkWidget   *widget,
                        GtkSnapshot *snapshot)
@@ -207,6 +231,8 @@ awra_surface_snapshot (GtkWidget   *widget,
   gboolean active = TRUE;
   gboolean blur_available;
   gboolean reduced_transparency;
+  gboolean square_frame = FALSE;
+  AwraSurfaceCorner corner_mask = self->corner_mask;
   float radius;
   graphene_rect_t bounds;
   GskRoundedRect outline;
@@ -244,6 +270,28 @@ awra_surface_snapshot (GtkWidget   *widget,
                          self->elevation,
                          &resolved);
   radius = self->radius >= 0.0 ? (float) self->radius : (float) resolved.radius;
+  /* GTK hides a native titlebar in fullscreen. The root then owns the top
+   * corners that the docked header normally supplies. Keep the stored mask
+   * intact so restoring the window does not round the header/content seam. */
+  if (AWRA_IS_WINDOW (root) &&
+      self == awra_window_get_root_surface (AWRA_WINDOW (root)) &&
+      gtk_window_is_fullscreen (GTK_WINDOW (root)) &&
+      gtk_window_get_titlebar (GTK_WINDOW (root)) ==
+          awra_window_get_chrome (AWRA_WINDOW (root)) &&
+      corner_mask == (AWRA_SURFACE_CORNER_BOTTOM_START |
+                      AWRA_SURFACE_CORNER_BOTTOM_END))
+    corner_mask = AWRA_SURFACE_CORNER_ALL;
+  if (AWRA_IS_WINDOW (root) &&
+      !awra_window_get_keep_rounded_corners (AWRA_WINDOW (root)) &&
+      (gtk_window_is_maximized (GTK_WINDOW (root)) ||
+       gtk_window_is_fullscreen (GTK_WINDOW (root))) &&
+      is_window_frame (self, AWRA_WINDOW (root)))
+    {
+      square_frame = TRUE;
+      radius = 0;
+      resolved.border_edges = AWRA_SURFACE_EDGE_NONE;
+      resolved.highlight_edges = AWRA_SURFACE_EDGE_NONE;
+    }
   resolved.border_edges &= self->edge_mask;
   resolved.highlight_edges &= self->edge_mask;
   bounds = GRAPHENE_RECT_INIT (0,
@@ -252,28 +300,28 @@ awra_surface_snapshot (GtkWidget   *widget,
                                gtk_widget_get_height (widget));
   rounded_corner = (graphene_size_t) GRAPHENE_SIZE_INIT (radius, radius);
   if (gtk_widget_get_direction (widget) == GTK_TEXT_DIR_RTL) {
-    top_left = (self->corner_mask & AWRA_SURFACE_CORNER_TOP_END) != 0
+    top_left = (corner_mask & AWRA_SURFACE_CORNER_TOP_END) != 0
                  ? &rounded_corner : &square_corner;
-    top_right = (self->corner_mask & AWRA_SURFACE_CORNER_TOP_START) != 0
+    top_right = (corner_mask & AWRA_SURFACE_CORNER_TOP_START) != 0
                   ? &rounded_corner : &square_corner;
-    bottom_right = (self->corner_mask & AWRA_SURFACE_CORNER_BOTTOM_START) != 0
+    bottom_right = (corner_mask & AWRA_SURFACE_CORNER_BOTTOM_START) != 0
                      ? &rounded_corner : &square_corner;
-    bottom_left = (self->corner_mask & AWRA_SURFACE_CORNER_BOTTOM_END) != 0
+    bottom_left = (corner_mask & AWRA_SURFACE_CORNER_BOTTOM_END) != 0
                     ? &rounded_corner : &square_corner;
   } else {
-    top_left = (self->corner_mask & AWRA_SURFACE_CORNER_TOP_START) != 0
+    top_left = (corner_mask & AWRA_SURFACE_CORNER_TOP_START) != 0
                  ? &rounded_corner : &square_corner;
-    top_right = (self->corner_mask & AWRA_SURFACE_CORNER_TOP_END) != 0
+    top_right = (corner_mask & AWRA_SURFACE_CORNER_TOP_END) != 0
                   ? &rounded_corner : &square_corner;
-    bottom_right = (self->corner_mask & AWRA_SURFACE_CORNER_BOTTOM_END) != 0
+    bottom_right = (corner_mask & AWRA_SURFACE_CORNER_BOTTOM_END) != 0
                      ? &rounded_corner : &square_corner;
-    bottom_left = (self->corner_mask & AWRA_SURFACE_CORNER_BOTTOM_START) != 0
+    bottom_left = (corner_mask & AWRA_SURFACE_CORNER_BOTTOM_START) != 0
                     ? &rounded_corner : &square_corner;
   }
   gsk_rounded_rect_init (&outline, &bounds,
                          top_left, top_right, bottom_right, bottom_left);
 
-  if (self->elevation > AWRA_ELEVATION_FLAT) {
+  if (!square_frame && self->elevation > AWRA_ELEVATION_FLAT) {
     float offset = self->elevation == AWRA_ELEVATION_RAISED ? 1.5f
                    : self->elevation == AWRA_ELEVATION_FLOATING ? 7.0f
                    : 12.0f;

@@ -102,6 +102,9 @@ def main() -> int:
         "KeyboardPhysicalLayout",
         "ShortcutCapture",
         "WaveformView",
+        "Timeline",
+        "OverlayBar",
+        "AspectPaintable",
         "VolumeControl",
         "MediaRow",
         "DropZone",
@@ -119,6 +122,14 @@ def main() -> int:
     assert_return_transfer("awra_context_resolve_material", "full", root)
     assert_return_transfer("awra_material_new_frosted", "full", root)
     assert_return_transfer("awra_inspector_get_target", "full", root)
+    assert_return_transfer("awra_dialog_new", "full", root)
+    assert_return_transfer("awra_command_palette_new", "full", root)
+    assert_return_transfer("awra_timeline_get_preview_popover", "none", root)
+    assert_return_transfer("awra_timeline_get_preview", "none", root)
+    assert_return_transfer("awra_overlay_bar_get_surface", "none", root)
+    assert_nullable("awra_timeline_set_preview", "preview", root)
+    assert_nullable("awra_overlay_bar_set_content", "content", root)
+    assert_nullable("awra_overlay_bar_set_bar", "bar", root)
     assert_nullable("awra_window_set_content", "content", root)
     assert_nullable("awra_window_set_chrome", "chrome", root)
     assert_nullable("awra_popover_set_child", "child", root)

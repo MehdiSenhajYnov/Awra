@@ -54,6 +54,32 @@ void         awra_window_set_chrome       (AwraWindow     *self,
  * Returns: (transfer none): the window's root surface
  */
 AwraSurface *awra_window_get_root_surface (AwraWindow     *self);
+/**
+ * awra_window_set_overlay_chrome:
+ * @self: an Awra window
+ * @overlaid: whether chrome floats above the full content allocation
+ *
+ * Opts into embedded chrome composition. Call before presenting the window
+ * the first time. Subsequent docked/overlaid transitions reparent only owned
+ * widgets, preserving the native CSD surface, resize handles and drag region.
+ * The application controls chrome visibility independently. Use get_chrome()
+ * rather than GtkWindow:titlebar after opting into this composition.
+ */
+void awra_window_set_overlay_chrome (AwraWindow *self, gboolean overlaid);
+gboolean awra_window_get_overlay_chrome (AwraWindow *self);
+/**
+ * awra_window_set_keep_rounded_corners:
+ * @self: an Awra window
+ * @keep: whether to retain frame rounding when maximized or fullscreen
+ *
+ * By default the outer frame becomes square and undecorated when maximized
+ * or fullscreen. Set this to TRUE to retain its configured rounded geometry.
+ * Restoring the window always restores its configured radius and corner/edge
+ * masks. Floating controls, cards and overlay chrome keep their own geometry.
+ * This does not change the compositor's maximized/fullscreen allocation.
+ */
+void awra_window_set_keep_rounded_corners (AwraWindow *self, gboolean keep);
+gboolean awra_window_get_keep_rounded_corners (AwraWindow *self);
 gboolean     awra_window_get_active       (AwraWindow     *self);
 
 G_END_DECLS

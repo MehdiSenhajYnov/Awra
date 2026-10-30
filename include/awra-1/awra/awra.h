@@ -49,6 +49,7 @@
 #include <awra/awra-split-view.h>
 #include <awra/awra-responsive-bin.h>
 #include <awra/awra-edge-panel.h>
+#include <awra/awra-overlay-bar.h>
 #include <awra/awra-toggle-button.h>
 #include <awra/awra-entry.h>
 #include <awra/awra-search-entry.h>
@@ -76,6 +77,10 @@
 #include <awra/awra-keyboard-view.h>
 #include <awra/awra-shortcut-capture.h>
 #include <awra/awra-waveform-view.h>
+#include <awra/awra-timeline.h>
+#include <awra/awra-aspect-paintable.h>
+#include <awra/awra-frame-pool.h>
+#include <awra/awra-texture-stream.h>
 #include <awra/awra-volume-control.h>
 #include <awra/awra-media-row.h>
 #include <awra/awra-drop-zone.h>

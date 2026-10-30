@@ -6,6 +6,9 @@
 mod action_row;
 pub use self::action_row::ActionRow;
 
+mod aspect_paintable;
+pub use self::aspect_paintable::AspectPaintable;
+
 mod badge;
 pub use self::badge::Badge;
 
@@ -78,6 +81,12 @@ pub use self::form::Form;
 mod form_row;
 pub use self::form_row::FormRow;
 
+mod frame;
+pub use self::frame::Frame;
+
+mod frame_pool;
+pub use self::frame_pool::FramePool;
+
 mod header;
 pub use self::header::Header;
 
@@ -122,6 +131,9 @@ pub use self::navigation_item::NavigationItem;
 
 mod navigation_view;
 pub use self::navigation_view::NavigationView;
+
+mod overlay_bar;
+pub use self::overlay_bar::OverlayBar;
 
 mod page;
 pub use self::page::Page;
@@ -195,6 +207,12 @@ pub use self::tag_entry::TagEntry;
 mod text_area;
 pub use self::text_area::TextArea;
 
+mod texture_stream;
+pub use self::texture_stream::TextureStream;
+
+mod timeline;
+pub use self::timeline::Timeline;
+
 mod toast_overlay;
 pub use self::toast_overlay::ToastOverlay;
 
@@ -249,6 +267,7 @@ pub(crate) mod traits {
 }
 pub(crate) mod builders {
     pub use super::action_row::ActionRowBuilder;
+    pub use super::aspect_paintable::AspectPaintableBuilder;
     pub use super::badge::BadgeBuilder;
     pub use super::badge_group::BadgeGroupBuilder;
     pub use super::breadcrumb_bar::BreadcrumbBarBuilder;
@@ -284,6 +303,7 @@ pub(crate) mod builders {
     pub use super::metric_row::MetricRowBuilder;
     pub use super::navigation_item::NavigationItemBuilder;
     pub use super::navigation_view::NavigationViewBuilder;
+    pub use super::overlay_bar::OverlayBarBuilder;
     pub use super::page::PageBuilder;
     pub use super::page_header::PageHeaderBuilder;
     pub use super::password_entry::PasswordEntryBuilder;
@@ -308,6 +328,7 @@ pub(crate) mod builders {
     pub use super::tab_view::TabViewBuilder;
     pub use super::tag_entry::TagEntryBuilder;
     pub use super::text_area::TextAreaBuilder;
+    pub use super::timeline::TimelineBuilder;
     pub use super::toast_overlay::ToastOverlayBuilder;
     pub use super::toggle_button::ToggleButtonBuilder;
     pub use super::toolbar::ToolbarBuilder;

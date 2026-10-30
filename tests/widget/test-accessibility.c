@@ -93,6 +93,14 @@ test_roles_keyboard_and_rtl (void)
   g_assert_cmpint (gtk_widget_get_width (content), <=,
                    gtk_widget_get_width (page));
 
+  /* Complete the native IM focus-out before destroying this fixture. GTK's
+   * Wayland IM callback may otherwise arrive during the next test after its
+   * client widget was finalized (also reproducible before timeline changes). */
+  gtk_window_set_focus (GTK_WINDOW (window), NULL);
+  GMainLoop *settle = g_main_loop_new (NULL, FALSE);
+  g_timeout_add_once (180, (GSourceOnceFunc) g_main_loop_quit, settle);
+  g_main_loop_run (settle);
+  g_main_loop_unref (settle);
   gtk_window_destroy (GTK_WINDOW (window));
 }
 

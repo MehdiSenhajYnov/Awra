@@ -204,9 +204,14 @@ impl EntryBuilder {
         }
     }
 
-    //pub fn primary_icon_paintable(self, primary_icon_paintable: &impl IsA</*Ignored*/gdk::Paintable>) -> Self {
-    //    Self { builder: self.builder.property("primary-icon-paintable", primary_icon_paintable.clone().upcast()), }
-    //}
+    pub fn primary_icon_paintable(self, primary_icon_paintable: &impl IsA<gdk::Paintable>) -> Self {
+        Self {
+            builder: self.builder.property(
+                "primary-icon-paintable",
+                primary_icon_paintable.clone().upcast(),
+            ),
+        }
+    }
 
     pub fn primary_icon_sensitive(self, primary_icon_sensitive: bool) -> Self {
         Self {
@@ -276,9 +281,17 @@ impl EntryBuilder {
         }
     }
 
-    //pub fn secondary_icon_paintable(self, secondary_icon_paintable: &impl IsA</*Ignored*/gdk::Paintable>) -> Self {
-    //    Self { builder: self.builder.property("secondary-icon-paintable", secondary_icon_paintable.clone().upcast()), }
-    //}
+    pub fn secondary_icon_paintable(
+        self,
+        secondary_icon_paintable: &impl IsA<gdk::Paintable>,
+    ) -> Self {
+        Self {
+            builder: self.builder.property(
+                "secondary-icon-paintable",
+                secondary_icon_paintable.clone().upcast(),
+            ),
+        }
+    }
 
     pub fn secondary_icon_sensitive(self, secondary_icon_sensitive: bool) -> Self {
         Self {

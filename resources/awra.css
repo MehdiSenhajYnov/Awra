@@ -14,7 +14,13 @@ window.awra-window > contents,
 window.awra-window:backdrop > contents,
 awrasurface,
 awrasurface:backdrop,
+awraheader,
+awraheader.titlebar,
+awraheader:backdrop,
+awraheader.titlebar:backdrop,
 awraedgepanel,
+awraoverlaybar,
+.awra-chrome-anchor,
 awrapage,
 awrapage:backdrop,
 awrapageviewport,
@@ -47,6 +53,7 @@ awrakeycap,
 awrakeyboardview,
 awrashortcutcapture,
 awrawaveformview,
+awratimeline,
 awravolumecontrol,
 awramediarow,
 awradropzone {
@@ -64,6 +71,19 @@ awradropzone {
   text-shadow: none;
   opacity: 1;
   filter: none;
+}
+
+/* Expanded windows occupy the compositor's complete allocation. Awra paints
+ * optional retained frame rounding itself, without CSD shadow space. */
+window.awra-window.maximized,
+window.awra-window.fullscreen,
+window.awra-window.maximized > contents,
+window.awra-window.fullscreen > contents {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 awrametricrow > box,
@@ -2677,4 +2697,33 @@ window.awra-window.awra-win32:backdrop {
   margin: 0;
   box-shadow: none;
   border-radius: 0;
+}
+
+/* Public collection-view role: GTK owns virtualization, selection and focus;
+ * Awra owns the neutral content plane and token-calibrated cell rhythm. */
+.awra-role-collection-view,
+.awra-role-collection-view > child,
+.awra-role-collection-view > row {
+  min-width: 0;
+  min-height: 0;
+  border: 0;
+  padding: 0;
+  color: @awra_foreground;
+  background: transparent;
+  box-shadow: none;
+  text-shadow: none;
+}
+.awra-role-collection-view > child,
+.awra-role-collection-view > row {
+  padding: 8px;
+  border-radius: 12px;
+}
+.awra-role-collection-view > child:focus-visible,
+.awra-role-collection-view > row:focus-visible {
+  outline: 2px solid @awra_focus;
+  outline-offset: -2px;
+}
+.awra-role-collection-view > child:selected,
+.awra-role-collection-view > row:selected {
+  background-color: @awra_selection;
 }

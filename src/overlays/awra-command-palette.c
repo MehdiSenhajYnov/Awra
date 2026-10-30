@@ -340,7 +340,7 @@ awra_command_palette_init (AwraCommandPalette *self)
   rebuild_results (self);
 }
 
-GtkWidget *awra_command_palette_new (GtkWindow *parent) { AwraCommandPalette *self; g_return_val_if_fail (parent == NULL || GTK_IS_WINDOW (parent), NULL); self = g_object_new (AWRA_TYPE_COMMAND_PALETTE, NULL); if (parent != NULL) gtk_window_set_transient_for (GTK_WINDOW (self), parent); return GTK_WIDGET (self); }
+GtkWidget *awra_command_palette_new (GtkWindow *parent) { AwraCommandPalette *self; g_return_val_if_fail (parent == NULL || GTK_IS_WINDOW (parent), NULL); self = g_object_new (AWRA_TYPE_COMMAND_PALETTE, NULL); if (parent != NULL) { gtk_window_set_transient_for (GTK_WINDOW (self), parent); gtk_window_set_application (GTK_WINDOW (self), gtk_window_get_application (parent)); } return g_object_ref (GTK_WIDGET (self)); }
 GMenuModel *awra_command_palette_get_menu_model (AwraCommandPalette *self) { g_return_val_if_fail (AWRA_IS_COMMAND_PALETTE (self), NULL); return self->model; }
 void awra_command_palette_set_menu_model (AwraCommandPalette *self, GMenuModel *model) { g_return_if_fail (AWRA_IS_COMMAND_PALETTE (self)); g_return_if_fail (model == NULL || G_IS_MENU_MODEL (model)); if (self->model == model) return; g_set_object (&self->model, model); g_ptr_array_set_size (self->commands, 0); g_ptr_array_set_size (self->sections, 0); if (model != NULL) collect_commands (self, model, NULL); rebuild_results (self); g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_MENU_MODEL]); }
 const char *awra_command_palette_get_title (AwraCommandPalette *self) { g_return_val_if_fail (AWRA_IS_COMMAND_PALETTE (self), NULL); return self->title; }

@@ -55,6 +55,13 @@ impl ToastOverlay {
         }
     }
 
+    #[doc(alias = "awra_toast_overlay_get_bottom_inset")]
+    #[doc(alias = "get_bottom_inset")]
+    #[doc(alias = "bottom-inset")]
+    pub fn bottom_inset(&self) -> u32 {
+        unsafe { ffi::awra_toast_overlay_get_bottom_inset(self.to_glib_none().0) }
+    }
+
     #[doc(alias = "awra_toast_overlay_get_child")]
     #[doc(alias = "get_child")]
     pub fn child(&self) -> Option<gtk::Widget> {
@@ -72,6 +79,14 @@ impl ToastOverlay {
     #[doc(alias = "revealed")]
     pub fn is_revealed(&self) -> bool {
         unsafe { from_glib(ffi::awra_toast_overlay_get_revealed(self.to_glib_none().0)) }
+    }
+
+    #[doc(alias = "awra_toast_overlay_set_bottom_inset")]
+    #[doc(alias = "bottom-inset")]
+    pub fn set_bottom_inset(&self, pixels: u32) {
+        unsafe {
+            ffi::awra_toast_overlay_set_bottom_inset(self.to_glib_none().0, pixels);
+        }
     }
 
     #[doc(alias = "awra_toast_overlay_set_child")]
@@ -134,6 +149,31 @@ impl ToastOverlay {
                 c"dismissed".as_ptr(),
                 Some(std::mem::transmute::<*const (), unsafe extern "C" fn()>(
                     dismissed_trampoline::<F> as *const (),
+                )),
+                Box_::into_raw(f),
+            )
+        }
+    }
+
+    #[doc(alias = "bottom-inset")]
+    pub fn connect_bottom_inset_notify<F: Fn(&Self) + 'static>(&self, f: F) -> SignalHandlerId {
+        unsafe extern "C" fn notify_bottom_inset_trampoline<F: Fn(&ToastOverlay) + 'static>(
+            this: *mut ffi::AwraToastOverlay,
+            _param_spec: glib::ffi::gpointer,
+            f: glib::ffi::gpointer,
+        ) {
+            unsafe {
+                let f: &F = &*(f as *const F);
+                f(&from_glib_borrow(this))
+            }
+        }
+        unsafe {
+            let f: Box_<F> = Box_::new(f);
+            connect_raw(
+                self.as_ptr() as *mut _,
+                c"notify::bottom-inset".as_ptr(),
+                Some(std::mem::transmute::<*const (), unsafe extern "C" fn()>(
+                    notify_bottom_inset_trampoline::<F> as *const (),
                 )),
                 Box_::into_raw(f),
             )
@@ -210,6 +250,12 @@ impl ToastOverlayBuilder {
     fn new() -> Self {
         Self {
             builder: glib::object::Object::builder(),
+        }
+    }
+
+    pub fn bottom_inset(self, bottom_inset: u32) -> Self {
+        Self {
+            builder: self.builder.property("bottom-inset", bottom_inset),
         }
     }
 

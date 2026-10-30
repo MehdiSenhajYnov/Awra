@@ -217,6 +217,20 @@ impl ::std::fmt::Debug for AwraActionRowClass {
 
 #[derive(Copy, Clone)]
 #[repr(C)]
+pub struct AwraAspectPaintableClass {
+    pub parent_class: gobject::GObjectClass,
+}
+
+impl ::std::fmt::Debug for AwraAspectPaintableClass {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraAspectPaintableClass @ {self:p}"))
+            .field("parent_class", &self.parent_class)
+            .finish()
+    }
+}
+
+#[derive(Copy, Clone)]
+#[repr(C)]
 pub struct AwraBadgeClass {
     pub parent_class: gtk::GtkWidgetClass,
 }
@@ -553,6 +567,34 @@ impl ::std::fmt::Debug for AwraFormRowClass {
 
 #[derive(Copy, Clone)]
 #[repr(C)]
+pub struct AwraFrameClass {
+    pub parent_class: gobject::GObjectClass,
+}
+
+impl ::std::fmt::Debug for AwraFrameClass {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraFrameClass @ {self:p}"))
+            .field("parent_class", &self.parent_class)
+            .finish()
+    }
+}
+
+#[derive(Copy, Clone)]
+#[repr(C)]
+pub struct AwraFramePoolClass {
+    pub parent_class: gobject::GObjectClass,
+}
+
+impl ::std::fmt::Debug for AwraFramePoolClass {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraFramePoolClass @ {self:p}"))
+            .field("parent_class", &self.parent_class)
+            .finish()
+    }
+}
+
+#[derive(Copy, Clone)]
+#[repr(C)]
 pub struct AwraHeaderClass {
     pub parent_class: gtk::GtkWidgetClass,
 }
@@ -756,6 +798,20 @@ pub struct AwraNavigationViewClass {
 impl ::std::fmt::Debug for AwraNavigationViewClass {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         f.debug_struct(&format!("AwraNavigationViewClass @ {self:p}"))
+            .field("parent_class", &self.parent_class)
+            .finish()
+    }
+}
+
+#[derive(Copy, Clone)]
+#[repr(C)]
+pub struct AwraOverlayBarClass {
+    pub parent_class: gtk::GtkWidgetClass,
+}
+
+impl ::std::fmt::Debug for AwraOverlayBarClass {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraOverlayBarClass @ {self:p}"))
             .field("parent_class", &self.parent_class)
             .finish()
     }
@@ -1099,6 +1155,34 @@ impl ::std::fmt::Debug for AwraTextAreaClass {
 
 #[derive(Copy, Clone)]
 #[repr(C)]
+pub struct AwraTextureStreamClass {
+    pub parent_class: gobject::GObjectClass,
+}
+
+impl ::std::fmt::Debug for AwraTextureStreamClass {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraTextureStreamClass @ {self:p}"))
+            .field("parent_class", &self.parent_class)
+            .finish()
+    }
+}
+
+#[derive(Copy, Clone)]
+#[repr(C)]
+pub struct AwraTimelineClass {
+    pub parent_class: gtk::GtkWidgetClass,
+}
+
+impl ::std::fmt::Debug for AwraTimelineClass {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraTimelineClass @ {self:p}"))
+            .field("parent_class", &self.parent_class)
+            .finish()
+    }
+}
+
+#[derive(Copy, Clone)]
+#[repr(C)]
 pub struct AwraToastOverlayClass {
     pub parent_class: gtk::GtkWidgetClass,
 }
@@ -1208,6 +1292,20 @@ pub struct AwraActionRow {
 impl ::std::fmt::Debug for AwraActionRow {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         f.debug_struct(&format!("AwraActionRow @ {self:p}"))
+            .finish()
+    }
+}
+
+#[repr(C)]
+#[allow(dead_code)]
+pub struct AwraAspectPaintable {
+    _data: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
+}
+
+impl ::std::fmt::Debug for AwraAspectPaintable {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraAspectPaintable @ {self:p}"))
             .finish()
     }
 }
@@ -1539,6 +1637,33 @@ impl ::std::fmt::Debug for AwraFormRow {
 
 #[repr(C)]
 #[allow(dead_code)]
+pub struct AwraFrame {
+    _data: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
+}
+
+impl ::std::fmt::Debug for AwraFrame {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraFrame @ {self:p}")).finish()
+    }
+}
+
+#[repr(C)]
+#[allow(dead_code)]
+pub struct AwraFramePool {
+    _data: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
+}
+
+impl ::std::fmt::Debug for AwraFramePool {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraFramePool @ {self:p}"))
+            .finish()
+    }
+}
+
+#[repr(C)]
+#[allow(dead_code)]
 pub struct AwraHeader {
     _data: [u8; 0],
     _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
@@ -1738,6 +1863,20 @@ pub struct AwraNavigationView {
 impl ::std::fmt::Debug for AwraNavigationView {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         f.debug_struct(&format!("AwraNavigationView @ {self:p}"))
+            .finish()
+    }
+}
+
+#[repr(C)]
+#[allow(dead_code)]
+pub struct AwraOverlayBar {
+    _data: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
+}
+
+impl ::std::fmt::Debug for AwraOverlayBar {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraOverlayBar @ {self:p}"))
             .finish()
     }
 }
@@ -2068,6 +2207,33 @@ impl ::std::fmt::Debug for AwraTextArea {
 
 #[repr(C)]
 #[allow(dead_code)]
+pub struct AwraTextureStream {
+    _data: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
+}
+
+impl ::std::fmt::Debug for AwraTextureStream {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraTextureStream @ {self:p}"))
+            .finish()
+    }
+}
+
+#[repr(C)]
+#[allow(dead_code)]
+pub struct AwraTimeline {
+    _data: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
+}
+
+impl ::std::fmt::Debug for AwraTimeline {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraTimeline @ {self:p}")).finish()
+    }
+}
+
+#[repr(C)]
+#[allow(dead_code)]
 pub struct AwraToastOverlay {
     _data: [u8; 0],
     _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
@@ -2301,6 +2467,19 @@ unsafe extern "C" {
     pub fn awra_action_row_set_subtitle(self_: *mut AwraActionRow, subtitle: *const c_char);
     pub fn awra_action_row_set_suffix(self_: *mut AwraActionRow, suffix: *mut gtk::GtkWidget);
     pub fn awra_action_row_set_title(self_: *mut AwraActionRow, title: *const c_char);
+
+    //=========================================================================
+    // AwraAspectPaintable
+    //=========================================================================
+    pub fn awra_aspect_paintable_get_type() -> GType;
+    pub fn awra_aspect_paintable_new(
+        paintable: *mut gdk::GdkPaintable,
+        aspect_ratio: c_double,
+    ) -> *mut AwraAspectPaintable;
+    pub fn awra_aspect_paintable_get_aspect_ratio(self_: *mut AwraAspectPaintable) -> c_double;
+    pub fn awra_aspect_paintable_get_paintable(
+        self_: *mut AwraAspectPaintable,
+    ) -> *mut gdk::GdkPaintable;
 
     //=========================================================================
     // AwraBadge
@@ -2725,6 +2904,35 @@ unsafe extern "C" {
     pub fn awra_form_row_set_validation_state(self_: *mut AwraFormRow, state: AwraValidationState);
 
     //=========================================================================
+    // AwraFrame
+    //=========================================================================
+    pub fn awra_frame_get_type() -> GType;
+    pub fn awra_frame_copy_scaled(self_: *mut AwraFrame, destination: *mut AwraFrame) -> gboolean;
+    pub fn awra_frame_create_texture(self_: *mut AwraFrame) -> *mut gdk::GdkTexture;
+    pub fn awra_frame_get_address(self_: *mut AwraFrame, plane: c_uint) -> u64;
+
+    //=========================================================================
+    // AwraFramePool
+    //=========================================================================
+    pub fn awra_frame_pool_get_type() -> GType;
+    pub fn awra_frame_pool_new(
+        width: c_uint,
+        height: c_uint,
+        format: gdk::GdkMemoryFormat,
+        capacity: c_uint,
+        color_state: *mut gdk::GdkColorState,
+    ) -> *mut AwraFramePool;
+    pub fn awra_frame_pool_acquire(self_: *mut AwraFramePool) -> *mut AwraFrame;
+    pub fn awra_frame_pool_get_allocated_bytes(self_: *mut AwraFramePool) -> size_t;
+    pub fn awra_frame_pool_get_available(self_: *mut AwraFramePool) -> c_uint;
+    pub fn awra_frame_pool_get_capacity(self_: *mut AwraFramePool) -> c_uint;
+    pub fn awra_frame_pool_get_height(self_: *mut AwraFramePool) -> c_uint;
+    pub fn awra_frame_pool_get_lines(self_: *mut AwraFramePool, plane: c_uint) -> c_uint;
+    pub fn awra_frame_pool_get_n_planes(self_: *mut AwraFramePool) -> c_uint;
+    pub fn awra_frame_pool_get_stride(self_: *mut AwraFramePool, plane: c_uint) -> size_t;
+    pub fn awra_frame_pool_get_width(self_: *mut AwraFramePool) -> c_uint;
+
+    //=========================================================================
     // AwraHeader
     //=========================================================================
     pub fn awra_header_get_type() -> GType;
@@ -3080,6 +3288,30 @@ unsafe extern "C" {
         self_: *mut AwraNavigationView,
         name: *const c_char,
     ) -> gboolean;
+
+    //=========================================================================
+    // AwraOverlayBar
+    //=========================================================================
+    pub fn awra_overlay_bar_get_type() -> GType;
+    pub fn awra_overlay_bar_new() -> *mut gtk::GtkWidget;
+    pub fn awra_overlay_bar_get_auto_hide(self_: *mut AwraOverlayBar) -> gboolean;
+    pub fn awra_overlay_bar_get_bar(self_: *mut AwraOverlayBar) -> *mut gtk::GtkWidget;
+    pub fn awra_overlay_bar_get_content(self_: *mut AwraOverlayBar) -> *mut gtk::GtkWidget;
+    pub fn awra_overlay_bar_get_hide_delay(self_: *mut AwraOverlayBar) -> c_uint;
+    pub fn awra_overlay_bar_get_inhibit_auto_hide(self_: *mut AwraOverlayBar) -> gboolean;
+    pub fn awra_overlay_bar_get_inset(self_: *mut AwraOverlayBar) -> AwraSpacing;
+    pub fn awra_overlay_bar_get_max_width(self_: *mut AwraOverlayBar) -> c_uint;
+    pub fn awra_overlay_bar_get_revealed(self_: *mut AwraOverlayBar) -> gboolean;
+    pub fn awra_overlay_bar_get_surface(self_: *mut AwraOverlayBar) -> *mut AwraSurface;
+    pub fn awra_overlay_bar_reveal(self_: *mut AwraOverlayBar);
+    pub fn awra_overlay_bar_set_auto_hide(self_: *mut AwraOverlayBar, auto_hide: gboolean);
+    pub fn awra_overlay_bar_set_bar(self_: *mut AwraOverlayBar, bar: *mut gtk::GtkWidget);
+    pub fn awra_overlay_bar_set_content(self_: *mut AwraOverlayBar, content: *mut gtk::GtkWidget);
+    pub fn awra_overlay_bar_set_hide_delay(self_: *mut AwraOverlayBar, milliseconds: c_uint);
+    pub fn awra_overlay_bar_set_inhibit_auto_hide(self_: *mut AwraOverlayBar, inhibit: gboolean);
+    pub fn awra_overlay_bar_set_inset(self_: *mut AwraOverlayBar, inset: AwraSpacing);
+    pub fn awra_overlay_bar_set_max_width(self_: *mut AwraOverlayBar, pixels: c_uint);
+    pub fn awra_overlay_bar_set_revealed(self_: *mut AwraOverlayBar, revealed: gboolean);
 
     //=========================================================================
     // AwraPage
@@ -3611,14 +3843,59 @@ unsafe extern "C" {
     pub fn awra_text_area_set_text(self_: *mut AwraTextArea, text: *const c_char);
 
     //=========================================================================
+    // AwraTextureStream
+    //=========================================================================
+    pub fn awra_texture_stream_get_type() -> GType;
+    pub fn awra_texture_stream_new() -> *mut AwraTextureStream;
+    pub fn awra_texture_stream_get_texture(self_: *mut AwraTextureStream) -> *mut gdk::GdkTexture;
+    pub fn awra_texture_stream_set_frame(
+        self_: *mut AwraTextureStream,
+        texture: *mut gdk::GdkTexture,
+        aspect_ratio: c_double,
+    );
+
+    //=========================================================================
+    // AwraTimeline
+    //=========================================================================
+    pub fn awra_timeline_get_type() -> GType;
+    pub fn awra_timeline_new() -> *mut gtk::GtkWidget;
+    pub fn awra_timeline_add_interval(
+        self_: *mut AwraTimeline,
+        start: c_double,
+        end: c_double,
+        label: *const c_char,
+    );
+    pub fn awra_timeline_clear_intervals(self_: *mut AwraTimeline);
+    pub fn awra_timeline_get_duration(self_: *mut AwraTimeline) -> c_double;
+    pub fn awra_timeline_get_editable(self_: *mut AwraTimeline) -> gboolean;
+    pub fn awra_timeline_get_hover_time(self_: *mut AwraTimeline) -> c_double;
+    pub fn awra_timeline_get_hover_x(self_: *mut AwraTimeline) -> c_double;
+    pub fn awra_timeline_get_n_intervals(self_: *mut AwraTimeline) -> c_uint;
+    pub fn awra_timeline_get_offset(self_: *mut AwraTimeline) -> c_double;
+    pub fn awra_timeline_get_position(self_: *mut AwraTimeline) -> c_double;
+    pub fn awra_timeline_get_preview(self_: *mut AwraTimeline) -> *mut gtk::GtkWidget;
+    pub fn awra_timeline_get_preview_popover(self_: *mut AwraTimeline) -> *mut AwraPopover;
+    pub fn awra_timeline_get_view_duration(self_: *mut AwraTimeline) -> c_double;
+    pub fn awra_timeline_get_view_start(self_: *mut AwraTimeline) -> c_double;
+    pub fn awra_timeline_set_duration(self_: *mut AwraTimeline, duration: c_double);
+    pub fn awra_timeline_set_editable(self_: *mut AwraTimeline, editable: gboolean);
+    pub fn awra_timeline_set_offset(self_: *mut AwraTimeline, offset: c_double);
+    pub fn awra_timeline_set_position(self_: *mut AwraTimeline, position: c_double);
+    pub fn awra_timeline_set_preview(self_: *mut AwraTimeline, preview: *mut gtk::GtkWidget);
+    pub fn awra_timeline_set_view_duration(self_: *mut AwraTimeline, duration: c_double);
+    pub fn awra_timeline_set_view_start(self_: *mut AwraTimeline, start: c_double);
+
+    //=========================================================================
     // AwraToastOverlay
     //=========================================================================
     pub fn awra_toast_overlay_get_type() -> GType;
     pub fn awra_toast_overlay_new() -> *mut gtk::GtkWidget;
     pub fn awra_toast_overlay_dismiss(self_: *mut AwraToastOverlay, toast_id: c_uint);
+    pub fn awra_toast_overlay_get_bottom_inset(self_: *mut AwraToastOverlay) -> c_uint;
     pub fn awra_toast_overlay_get_child(self_: *mut AwraToastOverlay) -> *mut gtk::GtkWidget;
     pub fn awra_toast_overlay_get_current_toast_id(self_: *mut AwraToastOverlay) -> c_uint;
     pub fn awra_toast_overlay_get_revealed(self_: *mut AwraToastOverlay) -> gboolean;
+    pub fn awra_toast_overlay_set_bottom_inset(self_: *mut AwraToastOverlay, pixels: c_uint);
     pub fn awra_toast_overlay_set_child(self_: *mut AwraToastOverlay, child: *mut gtk::GtkWidget);
     pub fn awra_toast_overlay_show_message(
         self_: *mut AwraToastOverlay,
@@ -3763,9 +4040,13 @@ unsafe extern "C" {
     pub fn awra_window_get_active(self_: *mut AwraWindow) -> gboolean;
     pub fn awra_window_get_chrome(self_: *mut AwraWindow) -> *mut gtk::GtkWidget;
     pub fn awra_window_get_content(self_: *mut AwraWindow) -> *mut gtk::GtkWidget;
+    pub fn awra_window_get_keep_rounded_corners(self_: *mut AwraWindow) -> gboolean;
+    pub fn awra_window_get_overlay_chrome(self_: *mut AwraWindow) -> gboolean;
     pub fn awra_window_get_root_surface(self_: *mut AwraWindow) -> *mut AwraSurface;
     pub fn awra_window_set_chrome(self_: *mut AwraWindow, chrome: *mut gtk::GtkWidget);
     pub fn awra_window_set_content(self_: *mut AwraWindow, content: *mut gtk::GtkWidget);
+    pub fn awra_window_set_keep_rounded_corners(self_: *mut AwraWindow, keep: gboolean);
+    pub fn awra_window_set_overlay_chrome(self_: *mut AwraWindow, overlaid: gboolean);
 
     //=========================================================================
     // Other functions

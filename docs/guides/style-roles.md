@@ -31,6 +31,7 @@ forbids reintroducing the compatibility roles listed below.
 | `nav-row`, `selected-nav` | row/button | Legacy navigation state | use `AwraNavigationItem:selected` |
 | `filter-dropdown` | dropdown | Dense filter sizing | use `AwraDropdown` in `AwraFilterBar` |
 | `filter-toggle` | toggle button | Dense filter toggle | use `AwraToggleButton` in `AwraFilterBar` |
+| `collection-view` | `GtkGridView` or `GtkListView` | Virtualized collections with a transparent plane, cell spacing and visible focus; GTK retains the model and selection | use when a card or row factory is application-owned |
 | `data-list`, `data-row`, `selected-data-row` | list/row | Dense GTK data presentation | keep only when a GTK behavioral row is deliberate; prefer Awra list/data views |
 | `category-text` | label | Domain category color | use `AwraBadge:custom-color` when possible |
 | `chart-*`, `matchup-*`, `relationship-*` | custom drawing/content | Domain visualization grammar | keep the application visualization |

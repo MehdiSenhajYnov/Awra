@@ -1943,6 +1943,39 @@ make_controls_page (void)
     gtk_box_append (GTK_BOX (caps), volume);
     gtk_box_append (GTK_BOX (body), make_plain_group (caps));
   }
+  append_section (body, "Interval timeline",
+                  "Chapters, clips and subtitle cues share a backend-neutral ruler. "
+                  "Drag this editable track to preview a synchronization offset.");
+  {
+    GtkWidget *timeline = awra_timeline_new ();
+    awra_timeline_set_duration (AWRA_TIMELINE (timeline), 60);
+    awra_timeline_set_position (AWRA_TIMELINE (timeline), 24);
+    awra_timeline_set_editable (AWRA_TIMELINE (timeline), TRUE);
+    awra_timeline_add_interval (AWRA_TIMELINE (timeline), 5, 16, "Opening");
+    awra_timeline_add_interval (AWRA_TIMELINE (timeline), 20, 32, "A subtitle cue");
+    awra_timeline_add_interval (AWRA_TIMELINE (timeline), 38, 56, "Another cue");
+    gtk_box_append (GTK_BOX (body), timeline);
+  }
+  append_section (body, "Floating controls",
+                  "The canvas keeps its full allocation. Move the pointer to reveal "
+                  "the bar; hover or keyboard focus protects its controls from hiding.");
+  {
+    AwraOverlayBar *overlay = AWRA_OVERLAY_BAR (awra_overlay_bar_new ());
+    GtkWidget *canvas = gtk_label_new ("Full-size content beneath floating controls");
+    GtkWidget *controls = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 8);
+    GtkWidget *timeline = awra_timeline_new ();
+    gtk_widget_set_size_request (GTK_WIDGET (overlay), -1, 240);
+    awra_timeline_set_duration (AWRA_TIMELINE (timeline), 120);
+    awra_timeline_set_position (AWRA_TIMELINE (timeline), 32);
+    awra_timeline_set_preview (AWRA_TIMELINE (timeline), gtk_label_new ("Backend-owned preview"));
+    gtk_widget_set_hexpand (timeline, TRUE);
+    gtk_box_append (GTK_BOX (controls), awra_button_new_from_icon_name ("media-playback-start-symbolic"));
+    gtk_box_append (GTK_BOX (controls), timeline);
+    awra_overlay_bar_set_content (overlay, canvas);
+    awra_overlay_bar_set_bar (overlay, controls);
+    awra_overlay_bar_set_auto_hide (overlay, TRUE);
+    gtk_box_append (GTK_BOX (body), GTK_WIDGET (overlay));
+  }
   append_section (body, "Keyboard-focus proof",
                   "Use Tab and Shift+Tab: focus-visible rings remain explicit in Light and Dark.");
   gtk_box_append (GTK_BOX (body), awra_badge_new ("GTK behavior · Awra rendering"));

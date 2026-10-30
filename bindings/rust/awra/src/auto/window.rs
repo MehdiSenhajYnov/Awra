@@ -87,6 +87,20 @@ impl WindowBuilder {
         }
     }
 
+    pub fn keep_rounded_corners(self, keep_rounded_corners: bool) -> Self {
+        Self {
+            builder: self
+                .builder
+                .property("keep-rounded-corners", keep_rounded_corners),
+        }
+    }
+
+    pub fn overlay_chrome(self, overlay_chrome: bool) -> Self {
+        Self {
+            builder: self.builder.property("overlay-chrome", overlay_chrome),
+        }
+    }
+
     pub fn show_menubar(self, show_menubar: bool) -> Self {
         Self {
             builder: self.builder.property("show-menubar", show_menubar),
@@ -464,6 +478,28 @@ pub trait WindowExt: IsA<Window> + 'static {
         unsafe { from_glib_none(ffi::awra_window_get_content(self.as_ref().to_glib_none().0)) }
     }
 
+    #[doc(alias = "awra_window_get_keep_rounded_corners")]
+    #[doc(alias = "get_keep_rounded_corners")]
+    #[doc(alias = "keep-rounded-corners")]
+    fn is_keep_rounded_corners(&self) -> bool {
+        unsafe {
+            from_glib(ffi::awra_window_get_keep_rounded_corners(
+                self.as_ref().to_glib_none().0,
+            ))
+        }
+    }
+
+    #[doc(alias = "awra_window_get_overlay_chrome")]
+    #[doc(alias = "get_overlay_chrome")]
+    #[doc(alias = "overlay-chrome")]
+    fn is_overlay_chrome(&self) -> bool {
+        unsafe {
+            from_glib(ffi::awra_window_get_overlay_chrome(
+                self.as_ref().to_glib_none().0,
+            ))
+        }
+    }
+
     #[doc(alias = "awra_window_get_root_surface")]
     #[doc(alias = "get_root_surface")]
     #[doc(alias = "root-surface")]
@@ -493,6 +529,28 @@ pub trait WindowExt: IsA<Window> + 'static {
             ffi::awra_window_set_content(
                 self.as_ref().to_glib_none().0,
                 content.map(|p| p.as_ref()).to_glib_none().0,
+            );
+        }
+    }
+
+    #[doc(alias = "awra_window_set_keep_rounded_corners")]
+    #[doc(alias = "keep-rounded-corners")]
+    fn set_keep_rounded_corners(&self, keep: bool) {
+        unsafe {
+            ffi::awra_window_set_keep_rounded_corners(
+                self.as_ref().to_glib_none().0,
+                keep.into_glib(),
+            );
+        }
+    }
+
+    #[doc(alias = "awra_window_set_overlay_chrome")]
+    #[doc(alias = "overlay-chrome")]
+    fn set_overlay_chrome(&self, overlaid: bool) {
+        unsafe {
+            ffi::awra_window_set_overlay_chrome(
+                self.as_ref().to_glib_none().0,
+                overlaid.into_glib(),
             );
         }
     }
@@ -541,6 +599,62 @@ pub trait WindowExt: IsA<Window> + 'static {
                 c"notify::content".as_ptr(),
                 Some(std::mem::transmute::<*const (), unsafe extern "C" fn()>(
                     notify_content_trampoline::<Self, F> as *const (),
+                )),
+                Box_::into_raw(f),
+            )
+        }
+    }
+
+    #[doc(alias = "keep-rounded-corners")]
+    fn connect_keep_rounded_corners_notify<F: Fn(&Self) + 'static>(&self, f: F) -> SignalHandlerId {
+        unsafe extern "C" fn notify_keep_rounded_corners_trampoline<
+            P: IsA<Window>,
+            F: Fn(&P) + 'static,
+        >(
+            this: *mut ffi::AwraWindow,
+            _param_spec: glib::ffi::gpointer,
+            f: glib::ffi::gpointer,
+        ) {
+            unsafe {
+                let f: &F = &*(f as *const F);
+                f(Window::from_glib_borrow(this).unsafe_cast_ref())
+            }
+        }
+        unsafe {
+            let f: Box_<F> = Box_::new(f);
+            connect_raw(
+                self.as_ptr() as *mut _,
+                c"notify::keep-rounded-corners".as_ptr(),
+                Some(std::mem::transmute::<*const (), unsafe extern "C" fn()>(
+                    notify_keep_rounded_corners_trampoline::<Self, F> as *const (),
+                )),
+                Box_::into_raw(f),
+            )
+        }
+    }
+
+    #[doc(alias = "overlay-chrome")]
+    fn connect_overlay_chrome_notify<F: Fn(&Self) + 'static>(&self, f: F) -> SignalHandlerId {
+        unsafe extern "C" fn notify_overlay_chrome_trampoline<
+            P: IsA<Window>,
+            F: Fn(&P) + 'static,
+        >(
+            this: *mut ffi::AwraWindow,
+            _param_spec: glib::ffi::gpointer,
+            f: glib::ffi::gpointer,
+        ) {
+            unsafe {
+                let f: &F = &*(f as *const F);
+                f(Window::from_glib_borrow(this).unsafe_cast_ref())
+            }
+        }
+        unsafe {
+            let f: Box_<F> = Box_::new(f);
+            connect_raw(
+                self.as_ptr() as *mut _,
+                c"notify::overlay-chrome".as_ptr(),
+                Some(std::mem::transmute::<*const (), unsafe extern "C" fn()>(
+                    notify_overlay_chrome_trampoline::<Self, F> as *const (),
                 )),
                 Box_::into_raw(f),
             )
