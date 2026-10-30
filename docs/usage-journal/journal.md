@@ -823,3 +823,30 @@ the same close-response path and leaves focused popovers their own dismissal
 sequence. The native VLC settings workflow covers that interaction. A DWM
 frame-style initialization also needed to run before the explicit radius
 policy, retaining both square expanded frames and small popup rounding.
+
+
+# 2026-10-30
+
+## ExplorerAwra — collections et panneaux de fichiers
+
+Le développement de l’explorateur a exposé quatre besoins génériques : une
+grille virtualisée partageant la sélection du tableau, un fil d’Ariane pouvant
+déborder sans élargir la fenêtre, des états de contenu utilisables dans un
+panneau étroit, et des en-têtes de colonnes cohérents lors du défilement
+horizontal. Ils sont traités dans Awra avec `AwraGridView`, un viewport de
+breadcrumb révélant le segment courant (LTR/RTL), des descriptions à largeur
+préférée et une correction du padding d’en-tête. ExplorerAwra n’ajoute aucun
+fournisseur CSS ni accès aux enfants privés.
+
+La validation ajoute un scénario C à 20 000 éléments (virtualisation,
+sélection, détachement du modèle/factory, destruction) et un chemin de trente
+segments dans une fenêtre de 320 pixels avec vérification RTL. La suite
+complète passe : 34 succès, un test d’état de fenêtre ignoré sous Xvfb.
+Les gates d’installation C/Python/Vala et de sous-projet Meson passent.
+
+Les miniatures, la recherche et les opérations restent dans l’application :
+ce sont des services du domaine fichiers. Le benchmark de 30 000 fichiers a
+également révélé qu’un tri Python/GI relancé à chaque lot renouvelle trop de
+cellules. Le classement initial des métadonnées est donc effectué hors du fil
+GTK, avant leur transfert borné au modèle. Cela ne nécessite pas une nouvelle
+API de framework.

@@ -7,6 +7,12 @@
 API added in this release is documented `Since: 1.1`; every 1.0.0 API is
 unchanged (checked against the frozen 1.0.0 contract).
 
+- `AwraGridView` adds a public C/GI virtualized grid with shared GTK selection
+  models, item factories, rubberband selection and semantic interaction styles.
+- Breadcrumbs scroll horizontally, reveal the current segment, and respect RTL
+  without making a long path the window minimum width.
+- Empty/loading/error descriptions wrap in narrow panes; data table header
+  padding no longer causes fixed-column row underallocation.
 - Responsive layout: `AwraMasterDetail`, `AwraFilterBar` and `AwraFormRow`
   are measured in the layout their width gives, so no frame is drawn with the
   previous layout's sizes after creation or a resize across a breakpoint.

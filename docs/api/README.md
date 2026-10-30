@@ -162,6 +162,12 @@ table presentation, state views, scrolling and incremental-loading feedback.
 `AwraDataColumn` wraps GTK factories/sorters with semantic sizing and
 alignment. `AwraSelectionToolbar` binds contextual actions directly to a
 selection model. See [data-views.md](../guides/data-views.md).
+`AwraGridView` wraps `GtkGridView` with a scrollable viewport, rubberband
+selection, keyboard navigation and Awra-owned hover/selection/focus styling.
+It accepts ordinary GTK selection models and factories; its public delegate
+provides activation, column limits and `scroll_to()`. Long breadcrumb trails
+scroll horizontally and reveal the current segment without imposing their
+full width on an application.
 `AwraListView` similarly owns its scrollable viewport and accepts an optional
 `header` widget for compact row factories that intentionally remain a single
 GTK list column. Overlay scrollbar visibility and header presentation stay

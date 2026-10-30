@@ -58,3 +58,28 @@ awra_badge_group_append (AWRA_BADGE_GROUP (types),
 They replace repeated label/grid/progress compositions observed in both the
 Showcase data workspace and Pokedia-style detail pages. Domain-specific colors
 remain badge configuration, never new framework widget types.
+
+## Virtualized grids (since 1.1)
+
+`AwraGridView` owns a `GtkGridView` inside an overlay-scrolling viewport.
+Supply a `GtkSelectionModel` and `GtkListItemFactory` as for the list view;
+retain the same selection when switching between a grid and a data table.
+GTK owns cell reuse, keyboard navigation, activation and rubberband selection.
+Awra owns neutral surfaces and reduced-motion-aware hover/focus/selection.
+
+```python
+grid = Awra.GridView.new(selection, factory)
+grid.get_delegate().connect("activate", open_item)
+grid.get_delegate().set_max_columns(12)
+```
+
+`model` and `factory` are nullable, observable GObject properties. Set them
+to `None` to detach data without destroying the viewport. Constructors and
+setters retain borrowed model/factory references; getters return borrowed
+references. Connect ordinary GTK activation signals on the public delegate;
+do not inspect the wrapper's private children. Item content, image loading
+and domain commands belong to the consuming application.
+
+State views use a preferred text width and wrap within narrow panes. Data
+column headers keep padding on cells rather than the enclosing layout row,
+so fixed column widths still work when horizontally scrolled.

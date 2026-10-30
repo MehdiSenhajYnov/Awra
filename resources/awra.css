@@ -648,6 +648,10 @@ awradataview columnview > header > button {
   font-weight: 700;
 }
 
+/* The header is a layout row, not a padded cell. Outer padding makes GTK
+ * allocate the data rows narrower than their fixed column widths. */
+awradataview columnview > header { padding: 0; }
+
 awradataview columnview > header > button:hover {
   color: @awra_foreground;
   background-color: alpha(@awra_foreground, .065);
@@ -2748,3 +2752,28 @@ popover.awra-popover.awra-win32-popup > contents {
 popover.awra-popover.awra-win32-square-popup > contents {
   border-radius: 0;
 }
+
+/* Virtualized collections share the list interaction grammar. Geometry belongs
+ * here so consumers only provide content and a GtkListItemFactory. */
+awragridview scrolledwindow, .awra-grid { background: transparent; }
+.awra-grid child {
+  padding: 12px;
+  margin: 4px;
+  min-width: 108px;
+  border-radius: 12px;
+  color: @awra_foreground;
+  background: transparent;
+  transition: background-color 110ms ease-out;
+}
+.awra-grid child:hover { background-color: @awra_control_hover; }
+.awra-grid child:selected { background-color: @awra_cap; }
+.awra-grid child:focus-visible {
+  outline: 2px solid @awra_focus;
+  outline-offset: -2px;
+}
+.awra-grid rubberband {
+  background-color: alpha(@awra_focus, .15);
+  border: 1px solid @awra_focus;
+  border-radius: 6px;
+}
+.awra-reduced-motion .awra-grid child { transition-duration: 0s; }
