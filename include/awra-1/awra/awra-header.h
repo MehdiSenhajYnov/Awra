@@ -72,4 +72,21 @@ gboolean      awra_header_get_blend_with_window (AwraHeader *self);
 void          awra_header_set_blend_with_window (AwraHeader *self,
                                                   gboolean    blend);
 
+/**
+ * awra_header_get_compact:
+ * @self: a header
+ *
+ * Returns: whether compact desktop chrome is enabled
+ * Since: 1.1
+ */
+gboolean awra_header_get_compact (AwraHeader *self);
+/**
+ * awra_header_set_compact:
+ * @self: a header
+ * @compact: whether to use compact desktop chrome
+ *
+ * Since: 1.1
+ */
+void awra_header_set_compact (AwraHeader *self, gboolean compact);
+
 G_END_DECLS

@@ -69,6 +69,7 @@ static void breadcrumb_overflow (void)
   g_assert_cmpfloat (gtk_adjustment_get_value (adjustment), >, 0);
   gtk_widget_set_direction (bar, GTK_TEXT_DIR_RTL);
   g_signal_emit_by_name (adjustment, "changed");
+  spin ();
   g_assert_cmpfloat (gtk_adjustment_get_value (adjustment), ==, gtk_adjustment_get_lower (adjustment));
   gtk_window_destroy (GTK_WINDOW (window));
   spin ();
@@ -101,6 +102,52 @@ static void text_area_contrast (void)
   spin ();
 }
 
+static void compact_workspace_contract (void)
+{
+  GtkWidget *window = gtk_window_new ();
+  GtkWidget *header = awra_header_new ();
+  GtkWidget *root = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
+  GtkWidget *toolbar = awra_selection_toolbar_new (NULL);
+  awra_selection_toolbar_set_auto_hide (AWRA_SELECTION_TOOLBAR (toolbar), FALSE);
+  awra_selection_toolbar_set_clear_label (AWRA_SELECTION_TOOLBAR (toolbar), "Dismiss selection");
+  g_assert_cmpstr (awra_selection_toolbar_get_clear_label (AWRA_SELECTION_TOOLBAR (toolbar)), ==, "Dismiss selection");
+  awra_header_set_title (AWRA_HEADER (header), "Workspace");
+  gtk_box_append (GTK_BOX (root), header);
+  gtk_box_append (GTK_BOX (root), toolbar);
+  gtk_window_set_child (GTK_WINDOW (window), root);
+  gtk_window_present (GTK_WINDOW (window));
+  spin ();
+  int regular_height = gtk_widget_get_height (header);
+  awra_header_set_compact (AWRA_HEADER (header), TRUE);
+  spin ();
+  g_assert_true (awra_header_get_compact (AWRA_HEADER (header)));
+  g_assert_cmpint (gtk_widget_get_height (header), <, regular_height);
+  g_assert_cmpint (gtk_widget_get_height (header), >=, 32);
+  awra_selection_toolbar_set_clear_label (AWRA_SELECTION_TOOLBAR (toolbar), NULL);
+  g_assert_nonnull (awra_selection_toolbar_get_clear_label (AWRA_SELECTION_TOOLBAR (toolbar)));
+  gtk_window_destroy (GTK_WINDOW (window));
+  spin ();
+}
+
+static void narrow_metadata (void)
+{
+  GtkWidget *window = gtk_window_new ();
+  GtkWidget *row = awra_metric_row_new ("Location", "A very long metadata value that must fit inside a compact inspector pane");
+  gtk_window_set_default_size (GTK_WINDOW (window), 260, 80);
+  gtk_window_set_child (GTK_WINDOW (window), row);
+  gtk_window_present (GTK_WINDOW (window));
+  spin ();
+  g_assert_cmpint (gtk_widget_get_width (row), <=, 260);
+  GtkWidget *root = gtk_widget_get_first_child (row);
+  GtkWidget *value = gtk_widget_get_last_child (root);
+  graphene_rect_t bounds;
+  g_assert_true (gtk_widget_compute_bounds (value, row, &bounds));
+  g_assert_cmpfloat (bounds.origin.x + bounds.size.width, <=, gtk_widget_get_width (row));
+  g_assert_true (gtk_label_get_layout (GTK_LABEL (value)) != NULL);
+  gtk_window_destroy (GTK_WINDOW (window));
+  spin ();
+}
+
 int main (int argc, char **argv)
 {
   g_test_init (&argc, &argv, NULL);
@@ -109,5 +156,7 @@ int main (int argc, char **argv)
   g_test_add_func ("/awra/grid/virtualization-model-lifecycle", grid_contract);
   g_test_add_func ("/awra/breadcrumb/overflow", breadcrumb_overflow);
   g_test_add_func ("/awra/text-area/readonly-contrast", text_area_contrast);
+  g_test_add_func ("/awra/workspace/compact-controls", compact_workspace_contract);
+  g_test_add_func ("/awra/workspace/narrow-metadata", narrow_metadata);
   return g_test_run ();
 }

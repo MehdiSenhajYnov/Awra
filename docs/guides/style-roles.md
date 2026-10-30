@@ -60,3 +60,30 @@ over multiple source lines.
 - Use `AwraMaterial`/`AwraSurface` for matter and depth, typed Awra widgets for
   reusable behavior, and public spacing/typography helpers for composition.
 - Never inspect or modify private GTK children to make a role work.
+
+## Desktop workspaces
+
+The following opt-in recipes keep file, media and developer workspaces compact
+without application-owned CSS. They use the same colors, contrast and motion
+preferences as the rest of Awra.
+
+| Role | Expected widget | Purpose |
+|---|---|---|
+| `workspace-canvas` | GtkBox | Quiet content plane and chrome separation |
+| `workspace-tabs` | AwraTabView | Tabs embedded in compact window chrome |
+| `compact-navigation` | AwraSidebar | Dense navigation items with selection feedback |
+| `sidebar-heading` | GtkLabel | Muted heading aligned with navigation items |
+| `compact-table` | AwraDataView | Compact rows and column headers |
+| `focused-pane` | AwraToolbar | Subtle focus feedback for independent panes |
+| `inline-search` | AwraSearchEntry | Quiet filter in a pane footer |
+| `view-switcher` | GtkBox containing AwraToggleButton | Compact, observable view selection |
+| `floating-selection` | AwraSelectionToolbar | Selection actions over content without moving it |
+| `collection-tile` | GtkBox item factory content | Compact icon/thumbnail and caption composition |
+| `inspector-pane` | GtkBox | Docked inspection pane, separated from content |
+| `document-preview` | AwraTextArea | Readable document surface without input-field decoration |
+
+`document-preview` changes presentation only. Set the public text-view delegate's
+`editable` and `cursor-visible` properties for a read-only preview. Use
+`AwraHeader:compact` for the matching compact titlebar. Its default remains the
+existing spacious header. `AwraSelectionToolbar:clear-label` lets applications
+localize or customize the dismiss-selection action alongside their own titles.

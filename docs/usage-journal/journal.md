@@ -857,3 +857,20 @@ sémantique que sur le nœud CSS `text`, alors que GtkTextView utilise aussi sa
 propre couleur pour le rendu. Le delegate reçoit maintenant explicitement la
 couleur de premier plan ; un test vérifie le contraste d’un aperçu non éditable
 en apparences claire et sombre. Aucun correctif local à ExplorerAwra.
+
+## Reprise visuelle — ExplorerAwra / référence File Pilot
+
+Le premier explorateur empilait des barres, réservait trop d’espace aux cellules
+et déplaçait le contenu à chaque sélection. La reprise utilise des onglets dans
+le chrome, une navigation indépendante par panneau, un tableau compact avec
+colonnes adaptatives, des filtres persistants et une sélection flottante.
+File Pilot sert ici de référence de composition et de densité, pas seulement
+de liste de fonctionnalités.
+
+Les besoins réutilisables sont portés dans Awra : propriété `compact` du header,
+libellé de désélection personnalisable, recettes publiques de workspace,
+ellipsisation des valeurs de métadonnées. Les captures ont révélé un cas où la
+valeur de défilement du breadcrumb était correcte mais son viewport conservait
+l’ancienne transformation ; la révélation est désormais différée après
+l’allocation. Les tests couvrent aussi le chrome compact et les métadonnées
+longues dans un panneau étroit.

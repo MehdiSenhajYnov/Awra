@@ -2784,3 +2784,113 @@ awragridview scrolledwindow, .awra-grid { background: transparent; }
   border-radius: 6px;
 }
 .awra-reduced-motion .awra-grid child { transition-duration: 0s; }
+
+/* Compact desktop composition. The header keeps its existing spacious default;
+ * desktop workspaces opt into a tighter titlebar through a typed property. */
+awraheader.awra-compact .awra-header-content {
+  min-height: 36px;
+  padding: 6px 14px;
+}
+awraheader.awra-compact .awra-header-controls button { min-height: 28px; }
+
+/* Public workspace roles: structural planes rather than additional cards. */
+.awra-role-workspace-canvas {
+  background-color: alpha(@awra_foreground, .016);
+  border-top: 1px solid @awra_separator;
+}
+.awra-role-inspector-pane {
+  background-color: alpha(@awra_foreground, .022);
+  border-left: 1px solid @awra_separator;
+}
+.awra-role-sidebar-heading {
+  font-size: .76em;
+  font-weight: 650;
+  color: @awra_muted;
+  margin: 18px 20px 6px;
+}
+.awra-role-view-switcher {
+  background: alpha(@awra_foreground, .05);
+  border: 1px solid alpha(@awra_foreground, .045);
+  border-radius: 8px;
+  padding: 2px;
+}
+.awra-role-view-switcher button { min-width: 24px; min-height: 24px; padding: 2px 6px; border-radius: 5px; }
+.awra-role-view-switcher button:checked {
+  background: @awra_cap_hover;
+  color: @awra_foreground;
+  box-shadow: 0 1px 3px alpha(black, .10);
+}
+.awra-role-floating-selection { margin: 16px; }
+.awra-role-floating-selection > awrasurface {
+  border: 1px solid @awra_border;
+  border-radius: 12px;
+  box-shadow: 0 6px 24px alpha(black, .14);
+}
+.awra-role-document-preview {
+  border: 0;
+  border-radius: 8px;
+  background-color: alpha(@awra_foreground, .035);
+  box-shadow: none;
+}
+.awra-role-document-preview textview text {
+  padding: 14px;
+  font-size: .92em;
+}
+.awra-role-document-preview:focus-within { box-shadow: none; border: 0; }
+.awra-role-collection-tile { margin: 0; }
+.awra-role-collection-tile label { font-size: .92em; }
+
+/* A collection item has one quiet selection plane; it never becomes a card.
+ * Its icon footprint remains fixed when a thumbnail arrives. */
+.awra-grid child { padding: 8px; margin: 4px; min-width: 108px; border-radius: 8px; }
+.awra-grid child:selected { background: @awra_selection; box-shadow: inset 0 0 0 1px alpha(@awra_focus, .28); }
+.awra-grid child:focus-visible { outline-offset: -1px; }
+.awra-role-compact-navigation .awra-navigation-item { min-height: 22px; padding: 6px 10px; margin: 1px 10px; }
+.awra-role-compact-navigation .awra-navigation-item:checked { background: @awra_selection; color: @awra_accent_content; box-shadow: none; }
+.awra-role-compact-table columnview cell { padding: 5px 10px; }
+.awra-role-compact-table columnview listview > row { min-height: 30px; border-radius: 4px; }
+.awra-role-compact-table columnview > header > button { min-height: 26px; padding: 4px 10px; }
+.awra-role-compact-navigation .awra-navigation-item-label { font-weight: 400; }
+.awra-role-compact-navigation .awra-navigation-item:checked .awra-navigation-item-label { font-weight: 600; }
+.awra-role-floating-selection { margin-bottom: 48px; }
+.awra-role-inline-search { min-width: 0; }
+awratoolbar.awra-role-focused-pane {
+  background: alpha(@awra_foreground, .025);
+  box-shadow: inset 0 -1px alpha(@awra_focus, .28);
+}
+.awra-role-inline-search .awra-entry {
+  min-height: 22px;
+  min-width: 0;
+  padding: 1px 4px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  box-shadow: none;
+  background: transparent;
+  font-size: .88em;
+}
+.awra-role-inline-search .awra-entry:focus-within { background: @awra_cap; outline: 0; border-color: @awra_border; }
+.awra-role-inline-search .awra-entry image { min-width: 16px; min-height: 16px; padding: 0 4px; }
+window.awra-window separator { background: @awra_separator; }
+window.awra-window separator.horizontal { min-height: 1px; }
+window.awra-window separator.vertical { min-width: 1px; }
+window.awra-window paned > separator {
+  min-width: 1px;
+  min-height: 1px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: @awra_separator;
+  box-shadow: none;
+}
+/* Workspace tabs merge into compact window chrome; the normal rounded rail
+ * remains available to galleries and standalone tab workspaces. */
+.awra-role-workspace-tabs .awra-tab-bar {
+  margin: 0;
+  min-height: 32px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+}
+.awra-role-workspace-tabs .awra-tab-pill { border-radius: 6px; }
+.awra-role-workspace-tabs .awra-tab-item { min-height: 30px; }

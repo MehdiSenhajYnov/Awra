@@ -89,6 +89,7 @@ struct _AwraBreadcrumbBar {
   GtkScrolledWindow *scroller;
   GListModel *model;
   gulong items_changed_handler;
+  guint reveal_idle;
 };
 
 enum { BAR_PROP_0, BAR_PROP_MODEL, BAR_N_PROPS };
@@ -153,6 +154,10 @@ static void
 awra_breadcrumb_bar_dispose (GObject *object)
 {
   AwraBreadcrumbBar *self = AWRA_BREADCRUMB_BAR (object);
+  if (self->reveal_idle != 0) {
+    g_source_remove (self->reveal_idle);
+    self->reveal_idle = 0;
+  }
   if (self->items_changed_handler != 0) {
     g_signal_handler_disconnect (self->model, self->items_changed_handler);
     self->items_changed_handler = 0;
@@ -192,13 +197,28 @@ awra_breadcrumb_bar_class_init (AwraBreadcrumbBarClass *klass)
                                         GTK_ACCESSIBLE_ROLE_NAVIGATION);
 }
 
-static void
-reveal_current_cb (GtkAdjustment *adjustment, AwraBreadcrumbBar *self)
+static gboolean
+reveal_current_idle (gpointer data)
 {
+  AwraBreadcrumbBar *self = data;
+  GtkAdjustment *adjustment = gtk_scrolled_window_get_hadjustment (self->scroller);
+  self->reveal_idle = 0;
   double value = gtk_widget_get_direction (GTK_WIDGET (self)) == GTK_TEXT_DIR_RTL
                    ? gtk_adjustment_get_lower (adjustment)
                    : gtk_adjustment_get_upper (adjustment) - gtk_adjustment_get_page_size (adjustment);
   gtk_adjustment_set_value (adjustment, value);
+  return G_SOURCE_REMOVE;
+}
+
+static void
+reveal_current_cb (GtkAdjustment *adjustment, AwraBreadcrumbBar *self)
+{
+  (void) adjustment;
+  /* GtkViewport configures the range while allocating its child. Scrolling
+   * synchronously there can leave a correct adjustment with an old viewport
+   * transform. Reveal after allocation, once the viewport can consume it. */
+  if (self->reveal_idle == 0)
+    self->reveal_idle = g_idle_add (reveal_current_idle, self);
 }
 
 static void

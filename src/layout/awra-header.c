@@ -369,6 +369,7 @@ struct _AwraHeader {
   gboolean show_window_controls;
   gboolean drag_enabled;
   gboolean blend_with_window;
+  gboolean compact;
 };
 
 enum {
@@ -382,6 +383,7 @@ enum {
   PROP_DRAG_ENABLED,
   PROP_MATERIAL,
   PROP_BLEND_WITH_WINDOW,
+  PROP_COMPACT,
   N_PROPS
 };
 
@@ -549,6 +551,7 @@ awra_header_get_property (GObject    *object,
   case PROP_MATERIAL:
     g_value_set_object (value, awra_header_get_material (self));
     break;
+  case PROP_COMPACT: g_value_set_boolean (value, self->compact); break;
   case PROP_BLEND_WITH_WINDOW:
     g_value_set_boolean (value, self->blend_with_window);
     break;
@@ -590,6 +593,7 @@ awra_header_set_property (GObject      *object,
   case PROP_MATERIAL:
     awra_header_set_material (self, g_value_get_object (value));
     break;
+  case PROP_COMPACT: awra_header_set_compact (self, g_value_get_boolean (value)); break;
   case PROP_BLEND_WITH_WINDOW:
     awra_header_set_blend_with_window (self, g_value_get_boolean (value));
     break;
@@ -634,6 +638,9 @@ awra_header_class_init (AwraHeaderClass *klass)
     G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
   properties[PROP_BLEND_WITH_WINDOW] = g_param_spec_boolean (
     "blend-with-window", NULL, NULL, FALSE,
+    G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+  properties[PROP_COMPACT] = g_param_spec_boolean (
+    "compact", NULL, NULL, FALSE,
     G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
   g_object_class_install_properties (object_class, N_PROPS, properties);
   gtk_widget_class_set_layout_manager_type (widget_class, GTK_TYPE_BIN_LAYOUT);
@@ -902,4 +909,23 @@ awra_header_set_blend_with_window (AwraHeader *self,
   update_surface_grammar (self);
   g_object_notify_by_pspec (G_OBJECT (self),
                             properties[PROP_BLEND_WITH_WINDOW]);
+}
+
+gboolean
+awra_header_get_compact (AwraHeader *self)
+{
+  g_return_val_if_fail (AWRA_IS_HEADER (self), FALSE);
+  return self->compact;
+}
+
+void
+awra_header_set_compact (AwraHeader *self, gboolean compact)
+{
+  g_return_if_fail (AWRA_IS_HEADER (self));
+  compact = !!compact;
+  if (self->compact == compact) return;
+  self->compact = compact;
+  if (compact) gtk_widget_add_css_class (GTK_WIDGET (self), "awra-compact");
+  else gtk_widget_remove_css_class (GTK_WIDGET (self), "awra-compact");
+  g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_COMPACT]);
 }

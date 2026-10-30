@@ -114,3 +114,14 @@ unchanged (checked against the frozen 1.0.0 contract).
 
 - Initial experimental C/GObject framework, semantic materials, AwraWindow,
   core controls, overlays and `ext-background-effect-v1` fallback backend.
+
+### Desktop workspace composition
+
+- `AwraHeader:compact` provides compact titlebar proportions without changing
+  the default header. `AwraSelectionToolbar:clear-label` customizes the
+  localized clear-selection action.
+- Public workspace roles cover embedded tabs, dense navigation and tables,
+  pane focus, inline filtering, floating selection and docked document previews.
+- Metadata values ellipsize with a full-value tooltip in narrow panes.
+- Breadcrumb reveal runs after viewport allocation, keeping the visible path
+  synchronized with the adjustment when a pane changes size.
