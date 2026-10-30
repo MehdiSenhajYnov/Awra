@@ -74,6 +74,33 @@ static void breadcrumb_overflow (void)
   spin ();
 }
 
+static void text_area_contrast (void)
+{
+  GtkWidget *window = gtk_window_new ();
+  GtkWidget *area = awra_text_area_new ();
+  GtkWidget *delegate = GTK_WIDGET (awra_text_area_get_delegate (AWRA_TEXT_AREA (area)));
+  AwraStyleManager *manager = awra_context_get_style_manager (
+    awra_context_get_for_display (gdk_display_get_default ()));
+  awra_text_area_set_text (AWRA_TEXT_AREA (area), "Read-only file preview");
+  gtk_text_view_set_editable (GTK_TEXT_VIEW (delegate), FALSE);
+  gtk_window_set_child (GTK_WINDOW (window), area);
+  gtk_window_present (GTK_WINDOW (window));
+  for (guint i = 0; i < 2; i++) {
+    GdkRGBA actual;
+    awra_style_manager_set_appearance (manager, i == 0 ? AWRA_APPEARANCE_DARK : AWRA_APPEARANCE_LIGHT);
+    spin ();
+    const GdkRGBA *expected = awra_token_set_get_foreground (
+      awra_style_manager_get_token_set (manager));
+    gtk_widget_get_color (delegate, &actual);
+    g_assert_cmpfloat_with_epsilon (actual.red, expected->red, .01);
+    g_assert_cmpfloat_with_epsilon (actual.green, expected->green, .01);
+    g_assert_cmpfloat_with_epsilon (actual.blue, expected->blue, .01);
+  }
+  awra_style_manager_set_appearance (manager, AWRA_APPEARANCE_SYSTEM);
+  gtk_window_destroy (GTK_WINDOW (window));
+  spin ();
+}
+
 int main (int argc, char **argv)
 {
   g_test_init (&argc, &argv, NULL);
@@ -81,5 +108,6 @@ int main (int argc, char **argv)
   awra_init ();
   g_test_add_func ("/awra/grid/virtualization-model-lifecycle", grid_contract);
   g_test_add_func ("/awra/breadcrumb/overflow", breadcrumb_overflow);
+  g_test_add_func ("/awra/text-area/readonly-contrast", text_area_contrast);
   return g_test_run ();
 }

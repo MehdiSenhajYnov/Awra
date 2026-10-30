@@ -9,6 +9,8 @@ unchanged (checked against the frozen 1.0.0 contract).
 
 - `AwraGridView` adds a public C/GI virtualized grid with shared GTK selection
   models, item factories, rubberband selection and semantic interaction styles.
+- `AwraTextArea` applies its semantic foreground directly to GtkTextView so
+  read-only previews retain contrast in both light and dark appearance.
 - Breadcrumbs scroll horizontally, reveal the current segment, and respect RTL
   without making a long path the window minimum width.
 - Empty/loading/error descriptions wrap in narrow panes; data table header

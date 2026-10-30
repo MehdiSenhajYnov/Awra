@@ -270,6 +270,13 @@ awratextarea:focus-within {
   box-shadow: inset 0 0 0 1px @awra_focus;
 }
 
+/* GtkTextView uses the widget foreground for Pango text too; setting only
+ * the internal text node leaves read-only previews in the desktop theme color. */
+awratextarea textview {
+  color: @awra_foreground;
+  caret-color: @awra_accent_content;
+}
+
 awratextarea textview text {
   padding: 10px 12px;
   color: @awra_foreground;

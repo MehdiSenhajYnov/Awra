@@ -850,3 +850,10 @@ ce sont des services du domaine fichiers. Le benchmark de 30 000 fichiers a
 cellules. Le classement initial des métadonnées est donc effectué hors du fil
 GTK, avant leur transfert borné au modèle. Cela ne nécessite pas une nouvelle
 API de framework.
+
+
+La revue des captures a aussi révélé que `AwraTextArea` ne posait la couleur
+sémantique que sur le nœud CSS `text`, alors que GtkTextView utilise aussi sa
+propre couleur pour le rendu. Le delegate reçoit maintenant explicitement la
+couleur de premier plan ; un test vérifie le contraste d’un aperçu non éditable
+en apparences claire et sombre. Aucun correctif local à ExplorerAwra.
