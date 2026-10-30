@@ -12,8 +12,9 @@ struct _AwraZoomController {
   double scale;
   double minimum;
   double maximum;
+  gboolean scale_text;
 };
-enum { PROP_0, PROP_SCALE, PROP_MIN_SCALE, PROP_MAX_SCALE, N_PROPS };
+enum { PROP_0, PROP_SCALE, PROP_MIN_SCALE, PROP_MAX_SCALE, PROP_SCALE_TEXT, N_PROPS };
 static GParamSpec *properties[N_PROPS];
 static gint next_scope;
 G_DEFINE_FINAL_TYPE (AwraZoomController, awra_zoom_controller, G_TYPE_OBJECT)
@@ -25,7 +26,7 @@ update_text_scale (AwraZoomController *self)
   g_autofree char *css = NULL;
   g_ascii_dtostr (number, sizeof number, self->scale);
   css = g_strdup_printf (".%s { font-size: %sem; }", self->scope, number);
-  gtk_css_provider_load_from_string (self->provider, self->scale == 1.0 ? "" : css);
+  gtk_css_provider_load_from_string (self->provider, !self->scale_text || self->scale == 1.0 ? "" : css);
 }
 
 static gboolean
@@ -70,6 +71,7 @@ get_property (GObject *object, guint id, GValue *value, GParamSpec *pspec)
   case PROP_SCALE: g_value_set_double (value, self->scale); break;
   case PROP_MIN_SCALE: g_value_set_double (value, self->minimum); break;
   case PROP_MAX_SCALE: g_value_set_double (value, self->maximum); break;
+  case PROP_SCALE_TEXT: g_value_set_boolean (value, self->scale_text); break;
   default: G_OBJECT_WARN_INVALID_PROPERTY_ID (object, id, pspec);
   }
 }
@@ -79,6 +81,8 @@ set_property (GObject *object, guint id, const GValue *value, GParamSpec *pspec)
 {
   if (id == PROP_SCALE)
     awra_zoom_controller_set_scale (AWRA_ZOOM_CONTROLLER (object), g_value_get_double (value));
+  else if (id == PROP_SCALE_TEXT)
+    awra_zoom_controller_set_scale_text (AWRA_ZOOM_CONTROLLER (object), g_value_get_boolean (value));
   else
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, id, pspec);
 }
@@ -97,6 +101,8 @@ awra_zoom_controller_class_init (AwraZoomControllerClass *klass)
     G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
   properties[PROP_MAX_SCALE] = g_param_spec_double ("max-scale", NULL, NULL, .05, 64, 3,
     G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+  properties[PROP_SCALE_TEXT] = g_param_spec_boolean ("scale-text", NULL, NULL, TRUE,
+    G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
   g_object_class_install_properties (oc, N_PROPS, properties);
 }
 
@@ -106,6 +112,7 @@ awra_zoom_controller_init (AwraZoomController *self)
   self->scale = 1;
   self->minimum = .5;
   self->maximum = 3;
+  self->scale_text = TRUE;
   self->provider = gtk_css_provider_new ();
   self->scope = g_strdup_printf ("awra-zoom-target-%u", (guint) g_atomic_int_add (&next_scope, 1));
 }
@@ -140,6 +147,22 @@ double awra_zoom_controller_get_scale (AwraZoomController *self)
 {
   g_return_val_if_fail (AWRA_IS_ZOOM_CONTROLLER (self), 1);
   return self->scale;
+}
+
+gboolean awra_zoom_controller_get_scale_text (AwraZoomController *self)
+{
+  g_return_val_if_fail (AWRA_IS_ZOOM_CONTROLLER (self), TRUE);
+  return self->scale_text;
+}
+
+void awra_zoom_controller_set_scale_text (AwraZoomController *self, gboolean scale_text)
+{
+  g_return_if_fail (AWRA_IS_ZOOM_CONTROLLER (self));
+  scale_text = !!scale_text;
+  if (self->scale_text == scale_text) return;
+  self->scale_text = scale_text;
+  if (self->provider != NULL) update_text_scale (self);
+  g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_SCALE_TEXT]);
 }
 
 void awra_zoom_controller_set_scale (AwraZoomController *self, double scale)

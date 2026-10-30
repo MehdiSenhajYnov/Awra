@@ -487,11 +487,29 @@ static void
 rebuild_menu (AwraPopover *self)
 {
   GtkWidget *box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
+  GtkWidget *scroller = gtk_scrolled_window_new ();
+  int maximum_height = 600;
+  GtkWidget *parent = gtk_widget_get_parent (GTK_WIDGET (self));
+  GtkNative *native = parent != NULL ? gtk_widget_get_native (parent) : NULL;
+  if (native != NULL) {
+    GdkSurface *surface = gtk_native_get_surface (native);
+    GdkMonitor *monitor = surface != NULL ? gdk_display_get_monitor_at_surface (gtk_widget_get_display (GTK_WIDGET (self)), surface) : NULL;
+    if (monitor != NULL) {
+      GdkRectangle geometry;
+      gdk_monitor_get_geometry (monitor, &geometry);
+      maximum_height = MAX (120, geometry.height - 64);
+    }
+  }
 
   awra_box_set_spacing (GTK_BOX (box), AWRA_SPACING_XS);
   gtk_widget_add_css_class (box, "awra-menu");
   append_menu_model (self, GTK_BOX (box), self->menu_model);
-  awra_surface_set_child (self->surface, box);
+  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroller), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+  gtk_scrolled_window_set_propagate_natural_width (GTK_SCROLLED_WINDOW (scroller), TRUE);
+  gtk_scrolled_window_set_propagate_natural_height (GTK_SCROLLED_WINDOW (scroller), TRUE);
+  gtk_scrolled_window_set_max_content_height (GTK_SCROLLED_WINDOW (scroller), maximum_height);
+  gtk_scrolled_window_set_child (GTK_SCROLLED_WINDOW (scroller), box);
+  awra_surface_set_child (self->surface, scroller);
 }
 
 GMenuModel *

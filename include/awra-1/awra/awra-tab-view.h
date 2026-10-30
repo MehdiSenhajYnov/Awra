@@ -112,6 +112,22 @@ void        awra_tab_view_set_page_tooltip  (AwraTabView *self,
  * Returns: (transfer none): the Awra-owned tab bar
  */
 GtkWidget  *awra_tab_view_get_tab_bar       (AwraTabView *self);
+/**
+ * awra_tab_view_get_page_tab:
+ * @self: a tab view
+ * @page: a page in the view
+ * Returns: (transfer none) (nullable): the page's tab, for input controllers
+ */
+GtkWidget *awra_tab_view_get_page_tab (AwraTabView *self, GtkWidget *page);
+/**
+ * awra_tab_view_reorder_page:
+ * @self: a tab view
+ * @page: a non-pinned page
+ * @position: the desired index among non-pinned pages
+ *
+ * Preserves the page, selected tab, controllers and page metadata.
+ */
+void awra_tab_view_reorder_page (AwraTabView *self, GtkWidget *page, guint position);
 gboolean    awra_tab_view_get_content_visible (AwraTabView *self);
 void        awra_tab_view_set_content_visible (AwraTabView *self,
                                                gboolean     visible);

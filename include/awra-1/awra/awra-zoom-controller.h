@@ -30,6 +30,23 @@ GtkWidget *awra_zoom_controller_get_target (AwraZoomController *self);
  */
 double awra_zoom_controller_get_scale (AwraZoomController *self);
 /**
+ * awra_zoom_controller_get_scale_text:
+ * @self: a zoom controller
+ * Returns: whether zoom also scales inherited text
+ * Since: 1.1
+ */
+gboolean awra_zoom_controller_get_scale_text (AwraZoomController *self);
+/**
+ * awra_zoom_controller_set_scale_text:
+ * @self: a zoom controller
+ * @scale_text: whether to scale text, true by default
+ *
+ * Disable for collections whose zoom changes item geometry while preserving
+ * readable labels, column headings and metadata at the desktop font size.
+ * Since: 1.1
+ */
+void awra_zoom_controller_set_scale_text (AwraZoomController *self, gboolean scale_text);
+/**
  * awra_zoom_controller_set_scale:
  * @self: a zoom controller
  * @scale: the requested scale, clamped to the configured range

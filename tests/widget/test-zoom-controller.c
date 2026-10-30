@@ -35,6 +35,14 @@ static void zoom_input_and_scope (void)
   settle ();
   g_assert_cmpint (gtk_widget_get_height (content), >, content_height);
   g_assert_cmpint (gtk_widget_get_height (chrome), ==, chrome_height);
+  awra_zoom_controller_set_scale_text (zoom, FALSE);
+  settle ();
+  g_assert_false (awra_zoom_controller_get_scale_text (zoom));
+  g_assert_cmpfloat (awra_zoom_controller_get_scale (zoom), ==, 2);
+  g_assert_cmpint (gtk_widget_get_height (content), ==, content_height);
+  awra_zoom_controller_set_scale_text (zoom, TRUE);
+  settle ();
+  g_assert_cmpint (gtk_widget_get_height (content), >, content_height);
   awra_zoom_controller_set_range (zoom, .5, 2);
   awra_zoom_controller_set_scale (zoom, 30);
   g_assert_cmpfloat (awra_zoom_controller_get_scale (zoom), ==, 2);

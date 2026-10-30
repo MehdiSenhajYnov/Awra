@@ -1301,6 +1301,45 @@ awra_tab_view_remove (AwraTabView *self,
   update_selected_tab (self);
 }
 
+GtkWidget *
+awra_tab_view_get_page_tab (AwraTabView *self, GtkWidget *page)
+{
+  g_return_val_if_fail (AWRA_IS_TAB_VIEW (self), NULL);
+  AwraTabPage *info = find_page (self, page, NULL);
+  return info != NULL ? info->tab : NULL;
+}
+
+void
+awra_tab_view_reorder_page (AwraTabView *self, GtkWidget *page, guint position)
+{
+  guint old;
+  g_return_if_fail (AWRA_IS_TAB_VIEW (self));
+  AwraTabPage *info = find_page (self, page, &old);
+  if (info == NULL || info->pinned) return;
+  AwraTabStrip *strip = AWRA_TAB_STRIP (self->tab_strip);
+  position = MIN (position, strip->children->len - 1);
+  for (guint i = 0; i < strip->children->len; i++) {
+    if (g_ptr_array_index (strip->children, i) == info->tab) {
+      g_ptr_array_steal_index (strip->children, i);
+      break;
+    }
+  }
+  g_ptr_array_insert (strip->children, position, info->tab);
+  g_ptr_array_steal_index (self->pages, old);
+  guint index = 0, count = 0;
+  while (index < self->pages->len) {
+    AwraTabPage *other = g_ptr_array_index (self->pages, index);
+    if (!other->pinned && count++ == position) break;
+    index++;
+  }
+  g_ptr_array_insert (self->pages, index, info);
+  GtkWidget *next = position + 1 < strip->children->len ? g_ptr_array_index (strip->children, position + 1) : NULL;
+  gtk_widget_insert_before (info->tab, GTK_WIDGET (strip), next);
+  gtk_widget_queue_resize (GTK_WIDGET (strip));
+  update_tab_separators (self);
+  update_selected_tab (self);
+}
+
 void
 awra_tab_view_close_page (AwraTabView *self,
                           GtkWidget   *page)
