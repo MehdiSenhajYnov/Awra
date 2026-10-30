@@ -1128,7 +1128,9 @@ awrasplitview paned > separator {
  * generic :hover fill and an action such as Cancel never acknowledges the
  * pointer. */
 .awra-button.awra-ghost:hover,
-.awra-menu-button.awra-ghost:hover {
+.awra-button.awra-toolbar-button:hover,
+.awra-menu-button.awra-ghost:hover,
+.awra-menu-button.awra-toolbar-button:hover {
   color: @awra_foreground;
   background-color: @awra_cap_hover;
   box-shadow: inset 0 1px @awra_rim;
@@ -1136,9 +1138,14 @@ awrasplitview paned > separator {
 
 .awra-button.awra-ghost:active,
 .awra-button.awra-ghost:checked,
+.awra-button.awra-toolbar-button:active,
+.awra-button.awra-toolbar-button:checked,
 .awra-menu-button.awra-ghost:active,
 .awra-menu-button.awra-ghost:checked,
-.awra-menu-button.awra-ghost.awra-open {
+.awra-menu-button.awra-ghost.awra-open,
+.awra-menu-button.awra-toolbar-button:active,
+.awra-menu-button.awra-toolbar-button:checked,
+.awra-menu-button.awra-toolbar-button.awra-open {
   color: @awra_foreground;
   background-color: @awra_control_pressed;
   box-shadow: inset 0 1px 2px rgba(10, 8, 18, 0.16);
@@ -3061,4 +3068,17 @@ window.awra-window paned > separator {
   outline: 2px solid @awra_focus;
   outline-offset: -2px;
   border-radius: 8px;
+}
+
+/* Drag preview */
+.awra-drag-preview-count {
+  min-width: 14px;
+  min-height: 14px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  color: @awra_on_accent;
+  background-color: @awra_accent;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(10, 8, 18, 0.35);
 }

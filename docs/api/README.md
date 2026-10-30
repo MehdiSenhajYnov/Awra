@@ -187,7 +187,8 @@ The media and keyboard input family adds `AwraKeyCap`, `AwraKeyboardView`
 (ANSI/ISO through `AwraKeyboardPhysicalLayout`, layout-aware legends,
 `GtkSelectionMode` selection, roving focus and per-key file drops),
 `AwraShortcutCapture`, `AwraWaveformView`, `AwraVolumeControl`,
-`AwraMediaRow` and `AwraDropZone`. Physical keys use `KeyboardEvent.code`
+`AwraMediaRow`, `AwraDropZone` and `AwraDragPreview`, which shows what a drag
+carries as an image or a counted pile. Physical keys use `KeyboardEvent.code`
 identifiers; `awra_keyboard_code_from_hardware_keycode()`,
 `awra_keyboard_code_to_hardware_keycode()` and
 `awra_keyboard_code_get_label()` bridge them to GDK hardware keycodes and the
