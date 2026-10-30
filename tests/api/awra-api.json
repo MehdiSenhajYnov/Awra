@@ -47857,6 +47857,54 @@
         },
         {
           "attributes": {
+            "get-property": "page-increment",
+            "identifier": "awra_timeline_get_page_increment",
+            "name": "get_page_increment",
+            "version": "1.1"
+          },
+          "children": [
+            {
+              "attributes": {},
+              "children": [
+                {
+                  "attributes": {
+                    "name": "self",
+                    "transfer-ownership": "none"
+                  },
+                  "children": [
+                    {
+                      "attributes": {
+                        "name": "Timeline",
+                        "type": "AwraTimeline*"
+                      },
+                      "tag": "type"
+                    }
+                  ],
+                  "tag": "instance-parameter"
+                }
+              ],
+              "tag": "parameters"
+            },
+            {
+              "attributes": {
+                "transfer-ownership": "none"
+              },
+              "children": [
+                {
+                  "attributes": {
+                    "name": "gdouble",
+                    "type": "double"
+                  },
+                  "tag": "type"
+                }
+              ],
+              "tag": "return-value"
+            }
+          ],
+          "tag": "method"
+        },
+        {
+          "attributes": {
             "get-property": "position",
             "identifier": "awra_timeline_get_position",
             "name": "get_position",
@@ -47990,6 +48038,54 @@
                   "attributes": {
                     "name": "Popover",
                     "type": "AwraPopover*"
+                  },
+                  "tag": "type"
+                }
+              ],
+              "tag": "return-value"
+            }
+          ],
+          "tag": "method"
+        },
+        {
+          "attributes": {
+            "get-property": "step-increment",
+            "identifier": "awra_timeline_get_step_increment",
+            "name": "get_step_increment",
+            "version": "1.1"
+          },
+          "children": [
+            {
+              "attributes": {},
+              "children": [
+                {
+                  "attributes": {
+                    "name": "self",
+                    "transfer-ownership": "none"
+                  },
+                  "children": [
+                    {
+                      "attributes": {
+                        "name": "Timeline",
+                        "type": "AwraTimeline*"
+                      },
+                      "tag": "type"
+                    }
+                  ],
+                  "tag": "instance-parameter"
+                }
+              ],
+              "tag": "parameters"
+            },
+            {
+              "attributes": {
+                "transfer-ownership": "none"
+              },
+              "children": [
+                {
+                  "attributes": {
+                    "name": "gdouble",
+                    "type": "double"
                   },
                   "tag": "type"
                 }
@@ -48289,6 +48385,70 @@
         },
         {
           "attributes": {
+            "identifier": "awra_timeline_set_page_increment",
+            "name": "set_page_increment",
+            "set-property": "page-increment",
+            "version": "1.1"
+          },
+          "children": [
+            {
+              "attributes": {},
+              "children": [
+                {
+                  "attributes": {
+                    "name": "self",
+                    "transfer-ownership": "none"
+                  },
+                  "children": [
+                    {
+                      "attributes": {
+                        "name": "Timeline",
+                        "type": "AwraTimeline*"
+                      },
+                      "tag": "type"
+                    }
+                  ],
+                  "tag": "instance-parameter"
+                },
+                {
+                  "attributes": {
+                    "name": "increment",
+                    "transfer-ownership": "none"
+                  },
+                  "children": [
+                    {
+                      "attributes": {
+                        "name": "gdouble",
+                        "type": "double"
+                      },
+                      "tag": "type"
+                    }
+                  ],
+                  "tag": "parameter"
+                }
+              ],
+              "tag": "parameters"
+            },
+            {
+              "attributes": {
+                "transfer-ownership": "none"
+              },
+              "children": [
+                {
+                  "attributes": {
+                    "name": "none",
+                    "type": "void"
+                  },
+                  "tag": "type"
+                }
+              ],
+              "tag": "return-value"
+            }
+          ],
+          "tag": "method"
+        },
+        {
+          "attributes": {
             "identifier": "awra_timeline_set_position",
             "name": "set_position",
             "set-property": "position",
@@ -48390,6 +48550,70 @@
                       "attributes": {
                         "name": "Gtk.Widget",
                         "type": "GtkWidget*"
+                      },
+                      "tag": "type"
+                    }
+                  ],
+                  "tag": "parameter"
+                }
+              ],
+              "tag": "parameters"
+            },
+            {
+              "attributes": {
+                "transfer-ownership": "none"
+              },
+              "children": [
+                {
+                  "attributes": {
+                    "name": "none",
+                    "type": "void"
+                  },
+                  "tag": "type"
+                }
+              ],
+              "tag": "return-value"
+            }
+          ],
+          "tag": "method"
+        },
+        {
+          "attributes": {
+            "identifier": "awra_timeline_set_step_increment",
+            "name": "set_step_increment",
+            "set-property": "step-increment",
+            "version": "1.1"
+          },
+          "children": [
+            {
+              "attributes": {},
+              "children": [
+                {
+                  "attributes": {
+                    "name": "self",
+                    "transfer-ownership": "none"
+                  },
+                  "children": [
+                    {
+                      "attributes": {
+                        "name": "Timeline",
+                        "type": "AwraTimeline*"
+                      },
+                      "tag": "type"
+                    }
+                  ],
+                  "tag": "instance-parameter"
+                },
+                {
+                  "attributes": {
+                    "name": "increment",
+                    "transfer-ownership": "none"
+                  },
+                  "children": [
+                    {
+                      "attributes": {
+                        "name": "gdouble",
+                        "type": "double"
                       },
                       "tag": "type"
                     }
@@ -48643,6 +48867,26 @@
         },
         {
           "attributes": {
+            "default-value": "10.000000",
+            "getter": "get_page_increment",
+            "name": "page-increment",
+            "setter": "set_page_increment",
+            "transfer-ownership": "none",
+            "writable": "1"
+          },
+          "children": [
+            {
+              "attributes": {
+                "name": "gdouble",
+                "type": "gdouble"
+              },
+              "tag": "type"
+            }
+          ],
+          "tag": "property"
+        },
+        {
+          "attributes": {
             "default-value": "0.000000",
             "getter": "get_position",
             "name": "position",
@@ -48673,6 +48917,26 @@
             {
               "attributes": {
                 "name": "Gtk.Widget"
+              },
+              "tag": "type"
+            }
+          ],
+          "tag": "property"
+        },
+        {
+          "attributes": {
+            "default-value": "1.000000",
+            "getter": "get_step_increment",
+            "name": "step-increment",
+            "setter": "set_step_increment",
+            "transfer-ownership": "none",
+            "writable": "1"
+          },
+          "children": [
+            {
+              "attributes": {
+                "name": "gdouble",
+                "type": "gdouble"
               },
               "tag": "type"
             }

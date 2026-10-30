@@ -7,6 +7,11 @@
 API added in this release is documented `Since: 1.1`; every 1.0.0 API is
 unchanged (checked against the frozen 1.0.0 contract).
 
+- `AwraTimeline` exposes configurable `step-increment` and `page-increment`
+  properties so local and global transport shortcuts can use consistent steps.
+  Defaults and editable-mode scaling remain compatible; C/GI/Vala/Rust expose
+  both properties.
+
 - Responsive layout: `AwraMasterDetail`, `AwraFilterBar` and `AwraFormRow`
   are measured in the layout their width gives, so no frame is drawn with the
   previous layout's sizes after creation or a resize across a breakpoint.

@@ -165,6 +165,10 @@ def main() -> int:
     assert volume.get_effective_volume() == 0
     timeline = Awra.Timeline.new()
     timeline.set_duration(120)
+    timeline.set_step_increment(5)
+    timeline.set_page_increment(30)
+    assert timeline.get_step_increment() == 5
+    assert timeline.get_page_increment() == 30
     timeline.add_interval(10, 15, "Cue")
     timeline.set_offset(-0.5)
     assert timeline.get_n_intervals() == 1
