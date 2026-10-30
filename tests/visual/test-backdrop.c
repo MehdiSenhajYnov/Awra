@@ -173,7 +173,7 @@ test_header (void)
   settle ();
   g_assert_cmpint (
       gtk_widget_get_width (GTK_WIDGET (awra_header_get_surface (AWRA_HEADER (header)))), ==,
-      800);
+      gtk_widget_get_width (header));
   gtk_window_destroy (GTK_WINDOW (window));
   settle ();
 }
