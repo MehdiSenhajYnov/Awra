@@ -129,6 +129,46 @@ GtkWidget *awra_tab_view_get_page_tab (AwraTabView *self, GtkWidget *page);
  */
 void awra_tab_view_reorder_page (AwraTabView *self, GtkWidget *page, guint position);
 /**
+ * awra_tab_view_set_page_dragged:
+ * @self: a tab view
+ * @page: a page of @self
+ * @dragged: whether the tab is being dragged
+ *
+ * Lifts the tab out of its bar while a drag carries it: neighbours close the
+ * gap and positions no longer count it. Clear it when the drag ends.
+ *
+ * Since: 1.1
+ */
+void awra_tab_view_set_page_dragged (AwraTabView *self, GtkWidget *page, gboolean dragged);
+/**
+ * awra_tab_view_get_insertion_position:
+ * @self: a tab view
+ * @x: a horizontal position in the coordinates of the tab bar
+ *
+ * Returns: the position, among tabs that are not lifted, at which a tab
+ *   dropped at @x would land. It does not depend on tabs in motion.
+ *
+ * Since: 1.1
+ */
+guint awra_tab_view_get_insertion_position (AwraTabView *self, double x);
+/**
+ * awra_tab_view_show_placeholder:
+ * @self: a tab view
+ * @position: the insertion position
+ *
+ * Opens an empty slot at @position, moving it there if it is already shown.
+ *
+ * Since: 1.1
+ */
+void awra_tab_view_show_placeholder (AwraTabView *self, guint position);
+/**
+ * awra_tab_view_hide_placeholder:
+ * @self: a tab view
+ *
+ * Since: 1.1
+ */
+void awra_tab_view_hide_placeholder (AwraTabView *self);
+/**
  * awra_tab_view_get_scroll_selects:
  * @self: a tab view
  *

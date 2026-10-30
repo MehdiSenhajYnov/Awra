@@ -27,6 +27,11 @@ unchanged (checked against the frozen 1.0.0 contract).
 - `AwraPathBar` combines breadcrumbs with an in-place text field: click, Tab
   completion from consumer-supplied suggestions that insert without committing, refusal without losing the
   typed text, and a trailing widget slot that survives both modes.
+- Tabs ease into their slots when reordered or closed. A drag can lift a tab out
+  of its bar with `awra_tab_view_set_page_dragged()` and open an empty slot with
+  `awra_tab_view_show_placeholder()`, positioned stably by
+  `awra_tab_view_get_insertion_position()`.
+- The floating selection rises into place, unless motion is reduced.
 - A middle click closes a closable tab. `AwraTabView:scroll-selects` makes
   scrolling over the tab bar move the selection rather than the strip.
 - Menus built from a `GMenuModel` now show the state of boolean and radio

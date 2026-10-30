@@ -148,12 +148,39 @@ static void narrow_metadata (void)
   spin ();
 }
 
+static void tab_placeholder_lifecycle (void)
+{
+  GtkWidget *window = gtk_window_new ();
+  GtkWidget *tabs = awra_tab_view_new ();
+  GtkWidget *first = gtk_label_new ("First");
+  GtkWidget *second = gtk_label_new ("Second");
+  awra_tab_view_append (AWRA_TAB_VIEW (tabs), first, "First", FALSE);
+  awra_tab_view_append (AWRA_TAB_VIEW (tabs), second, "Second", FALSE);
+  gtk_window_set_child (GTK_WINDOW (window), tabs);
+  gtk_window_set_default_size (GTK_WINDOW (window), 600, 200);
+  gtk_window_present (GTK_WINDOW (window));
+  spin ();
+  g_assert_cmpuint (awra_tab_view_get_insertion_position (AWRA_TAB_VIEW (tabs), 0.0), ==, 0);
+  g_assert_cmpuint (awra_tab_view_get_insertion_position (AWRA_TAB_VIEW (tabs), 5000.0), ==, 2);
+  awra_tab_view_set_page_dragged (AWRA_TAB_VIEW (tabs), first, TRUE);
+  g_assert_cmpuint (awra_tab_view_get_insertion_position (AWRA_TAB_VIEW (tabs), 5000.0), ==, 1);
+  awra_tab_view_show_placeholder (AWRA_TAB_VIEW (tabs), 1);
+  spin ();
+  /* Removing a lifted page and closing mid-animation must both be safe. */
+  awra_tab_view_remove (AWRA_TAB_VIEW (tabs), first);
+  awra_tab_view_show_placeholder (AWRA_TAB_VIEW (tabs), 0);
+  awra_tab_view_hide_placeholder (AWRA_TAB_VIEW (tabs));
+  gtk_window_destroy (GTK_WINDOW (window));
+  spin ();
+}
+
 int main (int argc, char **argv)
 {
   g_test_init (&argc, &argv, NULL);
   if (!gtk_init_check ()) return 77;
   awra_init ();
   g_test_add_func ("/awra/grid/virtualization-model-lifecycle", grid_contract);
+  g_test_add_func ("/awra/tabs/placeholder-lifecycle", tab_placeholder_lifecycle);
   g_test_add_func ("/awra/breadcrumb/overflow", breadcrumb_overflow);
   g_test_add_func ("/awra/text-area/readonly-contrast", text_area_contrast);
   g_test_add_func ("/awra/workspace/compact-controls", compact_workspace_contract);

@@ -2965,6 +2965,12 @@ awraheader.awra-compact .awra-menu-button.awra-toolbar-button {
 .awra-role-compact-table columnview > header > button { min-height: 26px; padding: 4px 10px; }
 .awra-role-compact-navigation .awra-navigation-item-label { font-weight: 400; }
 .awra-role-compact-navigation .awra-navigation-item:checked .awra-navigation-item-label { font-weight: 600; }
+@keyframes awra-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+.awra-role-floating-selection > awrasurface { animation: awra-rise 160ms cubic-bezier(.2, .8, .2, 1); }
+.awra-reduced-motion .awra-role-floating-selection > awrasurface { animation: none; }
 .awra-role-floating-selection { margin-bottom: 48px; }
 .awra-role-floating-selection > awrasurface > box { padding: 2px 6px 2px 14px; }
 .awra-role-inline-search { min-width: 0; }
@@ -3019,6 +3025,12 @@ window.awra-window paned > separator {
 }
 .awra-role-workspace-tabs .awra-tab-pill { border-radius: 6px; }
 .awra-role-workspace-tabs .awra-tab-item { min-height: 30px; }
+.awra-tab-placeholder {
+  margin: 2px 4px;
+  border-radius: 6px;
+  background-color: alpha(@awra_focus, .14);
+  box-shadow: inset 0 0 0 1px alpha(@awra_focus, .55);
+}
 /* The focused view of a divided workspace, told apart by its current tab. */
 .awra-role-active-tabs .awra-tab-item.awra-tab-selected > .awra-tab-pill { background-color: @awra_selection; }
 .awra-role-active-tabs .awra-tab-item.awra-tab-selected .awra-tab-title { color: @awra_accent_content; }
