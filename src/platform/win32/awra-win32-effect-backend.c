@@ -8,6 +8,7 @@
 #include <dwmapi.h>
 #include <gdk/win32/gdkwin32.h>
 
+#include "platform/win32/awra-win32-private.h"
 #include "platform/win32/awra-win32-util-private.h"
 
 /* DWM attributes newer than some MinGW headers. */
@@ -15,6 +16,7 @@
 #define AWRA_DWMWA_WINDOW_CORNER_PREFERENCE 33
 #define AWRA_DWMWA_SYSTEMBACKDROP_TYPE 38
 #define AWRA_DWMWCP_ROUND 2
+#define AWRA_DWMWCP_ROUNDSMALL 3
 #define AWRA_DWMWCP_DONOTROUND 1
 #define AWRA_DWMSBT_NONE 1
 #define AWRA_DWMSBT_TRANSIENTWINDOW 3 /* Acrylic: blurs what is behind */
@@ -40,7 +42,6 @@ typedef struct {
 typedef BOOL (WINAPI *SetWindowCompositionAttributeFunc) (HWND, CompositionAttribute *);
 
 #define PERSONALIZE_KEY L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"
-#define POLL_SECONDS 2
 
 typedef enum {
   MODE_NONE,
@@ -52,7 +53,7 @@ typedef struct {
   AwraEffectBackend parent;
   Mode mode;
   SetWindowCompositionAttributeFunc set_composition;
-  guint poll_id;
+  guint watch_id;
 } Win32Backend;
 
 static gboolean
@@ -70,7 +71,7 @@ current_capabilities (Win32Backend *self)
 {
   BOOL composition = FALSE;
 
-  if (self->mode == MODE_NONE ||
+  if (self->mode == MODE_NONE || self->parent.refusal != NULL ||
       FAILED (DwmIsCompositionEnabled (&composition)) || !composition ||
       !transparency_enabled ())
     return AWRA_EFFECT_CAPABILITY_NONE;
@@ -78,7 +79,7 @@ current_capabilities (Win32Backend *self)
 }
 
 static gboolean
-poll_capabilities (gpointer data)
+read_capabilities (gpointer data)
 {
   Win32Backend *self = data;
   AwraEffectCapability capabilities = current_capabilities (self);
@@ -93,15 +94,15 @@ poll_capabilities (gpointer data)
 }
 
 /* The system refused the effect: stop offering it, so Awra settles on the
- * opaque look instead of retrying on every frame. */
+ * opaque look instead of retrying on every frame. The mode stays, so the
+ * windows already given the effect are cleared the way they got it. */
 static void
 give_up (Win32Backend *self,
          const char   *reason,
          GError      **error)
 {
   g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, reason);
-  self->mode = MODE_NONE;
-  self->parent.interface_announced = FALSE;
+  self->parent.refusal = reason;
   if (self->parent.capabilities != AWRA_EFFECT_CAPABILITY_NONE) {
     self->parent.capabilities = AWRA_EFFECT_CAPABILITY_NONE;
     if (self->parent.capabilities_changed != NULL)
@@ -143,6 +144,14 @@ surface_hwnd (GdkSurface *surface,
   return hwnd;
 }
 
+static int
+corner_preference (GdkSurface *surface, int radius)
+{
+  if (radius <= 0)
+    return AWRA_DWMWCP_DONOTROUND;
+  return GDK_IS_POPUP (surface) ? AWRA_DWMWCP_ROUNDSMALL : AWRA_DWMWCP_ROUND;
+}
+
 static gpointer
 win32_apply (AwraEffectBackend *backend,
              GdkSurface        *surface,
@@ -165,7 +174,7 @@ win32_apply (AwraEffectBackend *backend,
      * wherever GTK draws translucent pixels; DWM also rounds the corners
      * and draws the native shadow. */
     MARGINS margins = { -1, -1, -1, -1 };
-    int corner = radius > 0 ? AWRA_DWMWCP_ROUND : AWRA_DWMWCP_DONOTROUND;
+    int corner = corner_preference (surface, radius);
     int backdrop = AWRA_DWMSBT_TRANSIENTWINDOW;
 
     if (FAILED (DwmExtendFrameIntoClientArea (hwnd, &margins)) ||
@@ -174,6 +183,7 @@ win32_apply (AwraEffectBackend *backend,
       give_up (self, "DWM refused the system backdrop", error);
       return NULL;
     }
+    awra_win32_style_frame (hwnd, GDK_IS_POPUP (surface));
     DwmSetWindowAttribute (hwnd, AWRA_DWMWA_WINDOW_CORNER_PREFERENCE,
                            &corner, sizeof (corner));
   } else if (self->mode != MODE_ACCENT_BLUR ||
@@ -193,13 +203,12 @@ win32_update (AwraEffectBackend *backend,
               int                radius,
               GError           **error)
 {
-  (void) surface;
   (void) width;
   (void) height;
   (void) error;
   Win32Backend *self = (Win32Backend *) backend;
   if (self->mode == MODE_SYSTEM_BACKDROP) {
-    int corner = radius > 0 ? AWRA_DWMWCP_ROUND : AWRA_DWMWCP_DONOTROUND;
+    int corner = corner_preference (surface, radius);
     DwmSetWindowAttribute ((HWND) handle, AWRA_DWMWA_WINDOW_CORNER_PREFERENCE,
                            &corner, sizeof (corner));
   }
@@ -250,8 +259,8 @@ win32_destroy (AwraEffectBackend *backend)
 {
   Win32Backend *self = (Win32Backend *) backend;
 
-  if (self->poll_id != 0)
-    g_source_remove (self->poll_id);
+  if (self->watch_id != 0)
+    g_source_remove (self->watch_id);
   g_free (self);
 }
 
@@ -284,6 +293,6 @@ awra_win32_effect_backend_new (GdkDisplay *display)
   self->parent.interface_announced = self->mode != MODE_NONE;
   self->parent.capabilities = current_capabilities (self);
   /* Follow the "Transparency effects" switch and DWM restarts. */
-  self->poll_id = g_timeout_add_seconds (POLL_SECONDS, poll_capabilities, self);
+  self->watch_id = awra_win32_watch_settings (read_capabilities, self, NULL);
   return &self->parent;
 }

@@ -201,6 +201,108 @@ impl Timeline {
         }
     }
 
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn duration(&self) -> f64 {
+        ObjectExt::property(self, "duration")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_duration(&self, duration: f64) {
+        ObjectExt::set_property(self, "duration", duration)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn is_editable(&self) -> bool {
+        ObjectExt::property(self, "editable")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_editable(&self, editable: bool) {
+        ObjectExt::set_property(self, "editable", editable)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "hover-time")]
+    pub fn hover_time(&self) -> f64 {
+        ObjectExt::property(self, "hover-time")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "hover-x")]
+    pub fn hover_x(&self) -> f64 {
+        ObjectExt::property(self, "hover-x")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn offset(&self) -> f64 {
+        ObjectExt::property(self, "offset")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_offset(&self, offset: f64) {
+        ObjectExt::set_property(self, "offset", offset)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn position(&self) -> f64 {
+        ObjectExt::property(self, "position")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_position(&self, position: f64) {
+        ObjectExt::set_property(self, "position", position)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn preview(&self) -> Option<gtk::Widget> {
+        ObjectExt::property(self, "preview")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_preview<P: IsA<gtk::Widget>>(&self, preview: Option<&P>) {
+        ObjectExt::set_property(self, "preview", preview)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "view-duration")]
+    pub fn view_duration(&self) -> f64 {
+        ObjectExt::property(self, "view-duration")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "view-duration")]
+    pub fn set_view_duration(&self, view_duration: f64) {
+        ObjectExt::set_property(self, "view-duration", view_duration)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "view-start")]
+    pub fn view_start(&self) -> f64 {
+        ObjectExt::property(self, "view-start")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "view-start")]
+    pub fn set_view_start(&self, view_start: f64) {
+        ObjectExt::set_property(self, "view-start", view_start)
+    }
+
     #[doc(alias = "offset-committed")]
     pub fn connect_offset_committed<F: Fn(&Self, f64) + 'static>(&self, f: F) -> SignalHandlerId {
         unsafe extern "C" fn offset_committed_trampoline<F: Fn(&Timeline, f64) + 'static>(
@@ -477,6 +579,8 @@ impl Timeline {
     }
 }
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 impl Default for Timeline {
     fn default() -> Self {
         Self::new()

@@ -14,6 +14,26 @@ enum { PROP_0, PROP_CAN_POP, PROP_VISIBLE_PAGE_NAME, PROP_STACK, N_PROPS };
 static GParamSpec *properties[N_PROPS];
 G_DEFINE_FINAL_TYPE (AwraNavigationView, awra_navigation_view, GTK_TYPE_WIDGET)
 static void update_motion (AwraNavigationView *self) { guint duration = self->style != NULL ? awra_motion_get_duration (self->style, AWRA_MOTION_PRESET_NORMAL) : 0; gtk_stack_set_transition_duration (self->stack, duration); gtk_stack_set_transition_type (self->stack, duration == 0 ? GTK_STACK_TRANSITION_TYPE_NONE : GTK_STACK_TRANSITION_TYPE_SLIDE_LEFT_RIGHT); }
+
+/* Pushing comes in from the end side, popping goes back from the start side,
+ * whatever order the pages were added in (SLIDE_LEFT_RIGHT follows that
+ * order). Mirrored for right-to-left text. */
+static void
+show_page (AwraNavigationView *self,
+           const char         *name,
+           gboolean            forward)
+{
+  GtkStackTransitionType type = GTK_STACK_TRANSITION_TYPE_NONE;
+
+  if (gtk_stack_get_transition_duration (self->stack) > 0) {
+    gboolean rtl = gtk_widget_get_direction (GTK_WIDGET (self)) == GTK_TEXT_DIR_RTL;
+
+    type = forward != rtl ? GTK_STACK_TRANSITION_TYPE_SLIDE_LEFT
+                          : GTK_STACK_TRANSITION_TYPE_SLIDE_RIGHT;
+  }
+  gtk_stack_set_transition_type (self->stack, type);
+  gtk_stack_set_visible_child_name (self->stack, name);
+}
 static void style_notify_cb (AwraStyleManager *style, GParamSpec *pspec, AwraNavigationView *self) { (void) style; (void) pspec; update_motion (self); }
 static void awra_navigation_view_map (GtkWidget *widget) { AwraNavigationView *self = AWRA_NAVIGATION_VIEW (widget); AwraContext *context; GTK_WIDGET_CLASS (awra_navigation_view_parent_class)->map (widget); context = awra_context_get_for_display (gtk_widget_get_display (widget)); self->style = awra_context_get_style_manager (context); update_motion (self); self->style_handler = g_signal_connect (self->style, "notify::reduced-motion", G_CALLBACK (style_notify_cb), self); }
 static void awra_navigation_view_unmap (GtkWidget *widget) { AwraNavigationView *self = AWRA_NAVIGATION_VIEW (widget); if (self->style_handler != 0) { g_signal_handler_disconnect (self->style, self->style_handler); self->style_handler = 0; self->style = NULL; } GTK_WIDGET_CLASS (awra_navigation_view_parent_class)->unmap (widget); }
@@ -29,9 +49,9 @@ static void awra_navigation_view_init (AwraNavigationView *self) { self->stack =
 static void history_changed (AwraNavigationView *self) { g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_CAN_POP]); g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_VISIBLE_PAGE_NAME]); }
 GtkWidget *awra_navigation_view_new (void) { return g_object_new (AWRA_TYPE_NAVIGATION_VIEW, NULL); }
 void awra_navigation_view_add (AwraNavigationView *self, GtkWidget *page, const char *name) { g_return_if_fail (AWRA_IS_NAVIGATION_VIEW (self)); g_return_if_fail (GTK_IS_WIDGET (page)); g_return_if_fail (name != NULL && *name != '\0'); gtk_stack_add_named (self->stack, page, name); }
-gboolean awra_navigation_view_push (AwraNavigationView *self, const char *name) { NavigationEntry *entry; g_return_val_if_fail (AWRA_IS_NAVIGATION_VIEW (self), FALSE); if (gtk_stack_get_child_by_name (self->stack, name) == NULL) return FALSE; if (self->history->len > 0) { entry = g_ptr_array_index (self->history, self->history->len - 1); if (g_str_equal (entry->name, name)) return TRUE; remember_current_focus (self); } g_ptr_array_add (self->history, navigation_entry_new (name)); gtk_stack_set_visible_child_name (self->stack, name); history_changed (self); return TRUE; }
-gboolean awra_navigation_view_pop (AwraNavigationView *self) { NavigationEntry *entry; g_return_val_if_fail (AWRA_IS_NAVIGATION_VIEW (self), FALSE); if (self->history->len <= 1) return FALSE; g_ptr_array_remove_index (self->history, self->history->len - 1); entry = g_ptr_array_index (self->history, self->history->len - 1); gtk_stack_set_visible_child_name (self->stack, entry->name); restore_entry_focus (self, entry); history_changed (self); return TRUE; }
-gboolean awra_navigation_view_replace (AwraNavigationView *self, const char *name) { g_return_val_if_fail (AWRA_IS_NAVIGATION_VIEW (self), FALSE); if (gtk_stack_get_child_by_name (self->stack, name) == NULL) return FALSE; if (self->history->len > 0) g_ptr_array_remove_index (self->history, self->history->len - 1); g_ptr_array_add (self->history, navigation_entry_new (name)); gtk_stack_set_visible_child_name (self->stack, name); history_changed (self); return TRUE; }
+gboolean awra_navigation_view_push (AwraNavigationView *self, const char *name) { NavigationEntry *entry; g_return_val_if_fail (AWRA_IS_NAVIGATION_VIEW (self), FALSE); if (gtk_stack_get_child_by_name (self->stack, name) == NULL) return FALSE; if (self->history->len > 0) { entry = g_ptr_array_index (self->history, self->history->len - 1); if (g_str_equal (entry->name, name)) return TRUE; remember_current_focus (self); } g_ptr_array_add (self->history, navigation_entry_new (name)); show_page (self, name, TRUE); history_changed (self); return TRUE; }
+gboolean awra_navigation_view_pop (AwraNavigationView *self) { NavigationEntry *entry; g_return_val_if_fail (AWRA_IS_NAVIGATION_VIEW (self), FALSE); if (self->history->len <= 1) return FALSE; g_ptr_array_remove_index (self->history, self->history->len - 1); entry = g_ptr_array_index (self->history, self->history->len - 1); show_page (self, entry->name, FALSE); restore_entry_focus (self, entry); history_changed (self); return TRUE; }
+gboolean awra_navigation_view_replace (AwraNavigationView *self, const char *name) { g_return_val_if_fail (AWRA_IS_NAVIGATION_VIEW (self), FALSE); if (gtk_stack_get_child_by_name (self->stack, name) == NULL) return FALSE; if (self->history->len > 0) g_ptr_array_remove_index (self->history, self->history->len - 1); g_ptr_array_add (self->history, navigation_entry_new (name)); show_page (self, name, TRUE); history_changed (self); return TRUE; }
 gboolean awra_navigation_view_get_can_pop (AwraNavigationView *self) { g_return_val_if_fail (AWRA_IS_NAVIGATION_VIEW (self), FALSE); return self->history->len > 1; }
 const char *awra_navigation_view_get_visible_page_name (AwraNavigationView *self) { g_return_val_if_fail (AWRA_IS_NAVIGATION_VIEW (self), NULL); return gtk_stack_get_visible_child_name (self->stack); }
 GtkStack *awra_navigation_view_get_stack (AwraNavigationView *self) { g_return_val_if_fail (AWRA_IS_NAVIGATION_VIEW (self), NULL); return self->stack; }

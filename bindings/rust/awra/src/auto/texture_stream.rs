@@ -40,6 +40,8 @@ impl TextureStream {
     }
 }
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 impl Default for TextureStream {
     fn default() -> Self {
         Self::new()

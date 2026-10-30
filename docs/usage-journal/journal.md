@@ -808,3 +808,18 @@ When GTK hides its native titlebar in fullscreen, the root supplies the top
 corners for the rounded opt-in. Consumers no longer need fullscreen corner-mask
 workarounds. Native state and rendered-alpha checks cover default/opt-in,
 docked/overlay composition and restoration on a private Wayland compositor.
+
+## 2026-10-30 — Integration with Awra 1.1
+
+The media components now share the current 1.1 development line with the newer
+Windows lifecycle, dialog responses, accessible toasts and layout fixes. New
+media APIs carry `Since: 1.1` metadata and generated Rust feature gates; the
+frozen 1.0 contract remains intact. Both the previous main API and the media
+API remain available after integration.
+
+Cross-application tests caught an Escape conflict: a focused search entry
+consumed the key before the new dialog class binding. Dialog capture now uses
+the same close-response path and leaves focused popovers their own dismissal
+sequence. The native VLC settings workflow covers that interaction. A DWM
+frame-style initialization also needed to run before the explicit radius
+policy, retaining both square expanded frames and small popup rounding.

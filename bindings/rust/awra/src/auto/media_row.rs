@@ -251,6 +251,172 @@ impl MediaRow {
         }
     }
 
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "accent-color")]
+    pub fn accent_color(&self) -> Option<gdk::RGBA> {
+        ObjectExt::property(self, "accent-color")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "accent-color")]
+    pub fn set_accent_color(&self, accent_color: Option<&gdk::RGBA>) {
+        ObjectExt::set_property(self, "accent-color", accent_color)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn duration(&self) -> f64 {
+        ObjectExt::property(self, "duration")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_duration(&self, duration: f64) {
+        ObjectExt::set_property(self, "duration", duration)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "icon-name")]
+    pub fn icon_name(&self) -> Option<glib::GString> {
+        ObjectExt::property(self, "icon-name")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "icon-name")]
+    pub fn set_icon_name(&self, icon_name: Option<&str>) {
+        ObjectExt::set_property(self, "icon-name", icon_name)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn is_playing(&self) -> bool {
+        ObjectExt::property(self, "playing")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_playing(&self, playing: bool) {
+        ObjectExt::set_property(self, "playing", playing)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn position(&self) -> f64 {
+        ObjectExt::property(self, "position")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_position(&self, position: f64) {
+        ObjectExt::set_property(self, "position", position)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn is_seekable(&self) -> bool {
+        ObjectExt::property(self, "seekable")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_seekable(&self, seekable: bool) {
+        ObjectExt::set_property(self, "seekable", seekable)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "show-play-button")]
+    pub fn shows_play_button(&self) -> bool {
+        ObjectExt::property(self, "show-play-button")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "show-play-button")]
+    pub fn set_show_play_button(&self, show_play_button: bool) {
+        ObjectExt::set_property(self, "show-play-button", show_play_button)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "show-stop-button")]
+    pub fn shows_stop_button(&self) -> bool {
+        ObjectExt::property(self, "show-stop-button")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "show-stop-button")]
+    pub fn set_show_stop_button(&self, show_stop_button: bool) {
+        ObjectExt::set_property(self, "show-stop-button", show_stop_button)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "show-volume")]
+    pub fn shows_volume(&self) -> bool {
+        ObjectExt::property(self, "show-volume")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "show-volume")]
+    pub fn set_show_volume(&self, show_volume: bool) {
+        ObjectExt::set_property(self, "show-volume", show_volume)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn subtitle(&self) -> Option<glib::GString> {
+        ObjectExt::property(self, "subtitle")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_subtitle(&self, subtitle: Option<&str>) {
+        ObjectExt::set_property(self, "subtitle", subtitle)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn suffix(&self) -> Option<gtk::Widget> {
+        ObjectExt::property(self, "suffix")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_suffix<P: IsA<gtk::Widget>>(&self, suffix: Option<&P>) {
+        ObjectExt::set_property(self, "suffix", suffix)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn title(&self) -> Option<glib::GString> {
+        ObjectExt::property(self, "title")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_title(&self, title: Option<&str>) {
+        ObjectExt::set_property(self, "title", title)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn volume(&self) -> f64 {
+        ObjectExt::property(self, "volume")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_volume(&self, volume: f64) {
+        ObjectExt::set_property(self, "volume", volume)
+    }
+
     #[doc(alias = "play-toggled")]
     pub fn connect_play_toggled<F: Fn(&Self) + 'static>(&self, f: F) -> SignalHandlerId {
         unsafe extern "C" fn play_toggled_trampoline<F: Fn(&MediaRow) + 'static>(
@@ -675,6 +841,8 @@ impl MediaRow {
     }
 }
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 impl Default for MediaRow {
     fn default() -> Self {
         glib::object::Object::new::<Self>()

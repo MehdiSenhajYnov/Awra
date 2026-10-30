@@ -16,8 +16,13 @@ cargo run --manifest-path subprojects/gir/Cargo.toml -- \
 cargo run --manifest-path subprojects/gir/Cargo.toml -- \
   -c bindings/rust/awra/Gir.toml -o bindings/rust/awra
 python3 build-aux/fix-rust-projection.py bindings/rust/awra
+cargo fmt --manifest-path bindings/rust/Cargo.toml --all
 cargo test --offline --manifest-path bindings/rust/Cargo.toml
 ```
+
+The generator writes unformatted code, hence `cargo fmt`. On Windows it
+also writes `subprojects\gir-files` in the file headers: keep the `/`, so
+the output does not depend on the platform that generated it.
 
 The safe generator configuration lists every GTK/Gio type crossing the Awra
 API boundary, so delegates, models, expressions, sorters, enum parameters and
@@ -30,3 +35,18 @@ contains the interface, but the pinned generator cannot currently combine
 version-conditioned interfaces from Gio and GTK without emitting duplicate
 wrapper declarations. The compile-time assertion in the example guards this
 relationship. The CI consumer builds the resulting committed output.
+
+## Versions and features
+
+The crates follow the C library's version. API added after 1.0 (documented
+`Since: 1.1` in the C headers) is behind the `v1_1` feature, enabled by
+default: it needs libawra 1.1 or later at build time. An application that
+must also build against libawra 1.0 turns default features off and keeps
+to the 1.0 API.
+
+## Publishing
+
+Both crates are ready for crates.io: `awra-sys` first, then `awra`, each
+with `cargo publish -p <crate>` from this directory once the matching C
+release is tagged. `awra-sys` finds libawra through pkg-config
+(`system-deps`), and skips linking on docs.rs.

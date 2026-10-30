@@ -119,6 +119,20 @@ test(
   is_parallel: false,
 )
 
+key_cap_resources = executable(
+  'test-key-cap-resources',
+  'performance/test-key-cap-resources.c',
+  dependencies: awra_dep,
+)
+
+test(
+  'key-cap-resources',
+  key_cap_resources,
+  env: ['GSK_RENDERER=cairo', 'GTK_A11Y=none'],
+  timeout: 30,
+  is_parallel: false,
+)
+
 fallback_context = executable(
   'test-fallback-context',
   'integration/test-fallback-context.c',
@@ -178,11 +192,23 @@ if gir.length() > 0
     args: [files('api/test-gir-contract.py'), gir[0]],
     depends: gir,
   )
+  # The current API, exactly; and every 1.0.0 API still there, unchanged.
   test(
-    'api-1.0-baseline',
+    'api-baseline',
     python,
     args: [
       files('api/test-api-baseline.py'),
+      gir[0],
+      files('api/awra-api.json'),
+    ],
+    depends: gir,
+  )
+  test(
+    'api-1.0-compatible',
+    python,
+    args: [
+      files('api/test-api-baseline.py'),
+      '--compatible',
       gir[0],
       files('api/awra-1.0-api.json'),
     ],
@@ -257,6 +283,19 @@ if gir.length() > 0
         'run', '--quiet', '--offline',
         '--manifest-path', rust_bindings_manifest,
         '-p', 'awra-rust-example',
+      ],
+      env: rust_bindings_env,
+      depends: gir,
+      timeout: 300,
+      is_parallel: false,
+    )
+    test(
+      'rust-1.0-api',
+      cargo,
+      args: [
+        'check', '--quiet', '--offline',
+        '--manifest-path', rust_bindings_manifest,
+        '-p', 'awra', '--no-default-features',
       ],
       env: rust_bindings_env,
       depends: gir,

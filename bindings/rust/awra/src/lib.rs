@@ -131,9 +131,7 @@ pub fn set_context_menu_model(
 }
 
 /// Returns the context menu model attached with [`set_context_menu_model`].
-pub fn context_menu_model(
-    widget: &impl glib::object::IsA<gtk::Widget>,
-) -> Option<gio::MenuModel> {
+pub fn context_menu_model(widget: &impl glib::object::IsA<gtk::Widget>) -> Option<gio::MenuModel> {
     use glib::translate::{from_glib_none, ToGlibPtr};
 
     unsafe {
@@ -145,6 +143,8 @@ pub fn context_menu_model(
 
 /// Maps a GDK hardware keycode (Linux evdev code + 8) to its
 /// `KeyboardEvent.code` identifier, such as `"KeyA"`.
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 pub fn keyboard_code_from_hardware_keycode(keycode: u32) -> Option<&'static str> {
     unsafe {
         let code = ffi::awra_keyboard_code_from_hardware_keycode(keycode);
@@ -157,6 +157,8 @@ pub fn keyboard_code_from_hardware_keycode(keycode: u32) -> Option<&'static str>
 }
 
 /// Maps a `KeyboardEvent.code` identifier to its GDK hardware keycode, or `0`.
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 pub fn keyboard_code_to_hardware_keycode(code: &str) -> u32 {
     let Ok(code) = std::ffi::CString::new(code) else {
         return 0;
@@ -166,6 +168,8 @@ pub fn keyboard_code_to_hardware_keycode(code: &str) -> u32 {
 
 /// Returns the legend of a physical key in the active keyboard layout of
 /// `display`, or a layout-independent legend when `display` is `None`.
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 pub fn keyboard_code_label(display: Option<&gdk::Display>, code: &str) -> Option<glib::GString> {
     use glib::translate::{from_glib_full, ToGlibPtr};
 

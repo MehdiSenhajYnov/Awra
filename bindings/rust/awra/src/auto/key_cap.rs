@@ -223,6 +223,146 @@ impl KeyCap {
         }
     }
 
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn is_active(&self) -> bool {
+        ObjectExt::property(self, "active")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_active(&self, active: bool) {
+        ObjectExt::set_property(self, "active", active)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn badge(&self) -> Option<glib::GString> {
+        ObjectExt::property(self, "badge")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_badge(&self, badge: Option<&str>) {
+        ObjectExt::set_property(self, "badge", badge)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn is_bound(&self) -> bool {
+        ObjectExt::property(self, "bound")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_bound(&self, bound: bool) {
+        ObjectExt::set_property(self, "bound", bound)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn is_dimmed(&self) -> bool {
+        ObjectExt::property(self, "dimmed")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_dimmed(&self, dimmed: bool) {
+        ObjectExt::set_property(self, "dimmed", dimmed)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "edge-color")]
+    pub fn edge_color(&self) -> Option<gdk::RGBA> {
+        ObjectExt::property(self, "edge-color")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "edge-color")]
+    pub fn set_edge_color(&self, edge_color: Option<&gdk::RGBA>) {
+        ObjectExt::set_property(self, "edge-color", edge_color)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "key-code")]
+    pub fn key_code(&self) -> Option<glib::GString> {
+        ObjectExt::property(self, "key-code")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "key-code")]
+    pub fn set_key_code(&self, key_code: Option<&str>) {
+        ObjectExt::set_property(self, "key-code", key_code)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn label(&self) -> Option<glib::GString> {
+        ObjectExt::property(self, "label")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_label(&self, label: Option<&str>) {
+        ObjectExt::set_property(self, "label", label)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "secondary-label")]
+    pub fn secondary_label(&self) -> Option<glib::GString> {
+        ObjectExt::property(self, "secondary-label")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "secondary-label")]
+    pub fn set_secondary_label(&self, secondary_label: Option<&str>) {
+        ObjectExt::set_property(self, "secondary-label", secondary_label)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn is_selected(&self) -> bool {
+        ObjectExt::property(self, "selected")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_selected(&self, selected: bool) {
+        ObjectExt::set_property(self, "selected", selected)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn tint(&self) -> Option<gdk::RGBA> {
+        ObjectExt::property(self, "tint")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_tint(&self, tint: Option<&gdk::RGBA>) {
+        ObjectExt::set_property(self, "tint", tint)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "width-units")]
+    pub fn width_units(&self) -> f64 {
+        ObjectExt::property(self, "width-units")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "width-units")]
+    pub fn set_width_units(&self, width_units: f64) {
+        ObjectExt::set_property(self, "width-units", width_units)
+    }
+
     #[doc(alias = "activated")]
     pub fn connect_activated<F: Fn(&Self, gdk::ModifierType) + 'static>(
         &self,
@@ -527,6 +667,8 @@ impl KeyCap {
     }
 }
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 impl Default for KeyCap {
     fn default() -> Self {
         glib::object::Object::new::<Self>()

@@ -28,11 +28,104 @@ G_DEFINE_FINAL_TYPE_WITH_CODE (
   G_IMPLEMENT_INTERFACE (GTK_TYPE_BUILDABLE,
                          awra_filter_bar_buildable_init))
 
+/* Narrower than this, or than its side-by-side minimum, the bar stacks. */
+#define COMPACT_BELOW 720
+
+static gboolean
+flips (AwraFilterBar *self,
+       GtkWidget     *widget)
+{
+  return widget == GTK_WIDGET (self->root) || widget == GTK_WIDGET (self->leading) ||
+         widget == GTK_WIDGET (self->filters_box);
+}
+
+/* Measures @widget as it is laid out stacked (@compact) or side by side,
+ * whichever its boxes are in now: the layout only changes once allocated,
+ * and parents must measure the one that their width will give. */
+static void
+measure_as (AwraFilterBar  *self,
+            GtkWidget      *widget,
+            gboolean        compact,
+            GtkOrientation  orientation,
+            int             for_size,
+            int            *minimum,
+            int            *natural)
+{
+  GtkOrientation axis = compact ? GTK_ORIENTATION_VERTICAL : GTK_ORIENTATION_HORIZONTAL;
+  int along, across, inner, count = 0;
+
+  *minimum = *natural = 0;
+  if (!gtk_widget_should_layout (widget))
+    return;
+  if (compact == self->compact || !flips (self, widget)) {
+    if (for_size >= 0) {
+      int opposite_min, opposite_nat;
+
+      /* Never measured for less than it can take. */
+      gtk_widget_measure (widget,
+                          orientation == GTK_ORIENTATION_HORIZONTAL
+                            ? GTK_ORIENTATION_VERTICAL
+                            : GTK_ORIENTATION_HORIZONTAL,
+                          -1, &opposite_min, &opposite_nat, NULL, NULL);
+      for_size = MAX (for_size, opposite_min);
+    }
+    gtk_widget_measure (widget, orientation, for_size, minimum, natural, NULL, NULL);
+    return;
+  }
+
+  if (orientation == GTK_ORIENTATION_HORIZONTAL) {
+    along = gtk_widget_get_margin_start (widget) + gtk_widget_get_margin_end (widget);
+    across = gtk_widget_get_margin_top (widget) + gtk_widget_get_margin_bottom (widget);
+  } else {
+    along = gtk_widget_get_margin_top (widget) + gtk_widget_get_margin_bottom (widget);
+    across = gtk_widget_get_margin_start (widget) + gtk_widget_get_margin_end (widget);
+  }
+  inner = for_size >= 0 ? MAX (for_size - across, 0) : -1;
+  for (GtkWidget *child = gtk_widget_get_first_child (widget); child != NULL;
+       child = gtk_widget_get_next_sibling (child)) {
+    int child_min, child_nat;
+
+    if (!gtk_widget_should_layout (child))
+      continue;
+    /* Across the box, each child gets the whole size; along it, they share
+     * it, and are measured as if alone. */
+    measure_as (self, child, compact, orientation, orientation == axis ? inner : -1,
+                &child_min, &child_nat);
+    if (orientation == axis) {
+      *minimum += child_min;
+      *natural += child_nat;
+      count++;
+    } else {
+      *minimum = MAX (*minimum, child_min);
+      *natural = MAX (*natural, child_nat);
+    }
+  }
+  if (orientation == axis && count > 1) {
+    *minimum += gtk_box_get_spacing (GTK_BOX (widget)) * (count - 1);
+    *natural += gtk_box_get_spacing (GTK_BOX (widget)) * (count - 1);
+  }
+  *minimum += along;
+  *natural += along;
+}
+
+static gboolean
+compact_for_width (AwraFilterBar *self,
+                   int            width)
+{
+  int side_min, side_nat;
+
+  if (width < COMPACT_BELOW)
+    return TRUE;
+  measure_as (self, GTK_WIDGET (self->root), FALSE, GTK_ORIENTATION_HORIZONTAL, -1,
+              &side_min, &side_nat);
+  return width < side_min;
+}
+
 static void
 update_layout (AwraFilterBar *self,
                int            width)
 {
-  gboolean compact = width < 720;
+  gboolean compact = compact_for_width (self, width);
 
   if (self->compact == compact)
     return;
@@ -53,11 +146,11 @@ update_layout (AwraFilterBar *self,
   g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_COMPACT]);
 }
 
+/* Its height depends on its width at least through its layout. */
 static GtkSizeRequestMode
-awra_filter_bar_request_mode (GtkWidget *widget)
+awra_filter_bar_request_mode (G_GNUC_UNUSED GtkWidget *widget)
 {
-  return gtk_widget_get_request_mode (
-    GTK_WIDGET (AWRA_FILTER_BAR (widget)->root));
+  return GTK_SIZE_REQUEST_HEIGHT_FOR_WIDTH;
 }
 
 static void
@@ -65,9 +158,22 @@ awra_filter_bar_measure (GtkWidget *widget, GtkOrientation orientation,
                          int for_size, int *minimum, int *natural,
                          int *minimum_baseline, int *natural_baseline)
 {
-  gtk_widget_measure (GTK_WIDGET (AWRA_FILTER_BAR (widget)->root), orientation,
-                      for_size, minimum, natural, minimum_baseline,
-                      natural_baseline);
+  AwraFilterBar *self = AWRA_FILTER_BAR (widget);
+  GtkWidget *root = GTK_WIDGET (self->root);
+
+  *minimum_baseline = *natural_baseline = -1;
+  if (orientation == GTK_ORIENTATION_HORIZONTAL) {
+    int stacked_min, stacked_nat;
+
+    /* As narrow as stacked, as wide as side by side. */
+    measure_as (self, root, TRUE, orientation, for_size, &stacked_min, &stacked_nat);
+    measure_as (self, root, FALSE, orientation, for_size, minimum, natural);
+    *minimum = MIN (*minimum, stacked_min);
+    return;
+  }
+  measure_as (self, root,
+              for_size >= 0 ? compact_for_width (self, for_size) : self->compact,
+              orientation, for_size, minimum, natural);
 }
 
 static void

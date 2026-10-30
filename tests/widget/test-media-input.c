@@ -410,12 +410,20 @@ test_keyboard_view (void)
   assert_selection (view, none);
   g_assert_cmpuint (selection.count, ==, 1);
 
+#ifdef G_OS_WIN32
+  /* Hardware keycodes are the virtual keys of the current layout. */
+  g_assert_cmpstr (awra_keyboard_code_from_hardware_keycode (0x20), ==, "Space");
+  g_assert_cmpuint (awra_keyboard_code_to_hardware_keycode ("Space"), ==, 0x20);
+  g_assert_cmpstr (awra_keyboard_code_from_hardware_keycode (
+                     awra_keyboard_code_to_hardware_keycode ("KeyA")), ==, "KeyA");
+#else
   /* Hardware keycodes are evdev + 8. */
   g_assert_cmpstr (awra_keyboard_code_from_hardware_keycode (38), ==, "KeyA");
   g_assert_cmpstr (awra_keyboard_code_from_hardware_keycode (65), ==, "Space");
   g_assert_null (awra_keyboard_code_from_hardware_keycode (3));
   g_assert_cmpuint (awra_keyboard_code_to_hardware_keycode ("Numpad4"), ==,
                     83);
+#endif
   g_assert_cmpuint (awra_keyboard_code_to_hardware_keycode ("Nope"), ==, 0);
   g_clear_pointer (&label, g_free);
   label = awra_keyboard_code_get_label (NULL, "ArrowLeft");
@@ -483,7 +491,15 @@ test_shortcut_capture (void)
   guint n = 0;
   g_auto (GStrv) codes = NULL;
   const char *labels[] = { "Ctrl", "Kick", NULL };
-  const guint stored[] = { 37, 65 };
+  /* Hardware keycodes differ per platform (evdev + 8, virtual keys). */
+  const guint key_a = awra_keyboard_code_to_hardware_keycode ("KeyA");
+  const guint key_z = awra_keyboard_code_to_hardware_keycode ("KeyZ");
+  const guint enter = awra_keyboard_code_to_hardware_keycode ("Enter");
+  const guint control = awra_keyboard_code_to_hardware_keycode ("ControlLeft");
+  const guint escape = awra_keyboard_code_to_hardware_keycode ("Escape");
+  const guint stored[] = {
+    control, awra_keyboard_code_to_hardware_keycode ("Space")
+  };
   SignalLog captured = { 0 };
   SignalLog cancelled = { 0 };
 
@@ -501,25 +517,25 @@ test_shortcut_capture (void)
                             &cancelled);
 
   /* Keys are ignored until listening starts; Enter starts it. */
-  g_assert_false (press_key (capture, GDK_KEY_a, 38, 0));
-  g_assert_true (press_key (capture, GDK_KEY_Return, 36, 0));
+  g_assert_false (press_key (capture, GDK_KEY_a, key_a, 0));
+  g_assert_true (press_key (capture, GDK_KEY_Return, enter, 0));
   g_assert_true (awra_shortcut_capture_get_listening (self));
-  release_key (capture, GDK_KEY_Return, 36, 0);
+  release_key (capture, GDK_KEY_Return, enter, 0);
   g_assert_true (awra_shortcut_capture_get_listening (self));
 
   /* Ctrl+A commits only when every key has been released. */
-  g_assert_true (press_key (capture, GDK_KEY_Control_L, 37, 0));
-  g_assert_true (press_key (capture, GDK_KEY_a, 38, GDK_CONTROL_MASK));
-  g_assert_true (press_key (capture, GDK_KEY_a, 38, GDK_CONTROL_MASK));
-  release_key (capture, GDK_KEY_a, 38, GDK_CONTROL_MASK);
+  g_assert_true (press_key (capture, GDK_KEY_Control_L, control, 0));
+  g_assert_true (press_key (capture, GDK_KEY_a, key_a, GDK_CONTROL_MASK));
+  g_assert_true (press_key (capture, GDK_KEY_a, key_a, GDK_CONTROL_MASK));
+  release_key (capture, GDK_KEY_a, key_a, GDK_CONTROL_MASK);
   g_assert_cmpuint (captured.count, ==, 0);
-  release_key (capture, GDK_KEY_Control_L, 37, GDK_CONTROL_MASK);
+  release_key (capture, GDK_KEY_Control_L, control, GDK_CONTROL_MASK);
   g_assert_cmpuint (captured.count, ==, 1);
   g_assert_false (awra_shortcut_capture_get_listening (self));
   keycodes = awra_shortcut_capture_get_keycodes (self, &n);
   g_assert_cmpuint (n, ==, 2);
-  g_assert_cmpuint (keycodes[0], ==, 37);
-  g_assert_cmpuint (keycodes[1], ==, 38);
+  g_assert_cmpuint (keycodes[0], ==, control);
+  g_assert_cmpuint (keycodes[1], ==, key_a);
   keyvals = awra_shortcut_capture_get_keyvals (self, &n);
   g_assert_cmpuint (n, ==, 2);
   g_assert_cmpuint (keyvals[0], ==, GDK_KEY_Control_L);
@@ -534,10 +550,10 @@ test_shortcut_capture (void)
 
   /* Without chords a second normal key replaces the first. */
   awra_shortcut_capture_start (self);
-  press_key (capture, GDK_KEY_a, 38, 0);
-  press_key (capture, GDK_KEY_z, 52, 0);
-  release_key (capture, GDK_KEY_a, 38, 0);
-  release_key (capture, GDK_KEY_z, 52, 0);
+  press_key (capture, GDK_KEY_a, key_a, 0);
+  press_key (capture, GDK_KEY_z, key_z, 0);
+  release_key (capture, GDK_KEY_a, key_a, 0);
+  release_key (capture, GDK_KEY_z, key_z, 0);
   codes = awra_shortcut_capture_get_codes (self);
   g_assert_cmpstrv (codes, ((const char *[]) { "KeyZ", NULL }));
   g_clear_pointer (&codes, g_strfreev);
@@ -546,10 +562,10 @@ test_shortcut_capture (void)
   /* Chords keep both keys. */
   awra_shortcut_capture_set_allow_chords (self, TRUE);
   awra_shortcut_capture_start (self);
-  press_key (capture, GDK_KEY_a, 38, 0);
-  press_key (capture, GDK_KEY_z, 52, 0);
-  release_key (capture, GDK_KEY_z, 52, 0);
-  release_key (capture, GDK_KEY_a, 38, 0);
+  press_key (capture, GDK_KEY_a, key_a, 0);
+  press_key (capture, GDK_KEY_z, key_z, 0);
+  release_key (capture, GDK_KEY_z, key_z, 0);
+  release_key (capture, GDK_KEY_a, key_a, 0);
   codes = awra_shortcut_capture_get_codes (self);
   g_assert_cmpstrv (codes, ((const char *[]) { "KeyA", "KeyZ", NULL }));
   g_clear_pointer (&codes, g_strfreev);
@@ -557,7 +573,7 @@ test_shortcut_capture (void)
 
   /* Escape cancels and keeps the previous shortcut. */
   awra_shortcut_capture_start (self);
-  g_assert_true (press_key (capture, GDK_KEY_Escape, 9, 0));
+  g_assert_true (press_key (capture, GDK_KEY_Escape, escape, 0));
   g_assert_false (awra_shortcut_capture_get_listening (self));
   g_assert_cmpuint (cancelled.count, ==, 1);
   awra_shortcut_capture_get_keycodes (self, &n);

@@ -40,12 +40,16 @@ GtkListView        *awra_list_view_get_delegate (AwraListView *self);
  * @self: an Awra list view
  *
  * Returns: (transfer none) (nullable): the optional table-style header
+ *
+ * Since: 1.1
  */
 GtkWidget          *awra_list_view_get_header   (AwraListView *self);
 /**
  * awra_list_view_set_header:
  * @self: an Awra list view
  * @header: (nullable): an optional table-style header
+ *
+ * Since: 1.1
  */
 void                awra_list_view_set_header   (AwraListView *self,
                                                  GtkWidget    *header);

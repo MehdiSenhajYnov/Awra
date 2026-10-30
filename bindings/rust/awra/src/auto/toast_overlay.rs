@@ -48,6 +48,8 @@ impl ToastOverlay {
         ToastOverlayBuilder::new()
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     #[doc(alias = "awra_toast_overlay_dismiss")]
     pub fn dismiss(&self, toast_id: u32) {
         unsafe {
@@ -55,6 +57,8 @@ impl ToastOverlay {
         }
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     #[doc(alias = "awra_toast_overlay_get_bottom_inset")]
     #[doc(alias = "get_bottom_inset")]
     #[doc(alias = "bottom-inset")]
@@ -68,6 +72,8 @@ impl ToastOverlay {
         unsafe { from_glib_none(ffi::awra_toast_overlay_get_child(self.to_glib_none().0)) }
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     #[doc(alias = "awra_toast_overlay_get_current_toast_id")]
     #[doc(alias = "get_current_toast_id")]
     pub fn current_toast_id(&self) -> u32 {
@@ -81,6 +87,8 @@ impl ToastOverlay {
         unsafe { from_glib(ffi::awra_toast_overlay_get_revealed(self.to_glib_none().0)) }
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     #[doc(alias = "awra_toast_overlay_set_bottom_inset")]
     #[doc(alias = "bottom-inset")]
     pub fn set_bottom_inset(&self, pixels: u32) {
@@ -111,6 +119,8 @@ impl ToastOverlay {
         }
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     #[doc(alias = "awra_toast_overlay_show_with_action")]
     pub fn show_with_action(
         &self,
@@ -155,6 +165,8 @@ impl ToastOverlay {
         }
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     #[doc(alias = "bottom-inset")]
     pub fn connect_bottom_inset_notify<F: Fn(&Self) + 'static>(&self, f: F) -> SignalHandlerId {
         unsafe extern "C" fn notify_bottom_inset_trampoline<F: Fn(&ToastOverlay) + 'static>(
@@ -253,6 +265,8 @@ impl ToastOverlayBuilder {
         }
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn bottom_inset(self, bottom_inset: u32) -> Self {
         Self {
             builder: self.builder.property("bottom-inset", bottom_inset),

@@ -6,8 +6,13 @@
 #include <awra/awra-popover.h>
 #include <awra/awra-layout.h>
 
+#include "awra-config.h"
 #include "core/awra-context-private.h"
 #include "awra-i18n-private.h"
+#ifdef AWRA_HAVE_WIN32
+#include <gdk/win32/gdkwin32.h>
+#include "platform/win32/awra-win32-private.h"
+#endif
 
 struct _AwraPopover {
   GtkPopover parent_instance;
@@ -87,6 +92,20 @@ style_changed_cb (AwraStyleManager *manager,
   sync_native_effect (self);
 }
 
+static void rebuild_menu (AwraPopover *self);
+
+static void
+awra_popover_show (GtkWidget *widget)
+{
+  AwraPopover *self = AWRA_POPOVER (widget);
+
+  if (self->menu_model != NULL) {
+    rebuild_menu (self);
+    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_CHILD]);
+  }
+  GTK_WIDGET_CLASS (awra_popover_parent_class)->show (widget);
+}
+
 static void
 awra_popover_map (GtkWidget *widget)
 {
@@ -94,6 +113,23 @@ awra_popover_map (GtkWidget *widget)
 
   GTK_WIDGET_CLASS (awra_popover_parent_class)->map (widget);
   self->context = awra_context_get_for_display (gtk_widget_get_display (widget));
+#ifdef AWRA_HAVE_WIN32
+  /* The popover is its own HWND there: DWM rounds and shadows it, so draw
+   * the same corner and no shadow of our own (it would square the corners). */
+  if (GDK_IS_WIN32_DISPLAY (gtk_widget_get_display (widget))) {
+    GdkSurface *native = gtk_native_get_surface (GTK_NATIVE (self));
+
+    double radius = awra_win32_popup_corner_radius ();
+
+    awra_surface_set_radius (self->surface, radius);
+    awra_surface_set_elevation_level (self->surface, AWRA_ELEVATION_FLAT);
+    /* GtkPopover clips its child to the contents' radius: match it too. */
+    gtk_widget_add_css_class (widget, radius > 0.0 ? "awra-win32-popup"
+                                                   : "awra-win32-square-popup");
+    if (GDK_IS_WIN32_SURFACE (native))
+      awra_win32_style_frame (gdk_win32_surface_get_handle (native), TRUE);
+  }
+#endif
   if (self->style_handler == 0) {
     self->style_handler = g_signal_connect (
       awra_context_get_style_manager (self->context),
@@ -210,6 +246,7 @@ awra_popover_class_init (AwraPopoverClass *klass)
   object_class->dispose = awra_popover_dispose;
   object_class->get_property = awra_popover_get_property;
   object_class->set_property = awra_popover_set_property;
+  widget_class->show = awra_popover_show;
   widget_class->map = awra_popover_map;
   widget_class->unmap = awra_popover_unmap;
   widget_class->size_allocate = awra_popover_size_allocate;
@@ -444,6 +481,19 @@ append_menu_model (AwraPopover *self,
   }
 }
 
+/* Items are built from the model as it is when the menu opens: models
+ * filled or changed after awra_popover_set_menu_model() show up too. */
+static void
+rebuild_menu (AwraPopover *self)
+{
+  GtkWidget *box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
+
+  awra_box_set_spacing (GTK_BOX (box), AWRA_SPACING_XS);
+  gtk_widget_add_css_class (box, "awra-menu");
+  append_menu_model (self, GTK_BOX (box), self->menu_model);
+  awra_surface_set_child (self->surface, box);
+}
+
 GMenuModel *
 awra_popover_get_menu_model (AwraPopover *self)
 {
@@ -455,8 +505,6 @@ void
 awra_popover_set_menu_model (AwraPopover *self,
                              GMenuModel   *model)
 {
-  GtkWidget *box;
-
   g_return_if_fail (AWRA_IS_POPOVER (self));
   g_return_if_fail (model == NULL || G_IS_MENU_MODEL (model));
 
@@ -471,11 +519,7 @@ awra_popover_set_menu_model (AwraPopover *self,
      * outside click, GTK also closes its parent instead of leaving a detached
      * menu behind. Arbitrary-content popovers keep the GTK default. */
     gtk_popover_set_cascade_popdown (GTK_POPOVER (self), TRUE);
-    box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
-    awra_box_set_spacing (GTK_BOX (box), AWRA_SPACING_XS);
-    gtk_widget_add_css_class (box, "awra-menu");
-    append_menu_model (self, GTK_BOX (box), model);
-    awra_surface_set_child (self->surface, box);
+    rebuild_menu (self);
   }
   g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_CHILD]);
   g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_MENU_MODEL]);

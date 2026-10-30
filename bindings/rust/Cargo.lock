@@ -16,7 +16,7 @@ checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
 
 [[package]]
 name = "awra"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "awra-sys",
  "bitflags",
@@ -35,7 +35,7 @@ dependencies = [
 
 [[package]]
 name = "awra-sys"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "gdk4-sys",
  "gio-sys",

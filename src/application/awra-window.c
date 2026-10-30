@@ -179,6 +179,21 @@ active_changed_cb (AwraWindow *self, GParamSpec *pspec, gpointer user_data)
 }
 
 static void
+awra_window_realize (GtkWidget *widget)
+{
+  GTK_WIDGET_CLASS (awra_window_parent_class)->realize (widget);
+#ifdef AWRA_HAVE_WIN32
+  if (gtk_widget_has_css_class (widget, "awra-win32")) {
+    /* DWM shadows the window (dialogs and the palette ask for elevation):
+     * Awra's own shadow would only darken the corners inside it. */
+    awra_surface_set_elevation_level (get_priv (AWRA_WINDOW (widget))->root_surface,
+                                      AWRA_ELEVATION_FLAT);
+    awra_win32_window_attach (GTK_WINDOW (widget));
+  }
+#endif
+}
+
+static void
 awra_window_map (GtkWidget *widget)
 {
   AwraWindow *self = AWRA_WINDOW (widget);
@@ -324,6 +339,7 @@ awra_window_class_init (AwraWindowClass *klass)
   object_class->dispose = awra_window_dispose;
   object_class->get_property = awra_window_get_property;
   object_class->set_property = awra_window_set_property;
+  widget_class->realize = awra_window_realize;
   widget_class->map = awra_window_map;
   widget_class->unmap = awra_window_unmap;
   widget_class->size_allocate = awra_window_size_allocate;
@@ -337,9 +353,23 @@ awra_window_class_init (AwraWindowClass *klass)
   properties[PROP_CHROME] = g_param_spec_object (
       "chrome", NULL, NULL, GTK_TYPE_WIDGET,
       G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+  /**
+   * AwraWindow:overlay-chrome:
+   *
+   * Place chrome above the full content allocation.
+   *
+   * Since: 1.1
+   */
   properties[PROP_OVERLAY_CHROME] = g_param_spec_boolean (
       "overlay-chrome", NULL, "Chrome overlays the content without reserving height",
       FALSE, G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+  /**
+   * AwraWindow:keep-rounded-corners:
+   *
+   * Retain configured frame rounding when maximized or fullscreen.
+   *
+   * Since: 1.1
+   */
   properties[PROP_KEEP_ROUNDED_CORNERS] = g_param_spec_boolean (
       "keep-rounded-corners", NULL,
       "Keep configured frame rounding when maximized or fullscreen", FALSE,
@@ -380,12 +410,13 @@ awra_window_init (AwraWindow *self)
   gtk_window_set_default_size (GTK_WINDOW (self), 900, 620);
 #ifdef AWRA_HAVE_WIN32
   /* DWM draws the shadow and rounds the corners natively; GTK's own shadow
-   * margin would otherwise be filled by the backdrop too. */
-  if (GDK_IS_WIN32_DISPLAY (gtk_widget_get_display (GTK_WIDGET (self))))
-    {
-      gtk_widget_add_css_class (GTK_WIDGET (self), "awra-win32");
-      awra_surface_set_radius (priv->root_surface, awra_win32_window_corner_radius ());
-    }
+   * and resize margin would otherwise be filled by the backdrop too (see
+   * awra_win32_window_attach). */
+  if (GDK_IS_WIN32_DISPLAY (gtk_widget_get_display (GTK_WIDGET (self)))) {
+    gtk_widget_add_css_class (GTK_WIDGET (self), "awra-win32");
+    awra_surface_set_radius (priv->root_surface,
+                             awra_win32_window_corner_radius ());
+  }
 #endif
 
   priv->material_handler = g_signal_connect (priv->root_surface, "notify::material",

@@ -267,7 +267,8 @@ Phase D is complete.
 ### Stable contract and reference applications
 
 - The complete non-documentation `Awra-1.0` GIR contract is frozen in
-  `tests/api/awra-1.0-api.json`; public ELF symbols, SONAME
+  `tests/api/awra-1.0-api.json` (later releases are checked against it and
+  `tests/api/awra-api.json` holds the current surface); public ELF symbols, SONAME
   `libawra-1.so.1`, nullability, transfer, properties, signals and enum values
   are machine checked.
 - The generated C, Python/GI, Vala and Rust consumers pass against the clean

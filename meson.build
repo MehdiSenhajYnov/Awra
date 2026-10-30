@@ -3,7 +3,7 @@
 project(
   'awra',
   'c',
-  version: '1.0.0',
+  version: '1.1.0',
   license: 'LGPL-2.1-or-later',
   meson_version: '>= 1.3.0',
   default_options: [
@@ -16,6 +16,7 @@ project(
 gnome = import('gnome')
 i18n = import('i18n')
 pkgconfig = import('pkgconfig')
+fs = import('fs')
 vala_available = add_languages('vala', native: false, required: false)
 
 cc = meson.get_compiler('c')
@@ -46,6 +47,14 @@ add_project_arguments(
 
 inc_public = include_directories('include/awra-1')
 inc_private = include_directories('src', 'src/platform')
+
+# The version header is read by every consumer as is (no generated header
+# to find): it must say the project's version.
+if not fs.read('include/awra-1/awra/awra-version.h').contains(
+    '#define AWRA_VERSION_S "' + meson.project_version() + '"')
+  error('include/awra-1/awra/awra-version.h does not match version ' +
+        meson.project_version())
+endif
 
 public_headers = files(
   'include/awra-1/awra/awra.h',
@@ -229,7 +238,8 @@ awra_symbol_map = custom_target(
   ],
 )
 
-awra_deps = [gtk_dep, gio_dep]
+# ceil, floor and round: libm is a library of its own on Linux.
+awra_deps = [gtk_dep, gio_dep, cc.find_library('m', required: false)]
 if wayland_dep.found() and wayland_scanner.found()
   protocol_xml = files('protocols/ext-background-effect-v1.xml')
   protocol_header = custom_target(
@@ -253,14 +263,35 @@ if host_machine.system() == 'windows'
     'src/platform/win32/awra-win32-effect-backend.c',
     'src/platform/win32/awra-win32-system.c',
     'src/platform/win32/awra-win32-util.c',
+    'src/platform/win32/awra-win32-window.c',
   )
-  awra_deps += [cc.find_library('dwmapi'), cc.find_library('advapi32')]
+  awra_deps += [
+    cc.find_library('dwmapi'),
+    cc.find_library('advapi32'),
+    cc.find_library('comctl32'),
+  ]
 endif
 
-# PE has no symbol versioning: MinGW exports the library's symbols itself.
+# PE has no symbol versioning: a module-definition file limits the DLL to
+# the same public symbols instead (MinGW would otherwise export them all).
 awra_link_args = []
 awra_link_depends = []
-if host_machine.system() != 'windows'
+awra_library_kwargs = {}
+if host_machine.system() == 'windows'
+  awra_module_defs = custom_target(
+    'awra-module-defs',
+    input: public_headers,
+    output: 'awra.def',
+    command: [
+      python,
+      files('build-aux/generate-version-script.py'),
+      '--def',
+      '@OUTPUT@',
+      '@INPUT@',
+    ],
+  )
+  awra_library_kwargs += {'vs_module_defs': awra_module_defs}
+else
   awra_link_args += '-Wl,--version-script=' + meson.project_build_root() / 'awra.map'
   awra_link_depends += awra_symbol_map
 endif
@@ -276,6 +307,7 @@ libawra = library(
   link_args: awra_link_args,
   link_depends: awra_link_depends,
   install: true,
+  kwargs: awra_library_kwargs,
 )
 
 awra_dep = declare_dependency(

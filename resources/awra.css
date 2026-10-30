@@ -200,7 +200,6 @@ awraerrorstate > box {
 
 awrafilterbar > box,
 awrafilterbar > box > box,
-awramasterdetail > box,
 awradetailpane > box,
 awradetailpane > box > box {
   margin: 0;
@@ -901,8 +900,8 @@ awrasplitview paned > separator {
 
 .awra-titlebar windowcontrols button,
 .awra-header-controls button {
-  min-width: 24px;
-  min-height: 24px;
+  min-width: 32px;
+  min-height: 32px;
   margin: 0;
   padding: 0;
   border: 0;
@@ -2726,4 +2725,22 @@ window.awra-window.awra-win32:backdrop {
 .awra-role-collection-view > child:selected,
 .awra-role-collection-view > row:selected {
   background-color: @awra_selection;
+}
+
+/* GTK still keeps a 12px resize-handle margin around a client-decorated
+ * window, which DWM would fill with the backdrop: cancel it so the Win32
+ * window is the visible one (it resizes through native borders instead). */
+window.awra-window.awra-win32.csd:not(.maximized):not(.fullscreen) {
+  margin: -12px;
+}
+
+/* Windows popups are rounded by DWM with its small radius (none on Windows
+ * 10): GtkPopover must clip its content the same way, or the backdrop shows
+ * in the corners. */
+popover.awra-popover.awra-win32-popup > contents {
+  border-radius: 4px;
+}
+
+popover.awra-popover.awra-win32-square-popup > contents {
+  border-radius: 0;
 }

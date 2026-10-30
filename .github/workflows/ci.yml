@@ -32,15 +32,17 @@ jobs:
           dbus-uuidgen > /etc/machine-id
           install -d -m 700 "$XDG_RUNTIME_DIR"
       - name: Configure and compile
-        run: meson setup _build --prefix=/opt/awra -Ddeveloper=true && meson compile -C _build
+        run: >-
+          ./build-aux/ci-run.sh sh -c 'meson setup _build --prefix=/opt/awra
+          -Ddeveloper=true && meson compile -C _build'
       - name: Prepare locked Rust dependencies
         run: |
           cargo fetch --locked --manifest-path tests/consumers/rust-experimental/Cargo.toml
           cargo fetch --locked --manifest-path bindings/rust/Cargo.toml
       - name: Test
-        run: dbus-run-session -- xvfb-run -a meson test -C _build --print-errorlogs
+        run: ./build-aux/ci-run.sh dbus-run-session -- xvfb-run -a meson test -C _build --print-errorlogs
       - name: Clean install consumers
-        run: dbus-run-session -- xvfb-run -a ./build-aux/validate-install.sh _build
+        run: ./build-aux/ci-run.sh dbus-run-session -- xvfb-run -a ./build-aux/validate-install.sh _build
       - name: Distribution archive
         run: |
           export SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)"
@@ -49,7 +51,7 @@ jobs:
           meson dist -C _build --no-tests
           sha256sum --check /tmp/awra-dist.sha256
       - name: Meson subproject consumer
-        run: ./build-aux/validate-subproject.sh
+        run: ./build-aux/ci-run.sh ./build-aux/validate-subproject.sh
 
   generic-backend:
     runs-on: ubuntu-latest
@@ -75,10 +77,11 @@ jobs:
           install -d -m 700 "$XDG_RUNTIME_DIR"
       - name: Build without Wayland effects
         run: >-
-          meson setup _build-generic -Dwayland-effects=disabled
-          -Ddeveloper=false && meson compile -C _build-generic
+          ./build-aux/ci-run.sh sh -c 'meson setup _build-generic
+          -Dwayland-effects=disabled -Ddeveloper=false &&
+          meson compile -C _build-generic'
       - name: Generic fallback suite
-        run: dbus-run-session -- xvfb-run -a meson test -C _build-generic --print-errorlogs
+        run: ./build-aux/ci-run.sh dbus-run-session -- xvfb-run -a meson test -C _build-generic --print-errorlogs
 
   sanitizers:
     runs-on: ubuntu-latest
@@ -103,4 +106,36 @@ jobs:
           dbus-uuidgen > /etc/machine-id
           install -d -m 700 "$XDG_RUNTIME_DIR"
       - name: ASan and UBSan
-        run: dbus-run-session -- xvfb-run -a ./build-aux/run-sanitizers.sh _build-sanitize
+        run: ./build-aux/ci-run.sh dbus-run-session -- xvfb-run -a ./build-aux/run-sanitizers.sh _build-sanitize
+
+  # The MSYS2 UCRT64 GTK, as the Windows packaging uses: Win32 backend,
+  # DWM effects, the DLL's export list, and the suite on a real desktop.
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    env:
+      GSK_RENDERER: cairo
+    steps:
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            git
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-meson
+            mingw-w64-ucrt-x86_64-ninja
+            mingw-w64-ucrt-x86_64-pkgconf
+            mingw-w64-ucrt-x86_64-gtk4
+            mingw-w64-ucrt-x86_64-python
+      - uses: actions/checkout@v4
+      - name: Configure and compile
+        run: >-
+          ./build-aux/ci-run.sh sh -c 'meson setup _build
+          -Dwayland-effects=disabled -Dintrospection=disabled
+          -Dtests=true -Dexamples=true -Dshowcase=true &&
+          meson compile -C _build'
+      - name: Test
+        run: ./build-aux/ci-run.sh meson test -C _build --print-errorlogs

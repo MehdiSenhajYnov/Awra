@@ -51,8 +51,23 @@ impl AspectPaintable {
             ))
         }
     }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "aspect-ratio")]
+    pub fn aspect_ratio(&self) -> f64 {
+        ObjectExt::property(self, "aspect-ratio")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn paintable(&self) -> Option<gdk::Paintable> {
+        ObjectExt::property(self, "paintable")
+    }
 }
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 impl Default for AspectPaintable {
     fn default() -> Self {
         glib::object::Object::new::<Self>()

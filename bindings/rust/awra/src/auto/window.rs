@@ -87,6 +87,8 @@ impl WindowBuilder {
         }
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn keep_rounded_corners(self, keep_rounded_corners: bool) -> Self {
         Self {
             builder: self
@@ -95,6 +97,8 @@ impl WindowBuilder {
         }
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn overlay_chrome(self, overlay_chrome: bool) -> Self {
         Self {
             builder: self.builder.property("overlay-chrome", overlay_chrome),
@@ -478,6 +482,8 @@ pub trait WindowExt: IsA<Window> + 'static {
         unsafe { from_glib_none(ffi::awra_window_get_content(self.as_ref().to_glib_none().0)) }
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     #[doc(alias = "awra_window_get_keep_rounded_corners")]
     #[doc(alias = "get_keep_rounded_corners")]
     #[doc(alias = "keep-rounded-corners")]
@@ -489,6 +495,8 @@ pub trait WindowExt: IsA<Window> + 'static {
         }
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     #[doc(alias = "awra_window_get_overlay_chrome")]
     #[doc(alias = "get_overlay_chrome")]
     #[doc(alias = "overlay-chrome")]
@@ -533,6 +541,8 @@ pub trait WindowExt: IsA<Window> + 'static {
         }
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     #[doc(alias = "awra_window_set_keep_rounded_corners")]
     #[doc(alias = "keep-rounded-corners")]
     fn set_keep_rounded_corners(&self, keep: bool) {
@@ -544,6 +554,8 @@ pub trait WindowExt: IsA<Window> + 'static {
         }
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     #[doc(alias = "awra_window_set_overlay_chrome")]
     #[doc(alias = "overlay-chrome")]
     fn set_overlay_chrome(&self, overlaid: bool) {
@@ -605,6 +617,8 @@ pub trait WindowExt: IsA<Window> + 'static {
         }
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     #[doc(alias = "keep-rounded-corners")]
     fn connect_keep_rounded_corners_notify<F: Fn(&Self) + 'static>(&self, f: F) -> SignalHandlerId {
         unsafe extern "C" fn notify_keep_rounded_corners_trampoline<
@@ -633,6 +647,8 @@ pub trait WindowExt: IsA<Window> + 'static {
         }
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     #[doc(alias = "overlay-chrome")]
     fn connect_overlay_chrome_notify<F: Fn(&Self) + 'static>(&self, f: F) -> SignalHandlerId {
         unsafe extern "C" fn notify_overlay_chrome_trampoline<

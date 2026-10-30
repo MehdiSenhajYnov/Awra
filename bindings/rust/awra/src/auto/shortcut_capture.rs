@@ -208,6 +208,38 @@ impl ShortcutCapture {
         }
     }
 
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "allow-chords")]
+    pub fn allows_chords(&self) -> bool {
+        ObjectExt::property(self, "allow-chords")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "allow-chords")]
+    pub fn set_allow_chords(&self, allow_chords: bool) {
+        ObjectExt::set_property(self, "allow-chords", allow_chords)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn is_listening(&self) -> bool {
+        ObjectExt::property(self, "listening")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn placeholder(&self) -> Option<glib::GString> {
+        ObjectExt::property(self, "placeholder")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_placeholder(&self, placeholder: Option<&str>) {
+        ObjectExt::set_property(self, "placeholder", placeholder)
+    }
+
     #[doc(alias = "cancelled")]
     pub fn connect_cancelled<F: Fn(&Self) + 'static>(&self, f: F) -> SignalHandlerId {
         unsafe extern "C" fn cancelled_trampoline<F: Fn(&ShortcutCapture) + 'static>(
@@ -332,6 +364,8 @@ impl ShortcutCapture {
     }
 }
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 impl Default for ShortcutCapture {
     fn default() -> Self {
         Self::new()

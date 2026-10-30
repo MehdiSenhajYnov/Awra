@@ -21,4 +21,17 @@ guint    awra_win32_watch_system         (GtkSettings           *settings,
 /* Corner radius DWM gives windows on Windows 11, 0 on earlier versions. */
 double   awra_win32_window_corner_radius (void);
 
+/* Popups (popovers, menus) get DWM's small corner radius. */
+double   awra_win32_popup_corner_radius  (void);
+
+/* Make @window's realized Win32 window exactly its visible area: no
+ * client-side resize margin, native resize borders and DWM corners. */
+void     awra_win32_window_attach        (GtkWindow             *window);
+
+/* Native frame of an Awra surface's HWND: DWM rounds it like Awra draws it
+ * (the small radius for a popup), and its 1px border, translucent over the
+ * backdrop, is dropped. */
+void     awra_win32_style_frame          (gpointer               hwnd,
+                                          gboolean               popup);
+
 G_END_DECLS

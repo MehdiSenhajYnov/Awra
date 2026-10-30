@@ -3,7 +3,6 @@
 #include <awra/awra.h>
 #include <glib/gstdio.h>
 #include <math.h>
-#include <unistd.h>
 
 #include "layout/awra-split-view-private.h"
 
@@ -1370,6 +1369,305 @@ test_form_alignment_and_control_width (void)
                    >=, 5);
 }
 
+/* A row not allocated yet is still side by side: it is measured as the width
+ * it gets will lay it out, never wider than stacked, so a new row does not
+ * widen a narrow column nor get a side-by-side height there for a frame. */
+static void
+test_form_row_measured_for_its_layout (void)
+{
+  g_autoptr (GtkWidget) row = g_object_ref_sink (awra_form_row_new ());
+  GtkWidget *entry = awra_entry_new ();
+  GtkWidget *label;
+  int row_min = 0, label_min = 0, field_min = 0;
+  int row_height = 0, label_height = 0, field_height = 0;
+
+  awra_form_row_set_label (AWRA_FORM_ROW (row), "Lecture");
+  awra_form_row_set_control (AWRA_FORM_ROW (row), entry);
+  label = gtk_widget_get_first_child (gtk_widget_get_first_child (row));
+  g_assert_false (gtk_widget_has_css_class (row, "awra-compact"));
+
+  gtk_widget_measure (row, GTK_ORIENTATION_HORIZONTAL, -1,
+                      &row_min, NULL, NULL, NULL);
+  gtk_widget_measure (label, GTK_ORIENTATION_HORIZONTAL, -1,
+                      &label_min, NULL, NULL, NULL);
+  gtk_widget_measure (entry, GTK_ORIENTATION_HORIZONTAL, -1,
+                      &field_min, NULL, NULL, NULL);
+  g_assert_cmpint (row_min, <, label_min + field_min);
+
+  g_assert_cmpint (gtk_widget_get_request_mode (row), ==,
+                   GTK_SIZE_REQUEST_HEIGHT_FOR_WIDTH);
+  gtk_widget_measure (row, GTK_ORIENTATION_VERTICAL, 320,
+                      &row_height, NULL, NULL, NULL);
+  gtk_widget_measure (label, GTK_ORIENTATION_VERTICAL, -1,
+                      &label_height, NULL, NULL, NULL);
+  gtk_widget_measure (entry, GTK_ORIENTATION_VERTICAL, 320,
+                      &field_height, NULL, NULL, NULL);
+  g_assert_cmpint (row_height, >=, label_height + field_height);
+}
+
+/* A divider the user dragged stays put while the mode does not change. */
+static void
+test_split_view_keeps_dragged_divider (void)
+{
+  g_autoptr (GtkWidget) split = g_object_ref_sink (awra_split_view_new ());
+  GtkPaned *paned;
+
+  awra_split_view_set_sidebar (AWRA_SPLIT_VIEW (split), gtk_label_new ("Sidebar"));
+  awra_split_view_set_content (AWRA_SPLIT_VIEW (split), gtk_label_new ("Content"));
+  paned = GTK_PANED (gtk_widget_get_first_child (split));
+
+  awra_split_view_update_for_width (AWRA_SPLIT_VIEW (split), 1200);
+  g_assert_cmpint (gtk_paned_get_position (paned), ==, 244);
+  gtk_paned_set_position (paned, 400);
+  awra_split_view_update_for_width (AWRA_SPLIT_VIEW (split), 1300);
+  g_assert_cmpint (gtk_paned_get_position (paned), ==, 400);
+  awra_split_view_update_for_width (AWRA_SPLIT_VIEW (split), 800);
+  g_assert_cmpint (gtk_paned_get_position (paned), ==, 220);
+  awra_split_view_update_for_width (AWRA_SPLIT_VIEW (split), 1300);
+  g_assert_cmpint (gtk_paned_get_position (paned), ==, 244);
+}
+
+/* The two widths of a responsive container can be set in either order. */
+static void
+test_responsive_widths_in_any_order (void)
+{
+  g_autoptr (GtkWidget) bin = g_object_ref_sink (awra_responsive_bin_new ());
+  g_autoptr (GtkWidget) split = g_object_ref_sink (awra_split_view_new ());
+
+  g_object_set (bin, "compact-width", 1000, "expanded-width", 800, NULL);
+  g_assert_cmpuint (awra_responsive_bin_get_compact_width (AWRA_RESPONSIVE_BIN (bin)), ==, 1000);
+  g_assert_cmpuint (awra_responsive_bin_get_expanded_width (AWRA_RESPONSIVE_BIN (bin)), ==, 800);
+  g_object_set (split, "compact-width", 1000, "expanded-width", 700, NULL);
+  awra_split_view_update_for_width (AWRA_SPLIT_VIEW (split), 900);
+  g_assert_cmpint (awra_split_view_get_layout_mode (AWRA_SPLIT_VIEW (split)), ==,
+                   AWRA_LAYOUT_MODE_COMPACT);
+  awra_split_view_update_for_width (AWRA_SPLIT_VIEW (split), 1100);
+  g_assert_cmpint (awra_split_view_get_layout_mode (AWRA_SPLIT_VIEW (split)), ==,
+                   AWRA_LAYOUT_MODE_EXPANDED);
+}
+
+static GtkWidget *
+sized_box (int width,
+           int height)
+{
+  GtkWidget *box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
+
+  gtk_widget_set_size_request (box, width, height);
+  return box;
+}
+
+/* A master-detail is measured as the width it gets lays it out: one pane
+ * alone when narrow, both side by side when wide; the hidden pane keeps
+ * its own visibility. */
+static void
+test_master_detail_measured_for_its_layout (void)
+{
+  g_autoptr (GtkWidget) view = g_object_ref_sink (awra_master_detail_new ());
+  GtkWidget *master = sized_box (200, 100);
+  GtkWidget *detail = sized_box (450, 150);
+  int minimum = 0, natural = 0;
+
+  awra_master_detail_set_master (AWRA_MASTER_DETAIL (view), master);
+  awra_master_detail_set_detail (AWRA_MASTER_DETAIL (view), detail);
+
+  gtk_widget_measure (view, GTK_ORIENTATION_HORIZONTAL, -1, &minimum, &natural, NULL, NULL);
+  g_assert_cmpint (minimum, ==, 200);
+  g_assert_cmpint (natural, >=, 320 + 450);
+  g_assert_cmpint (gtk_widget_get_request_mode (view), ==, GTK_SIZE_REQUEST_HEIGHT_FOR_WIDTH);
+  gtk_widget_measure (view, GTK_ORIENTATION_VERTICAL, 500, &minimum, NULL, NULL, NULL);
+  g_assert_cmpint (minimum, ==, 100);
+  gtk_widget_measure (view, GTK_ORIENTATION_VERTICAL, 1200, &minimum, NULL, NULL, NULL);
+  g_assert_cmpint (minimum, ==, 150);
+  /* Wider than compact, but too narrow for both panes: still one. */
+  gtk_widget_measure (view, GTK_ORIENTATION_VERTICAL, 700, &minimum, NULL, NULL, NULL);
+  g_assert_cmpint (minimum, ==, 100);
+
+  awra_master_detail_show_detail (AWRA_MASTER_DETAIL (view));
+  gtk_widget_measure (view, GTK_ORIENTATION_HORIZONTAL, -1, &minimum, NULL, NULL, NULL);
+  g_assert_cmpint (minimum, ==, 450);
+  gtk_widget_measure (view, GTK_ORIENTATION_VERTICAL, 500, &minimum, NULL, NULL, NULL);
+  g_assert_cmpint (minimum, ==, 150);
+  g_assert_true (gtk_widget_get_visible (master));
+}
+
+/* A new filter bar, still side by side, is measured as the width it gets
+ * will lay it out. */
+static void
+test_filter_bar_measured_for_its_layout (void)
+{
+  g_autoptr (GtkWidget) bar = g_object_ref_sink (awra_filter_bar_new ());
+  int stacked = 0, side = 0, minimum = 0;
+
+  awra_filter_bar_set_search (AWRA_FILTER_BAR (bar), sized_box (300, 40));
+  awra_filter_bar_append_filter (AWRA_FILTER_BAR (bar), sized_box (200, 40));
+  awra_filter_bar_set_summary (AWRA_FILTER_BAR (bar), sized_box (100, 20));
+  awra_filter_bar_set_reset_widget (AWRA_FILTER_BAR (bar), sized_box (80, 30));
+  g_assert_false (awra_filter_bar_get_compact (AWRA_FILTER_BAR (bar)));
+
+  gtk_widget_measure (bar, GTK_ORIENTATION_HORIZONTAL, -1, &minimum, NULL, NULL, NULL);
+  g_assert_cmpint (minimum, <, 300 + 200 + 100 + 80);
+  gtk_widget_measure (bar, GTK_ORIENTATION_VERTICAL, 400, &stacked, NULL, NULL, NULL);
+  gtk_widget_measure (bar, GTK_ORIENTATION_VERTICAL, 1200, &side, NULL, NULL, NULL);
+  g_assert_cmpint (stacked, >=, 40 + 40 + 30);
+  g_assert_cmpint (side, <, stacked);
+}
+
+/* Pushing slides in from the end, popping goes back from the start,
+ * whatever order the pages were added in. */
+static void
+test_navigation_direction (void)
+{
+  g_autoptr (GtkWidget) view = g_object_ref_sink (awra_navigation_view_new ());
+  GtkStack *stack = awra_navigation_view_get_stack (AWRA_NAVIGATION_VIEW (view));
+
+  awra_navigation_view_add (AWRA_NAVIGATION_VIEW (view), gtk_label_new ("Detail"), "detail");
+  awra_navigation_view_add (AWRA_NAVIGATION_VIEW (view), gtk_label_new ("Home"), "home");
+  gtk_stack_set_transition_duration (stack, 200);
+  gtk_widget_set_direction (view, GTK_TEXT_DIR_LTR);
+
+  g_assert_true (awra_navigation_view_push (AWRA_NAVIGATION_VIEW (view), "home"));
+  g_assert_true (awra_navigation_view_push (AWRA_NAVIGATION_VIEW (view), "detail"));
+  g_assert_cmpint (gtk_stack_get_transition_type (stack), ==,
+                   GTK_STACK_TRANSITION_TYPE_SLIDE_LEFT);
+  g_assert_true (awra_navigation_view_pop (AWRA_NAVIGATION_VIEW (view)));
+  g_assert_cmpint (gtk_stack_get_transition_type (stack), ==,
+                   GTK_STACK_TRANSITION_TYPE_SLIDE_RIGHT);
+  g_assert_cmpstr (awra_navigation_view_get_visible_page_name (AWRA_NAVIGATION_VIEW (view)),
+                   ==, "home");
+}
+
+typedef struct {
+  guint count;
+  char *last;
+} ResponseLog;
+
+static void
+dialog_response_cb (AwraDialog  *dialog,
+                    const char  *response,
+                    ResponseLog *log)
+{
+  (void) dialog;
+  log->count++;
+  g_free (log->last);
+  log->last = g_strdup (response);
+}
+
+/* Responses: buttons below the body, a default one, and the one closing
+ * the dialog gives. */
+static void
+test_dialog_responses (void)
+{
+  ResponseLog log = { 0 };
+  ResponseLog saved = { 0 };
+  GtkWidget *dialog = awra_dialog_new (NULL);
+  GtkWidget *body = gtk_label_new ("Delete the profile?");
+
+  g_object_ref_sink (dialog);
+  awra_dialog_set_body (AWRA_DIALOG (dialog), body);
+  g_assert_true (awra_dialog_get_body (AWRA_DIALOG (dialog)) == body);
+  g_assert_true (gtk_widget_is_ancestor (body, dialog));
+  awra_dialog_add_response (AWRA_DIALOG (dialog), "cancel", "Cancel");
+  awra_dialog_add_response (AWRA_DIALOG (dialog), "delete", "Delete");
+  awra_dialog_set_response_appearance (AWRA_DIALOG (dialog), "delete",
+                                       AWRA_BUTTON_APPEARANCE_DESTRUCTIVE);
+  awra_dialog_set_default_response (AWRA_DIALOG (dialog), "delete");
+  awra_dialog_set_close_response (AWRA_DIALOG (dialog), "cancel");
+  g_assert_cmpstr (awra_dialog_get_default_response (AWRA_DIALOG (dialog)), ==, "delete");
+  g_assert_cmpstr (awra_dialog_get_close_response (AWRA_DIALOG (dialog)), ==, "cancel");
+  g_assert_nonnull (gtk_window_get_default_widget (GTK_WINDOW (dialog)));
+  g_signal_connect (dialog, "response", G_CALLBACK (dialog_response_cb), &log);
+  g_signal_connect (dialog, "response::delete", G_CALLBACK (dialog_response_cb), &saved);
+
+  /* Closing answers the close response (GTK only closes realized windows). */
+  gtk_widget_realize (dialog);
+  gtk_window_close (GTK_WINDOW (dialog));
+  g_assert_cmpuint (log.count, ==, 1);
+  g_assert_cmpstr (log.last, ==, "cancel");
+  g_assert_cmpuint (saved.count, ==, 0);
+  g_object_unref (dialog);
+
+  dialog = g_object_ref_sink (awra_dialog_new (NULL));
+  awra_dialog_add_response (AWRA_DIALOG (dialog), "delete", "Delete");
+  awra_dialog_set_close_response (AWRA_DIALOG (dialog), "cancel");
+  g_signal_connect (dialog, "response", G_CALLBACK (dialog_response_cb), &log);
+  g_signal_connect (dialog, "response::delete", G_CALLBACK (dialog_response_cb), &saved);
+  awra_dialog_respond (AWRA_DIALOG (dialog), "delete");
+  /* Once, not also as a close response. */
+  g_assert_cmpuint (log.count, ==, 2);
+  g_assert_cmpstr (log.last, ==, "delete");
+  g_assert_cmpuint (saved.count, ==, 1);
+  g_object_unref (dialog);
+  g_free (log.last);
+  g_free (saved.last);
+}
+
+static GtkWidget *
+find_role (GtkWidget         *widget,
+           GtkAccessibleRole  role)
+{
+  if (gtk_accessible_get_accessible_role (GTK_ACCESSIBLE (widget)) == role)
+    return widget;
+  for (GtkWidget *child = gtk_widget_get_first_child (widget); child != NULL;
+       child = gtk_widget_get_next_sibling (child)) {
+    GtkWidget *found = find_role (child, role);
+
+    if (found != NULL)
+      return found;
+  }
+  return NULL;
+}
+
+/* What assistive technologies are told: radio segments with one Tab stop,
+ * required form fields, toasts as status updates, tabs of a tab list. */
+static void
+test_accessibility_semantics (void)
+{
+  g_autoptr (GtkWidget) segmented = g_object_ref_sink (awra_segmented_control_new ());
+  g_autoptr (GtkWidget) row = g_object_ref_sink (awra_form_row_new ());
+  g_autoptr (GtkWidget) toasts = g_object_ref_sink (awra_toast_overlay_new ());
+  g_autoptr (GtkWidget) tabs = g_object_ref_sink (awra_tab_view_new ());
+  GtkWidget *entry = awra_entry_new ();
+  GtkWidget *first;
+  GtkWidget *second;
+  g_autoptr (GtkATContext) context = NULL;
+  gboolean states;
+
+  awra_segmented_control_append (AWRA_SEGMENTED_CONTROL (segmented), "Day");
+  awra_segmented_control_append (AWRA_SEGMENTED_CONTROL (segmented), "Week");
+  g_assert_cmpint (gtk_accessible_get_accessible_role (GTK_ACCESSIBLE (segmented)), ==,
+                   GTK_ACCESSIBLE_ROLE_RADIO_GROUP);
+  first = gtk_widget_get_first_child (gtk_widget_get_first_child (segmented));
+  second = gtk_widget_get_next_sibling (first);
+  g_assert_cmpint (gtk_accessible_get_accessible_role (GTK_ACCESSIBLE (first)), ==,
+                   GTK_ACCESSIBLE_ROLE_RADIO);
+  /* States and properties live in an AT context, absent with GTK_A11Y=none. */
+  context = gtk_accessible_get_at_context (GTK_ACCESSIBLE (first));
+  states = context != NULL;
+  if (states)
+    gtk_test_accessible_assert_state (first, GTK_ACCESSIBLE_STATE_CHECKED,
+                                      GTK_ACCESSIBLE_TRISTATE_TRUE);
+  g_assert_true (gtk_widget_get_focusable (first));
+  g_assert_false (gtk_widget_get_focusable (second));
+  awra_segmented_control_set_selected (AWRA_SEGMENTED_CONTROL (segmented), 1);
+  if (states)
+    gtk_test_accessible_assert_state (second, GTK_ACCESSIBLE_STATE_CHECKED,
+                                      GTK_ACCESSIBLE_TRISTATE_TRUE);
+  g_assert_false (gtk_widget_get_focusable (first));
+  g_assert_true (gtk_widget_get_focusable (second));
+
+  awra_form_row_set_label (AWRA_FORM_ROW (row), "Name");
+  awra_form_row_set_control (AWRA_FORM_ROW (row), entry);
+  awra_form_row_set_required (AWRA_FORM_ROW (row), TRUE);
+  if (states)
+    gtk_test_accessible_assert_property (entry, GTK_ACCESSIBLE_PROPERTY_REQUIRED, TRUE);
+
+  g_assert_nonnull (find_role (toasts, GTK_ACCESSIBLE_ROLE_STATUS));
+
+  awra_tab_view_append (AWRA_TAB_VIEW (tabs), gtk_label_new ("One"), "One", FALSE);
+  g_assert_nonnull (find_role (tabs, GTK_ACCESSIBLE_ROLE_TAB_LIST));
+  g_assert_nonnull (find_role (tabs, GTK_ACCESSIBLE_ROLE_TAB));
+}
+
 /* Interactive suffix controls must see clicks before the row claims them. */
 static void
 test_action_row_suffix_receives_clicks (void)
@@ -1669,7 +1967,19 @@ test_command_palette (void)
     g_assert_nonnull (find_descendant_with_class (palette,
                                                   "awra-command-accel"));
   }
-  gtk_window_destroy (GTK_WINDOW (palette));
+  {
+    GWeakRef weak;
+    g_autoptr (GtkWidget) alive = NULL;
+
+    /* A language binding releases its transfer-full result after present().
+     * GTK must still own the palette, just as it owns other toplevels. */
+    g_weak_ref_init (&weak, palette);
+    g_object_unref (palette);
+    alive = g_weak_ref_get (&weak);
+    g_assert_nonnull (alive);
+    gtk_window_destroy (GTK_WINDOW (alive));
+    g_weak_ref_clear (&weak);
+  }
   gtk_window_destroy (GTK_WINDOW (parent));
 }
 
@@ -1716,14 +2026,22 @@ test_extended_components (void)
                                    awra_token_set_get_accent (default_tokens)));
   awra_style_manager_set_accent_source (manager, AWRA_ACCENT_SOURCE_DEFAULT);
 
-  g_assert_cmpuint (awra_motion_get_duration (manager,
-                                              AWRA_MOTION_PRESET_FAST),
-                    >=,
-                    90);
-  g_assert_cmpuint (awra_motion_get_duration (manager,
-                                              AWRA_MOTION_PRESET_FAST),
-                    <=,
-                    140);
+  /* Durations follow the system's animation preference. */
+  if (awra_style_manager_get_reduced_motion (manager)) {
+    g_assert_cmpuint (awra_motion_get_duration (manager,
+                                                AWRA_MOTION_PRESET_FAST),
+                      ==,
+                      0);
+  } else {
+    g_assert_cmpuint (awra_motion_get_duration (manager,
+                                                AWRA_MOTION_PRESET_FAST),
+                      >=,
+                      90);
+    g_assert_cmpuint (awra_motion_get_duration (manager,
+                                                AWRA_MOTION_PRESET_FAST),
+                      <=,
+                      140);
+  }
   awra_style_manager_set_reduced_motion (manager, TRUE);
   g_assert_cmpuint (awra_motion_get_duration (manager,
                                               AWRA_MOTION_PRESET_SLOW),
@@ -2477,6 +2795,22 @@ main (int   argc,
                    test_action_row_and_context_menu);
   g_test_add_func ("/awra/widgets/form-alignment-and-control-width",
                    test_form_alignment_and_control_width);
+  g_test_add_func ("/awra/widgets/form-row-measured-for-its-layout",
+                   test_form_row_measured_for_its_layout);
+  g_test_add_func ("/awra/widgets/split-view-keeps-dragged-divider",
+                   test_split_view_keeps_dragged_divider);
+  g_test_add_func ("/awra/widgets/responsive-widths-in-any-order",
+                   test_responsive_widths_in_any_order);
+  g_test_add_func ("/awra/widgets/master-detail-measured-for-its-layout",
+                   test_master_detail_measured_for_its_layout);
+  g_test_add_func ("/awra/widgets/filter-bar-measured-for-its-layout",
+                   test_filter_bar_measured_for_its_layout);
+  g_test_add_func ("/awra/widgets/navigation-direction",
+                   test_navigation_direction);
+  g_test_add_func ("/awra/widgets/dialog-responses",
+                   test_dialog_responses);
+  g_test_add_func ("/awra/widgets/accessibility-semantics",
+                   test_accessibility_semantics);
   g_test_add_func ("/awra/widgets/action-row-suffix-receives-clicks",
                    test_action_row_suffix_receives_clicks);
   g_test_add_func ("/awra/widgets/window-popover", test_window_and_popover);

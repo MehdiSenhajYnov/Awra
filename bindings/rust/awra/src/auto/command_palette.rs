@@ -365,6 +365,8 @@ impl CommandPaletteBuilder {
         }
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn keep_rounded_corners(self, keep_rounded_corners: bool) -> Self {
         Self {
             builder: self
@@ -373,6 +375,8 @@ impl CommandPaletteBuilder {
         }
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn overlay_chrome(self, overlay_chrome: bool) -> Self {
         Self {
             builder: self.builder.property("overlay-chrome", overlay_chrome),

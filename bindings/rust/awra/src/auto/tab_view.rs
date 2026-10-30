@@ -131,6 +131,8 @@ impl TabView {
         }
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     #[doc(alias = "awra_tab_view_set_page_icon")]
     pub fn set_page_icon(&self, page: &impl IsA<gtk::Widget>, icon: Option<&gtk::Image>) {
         unsafe {
@@ -142,6 +144,8 @@ impl TabView {
         }
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     #[doc(alias = "awra_tab_view_set_page_icon_name")]
     pub fn set_page_icon_name(&self, page: &impl IsA<gtk::Widget>, icon_name: Option<&str>) {
         unsafe {
@@ -164,6 +168,8 @@ impl TabView {
         }
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     #[doc(alias = "awra_tab_view_set_page_title_visible")]
     pub fn set_page_title_visible(&self, page: &impl IsA<gtk::Widget>, visible: bool) {
         unsafe {

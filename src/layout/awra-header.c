@@ -4,6 +4,12 @@
 #include <awra/awra-layout.h>
 #include <awra/awra-surface.h>
 
+#include "awra-config.h"
+#ifdef AWRA_HAVE_WIN32
+#include <gdk/win32/gdkwin32.h>
+#include "platform/win32/awra-win32-private.h"
+#endif
+
 enum {
   /* A center search/segmented control should use the calm visual span of the
    * header when space permits, while retaining the child's real minimum in a
@@ -434,10 +440,18 @@ update_surface_grammar (AwraHeader *self)
     awra_surface_set_edge_mask (
       self->surface,
       AWRA_SURFACE_EDGE_TOP | AWRA_SURFACE_EDGE_START | AWRA_SURFACE_EDGE_END);
+#ifdef AWRA_HAVE_WIN32
+    /* DWM rounds the window: its top corners must match, or the backdrop
+     * shows between the two curves. */
+    if (GDK_IS_WIN32_DISPLAY (gtk_widget_get_display (GTK_WIDGET (self))))
+      awra_surface_set_radius (self->surface, awra_win32_window_corner_radius ());
+#endif
   } else {
     awra_surface_set_role (self->surface, AWRA_SURFACE_ROLE_TOOLBAR);
     awra_surface_set_corner_mask (self->surface, AWRA_SURFACE_CORNER_ALL);
     awra_surface_set_edge_mask (self->surface, AWRA_SURFACE_EDGE_ALL);
+    /* Back to the material radius when no longer blended. */
+    awra_surface_set_radius (self->surface, -1.0);
   }
 }
 
@@ -643,6 +657,10 @@ awra_header_init (AwraHeader *self)
   self->subtitle = GTK_LABEL (gtk_label_new (NULL));
   self->start_controls = gtk_window_controls_new (GTK_PACK_START);
   self->end_controls = gtk_window_controls_new (GTK_PACK_END);
+  /* The side boxes fill the header; caption buttons keep their own square
+   * allocation instead of stretching to the full height of the chrome. */
+  gtk_widget_set_valign (self->start_controls, GTK_ALIGN_CENTER);
+  gtk_widget_set_valign (self->end_controls, GTK_ALIGN_CENTER);
 
   g_signal_connect (self->start_controls, "notify::empty",
                     G_CALLBACK (window_controls_empty_changed_cb), self);

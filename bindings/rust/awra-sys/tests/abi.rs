@@ -976,7 +976,7 @@ const RUST_CONSTANTS: &[(&str, &str)] = &[
     ("(gint) AWRA_MATERIAL_PRESET_NONE", "0"),
     ("(gint) AWRA_MATERIAL_PRESET_OPAQUE", "6"),
     ("AWRA_MICRO_VERSION", "0"),
-    ("AWRA_MINOR_VERSION", "0"),
+    ("AWRA_MINOR_VERSION", "1"),
     ("(gint) AWRA_MOTION_PRESET_FAST", "1"),
     ("(gint) AWRA_MOTION_PRESET_INSTANT", "0"),
     ("(gint) AWRA_MOTION_PRESET_NORMAL", "2"),
@@ -1035,5 +1035,5 @@ const RUST_CONSTANTS: &[(&str, &str)] = &[
     ("(gint) AWRA_VALIDATION_STATE_NONE", "0"),
     ("(gint) AWRA_VALIDATION_STATE_SUCCESS", "1"),
     ("(gint) AWRA_VALIDATION_STATE_WARNING", "2"),
-    ("AWRA_VERSION_S", "1.0.0"),
+    ("AWRA_VERSION_S", "1.1.0"),
 ];

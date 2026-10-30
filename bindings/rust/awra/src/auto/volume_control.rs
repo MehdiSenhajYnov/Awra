@@ -89,6 +89,30 @@ impl VolumeControl {
         }
     }
 
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn is_muted(&self) -> bool {
+        ObjectExt::property(self, "muted")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_muted(&self, muted: bool) {
+        ObjectExt::set_property(self, "muted", muted)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn volume(&self) -> f64 {
+        ObjectExt::property(self, "volume")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_volume(&self, volume: f64) {
+        ObjectExt::set_property(self, "volume", volume)
+    }
+
     #[doc(alias = "volume-changed")]
     pub fn connect_volume_changed<F: Fn(&Self, f64) + 'static>(&self, f: F) -> SignalHandlerId {
         unsafe extern "C" fn volume_changed_trampoline<F: Fn(&VolumeControl, f64) + 'static>(
@@ -165,6 +189,8 @@ impl VolumeControl {
     }
 }
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 impl Default for VolumeControl {
     fn default() -> Self {
         Self::new()

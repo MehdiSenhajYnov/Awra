@@ -734,6 +734,8 @@ impl From<Elevation> for glib::Value {
     }
 }
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Clone, Copy)]
 #[non_exhaustive]
 #[doc(alias = "AwraKeyboardPhysicalLayout")]
@@ -746,6 +748,8 @@ pub enum KeyboardPhysicalLayout {
     __Unknown(i32),
 }
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 #[doc(hidden)]
 impl IntoGlib for KeyboardPhysicalLayout {
     type GlibType = ffi::AwraKeyboardPhysicalLayout;
@@ -760,6 +764,8 @@ impl IntoGlib for KeyboardPhysicalLayout {
     }
 }
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 #[doc(hidden)]
 impl FromGlib<ffi::AwraKeyboardPhysicalLayout> for KeyboardPhysicalLayout {
     #[inline]
@@ -774,6 +780,8 @@ impl FromGlib<ffi::AwraKeyboardPhysicalLayout> for KeyboardPhysicalLayout {
     }
 }
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 impl StaticType for KeyboardPhysicalLayout {
     #[inline]
     #[doc(alias = "awra_keyboard_physical_layout_get_type")]
@@ -782,6 +790,8 @@ impl StaticType for KeyboardPhysicalLayout {
     }
 }
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 impl glib::HasParamSpec for KeyboardPhysicalLayout {
     type ParamSpec = glib::ParamSpecEnum;
     type SetValue = Self;
@@ -792,10 +802,14 @@ impl glib::HasParamSpec for KeyboardPhysicalLayout {
     }
 }
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 impl glib::value::ValueType for KeyboardPhysicalLayout {
     type Type = Self;
 }
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 unsafe impl<'a> glib::value::FromValue<'a> for KeyboardPhysicalLayout {
     type Checker = glib::value::GenericValueTypeChecker<Self>;
 
@@ -806,6 +820,8 @@ unsafe impl<'a> glib::value::FromValue<'a> for KeyboardPhysicalLayout {
     }
 }
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 impl ToValue for KeyboardPhysicalLayout {
     #[inline]
     fn to_value(&self) -> glib::Value {
@@ -822,6 +838,8 @@ impl ToValue for KeyboardPhysicalLayout {
     }
 }
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 impl From<KeyboardPhysicalLayout> for glib::Value {
     #[inline]
     fn from(v: KeyboardPhysicalLayout) -> Self {

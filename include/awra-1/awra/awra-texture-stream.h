@@ -2,6 +2,11 @@
 #pragma once
 #include <gdk/gdk.h>
 G_BEGIN_DECLS
+/**
+ * AwraTextureStream:
+ *
+ * Since: 1.1
+ */
 #define AWRA_TYPE_TEXTURE_STREAM (awra_texture_stream_get_type ())
 G_DECLARE_FINAL_TYPE (AwraTextureStream, awra_texture_stream, AWRA,
                       TEXTURE_STREAM, GObject)
@@ -18,6 +23,8 @@ G_DECLARE_FINAL_TYPE (AwraTextureStream, awra_texture_stream, AWRA,
  * intact.
  *
  * Returns: (transfer full): an empty live paintable
+ *
+ * Since: 1.1
  */
 AwraTextureStream *awra_texture_stream_new (void);
 /**
@@ -26,6 +33,8 @@ AwraTextureStream *awra_texture_stream_new (void);
  * @texture: (nullable): the next immutable frame, or NULL to clear
  * @aspect_ratio: display width / height (.001 to 1000), or 0 for pixel
  * dimensions
+ *
+ * Since: 1.1
  */
 void awra_texture_stream_set_frame (AwraTextureStream *self,
                                     GdkTexture *texture, double aspect_ratio);
@@ -33,6 +42,8 @@ void awra_texture_stream_set_frame (AwraTextureStream *self,
  * awra_texture_stream_get_texture:
  * @self: a stream
  * Returns: (transfer none) (nullable): the latest source texture
+ *
+ * Since: 1.1
  */
 GdkTexture *awra_texture_stream_get_texture (AwraTextureStream *self);
 G_END_DECLS

@@ -187,6 +187,110 @@ impl OverlayBar {
         }
     }
 
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "auto-hide")]
+    pub fn is_auto_hide(&self) -> bool {
+        ObjectExt::property(self, "auto-hide")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "auto-hide")]
+    pub fn set_auto_hide(&self, auto_hide: bool) {
+        ObjectExt::set_property(self, "auto-hide", auto_hide)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn bar(&self) -> Option<gtk::Widget> {
+        ObjectExt::property(self, "bar")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_bar<P: IsA<gtk::Widget>>(&self, bar: Option<&P>) {
+        ObjectExt::set_property(self, "bar", bar)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn content(&self) -> Option<gtk::Widget> {
+        ObjectExt::property(self, "content")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_content<P: IsA<gtk::Widget>>(&self, content: Option<&P>) {
+        ObjectExt::set_property(self, "content", content)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "hide-delay")]
+    pub fn hide_delay(&self) -> u32 {
+        ObjectExt::property(self, "hide-delay")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "hide-delay")]
+    pub fn set_hide_delay(&self, hide_delay: u32) {
+        ObjectExt::set_property(self, "hide-delay", hide_delay)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "inhibit-auto-hide")]
+    pub fn is_inhibit_auto_hide(&self) -> bool {
+        ObjectExt::property(self, "inhibit-auto-hide")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "inhibit-auto-hide")]
+    pub fn set_inhibit_auto_hide(&self, inhibit_auto_hide: bool) {
+        ObjectExt::set_property(self, "inhibit-auto-hide", inhibit_auto_hide)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn inset(&self) -> Spacing {
+        ObjectExt::property(self, "inset")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_inset(&self, inset: Spacing) {
+        ObjectExt::set_property(self, "inset", inset)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "max-width")]
+    pub fn max_width(&self) -> u32 {
+        ObjectExt::property(self, "max-width")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "max-width")]
+    pub fn set_max_width(&self, max_width: u32) {
+        ObjectExt::set_property(self, "max-width", max_width)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn is_revealed(&self) -> bool {
+        ObjectExt::property(self, "revealed")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_revealed(&self, revealed: bool) {
+        ObjectExt::set_property(self, "revealed", revealed)
+    }
+
     #[doc(alias = "auto-hide")]
     pub fn connect_auto_hide_notify<F: Fn(&Self) + 'static>(&self, f: F) -> SignalHandlerId {
         unsafe extern "C" fn notify_auto_hide_trampoline<F: Fn(&OverlayBar) + 'static>(
@@ -391,6 +495,8 @@ impl OverlayBar {
     }
 }
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 impl Default for OverlayBar {
     fn default() -> Self {
         Self::new()

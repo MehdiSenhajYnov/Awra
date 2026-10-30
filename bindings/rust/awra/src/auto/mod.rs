@@ -6,7 +6,11 @@
 mod action_row;
 pub use self::action_row::ActionRow;
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 mod aspect_paintable;
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 pub use self::aspect_paintable::AspectPaintable;
 
 mod badge;
@@ -54,7 +58,11 @@ pub use self::diagnostics::Diagnostics;
 mod dialog;
 pub use self::dialog::Dialog;
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 mod drop_zone;
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 pub use self::drop_zone::DropZone;
 
 mod dropdown;
@@ -81,10 +89,18 @@ pub use self::form::Form;
 mod form_row;
 pub use self::form_row::FormRow;
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 mod frame;
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 pub use self::frame::Frame;
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 mod frame_pool;
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 pub use self::frame_pool::FramePool;
 
 mod header;
@@ -93,10 +109,18 @@ pub use self::header::Header;
 mod inspector;
 pub use self::inspector::Inspector;
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 mod key_cap;
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 pub use self::key_cap::KeyCap;
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 mod keyboard_view;
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 pub use self::keyboard_view::KeyboardView;
 
 mod list_view;
@@ -114,7 +138,11 @@ pub use self::material::Material;
 mod material_resolution;
 pub use self::material_resolution::MaterialResolution;
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 mod media_row;
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 pub use self::media_row::MediaRow;
 
 mod menu_button;
@@ -132,7 +160,11 @@ pub use self::navigation_item::NavigationItem;
 mod navigation_view;
 pub use self::navigation_view::NavigationView;
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 mod overlay_bar;
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 pub use self::overlay_bar::OverlayBar;
 
 mod page;
@@ -165,7 +197,11 @@ pub use self::segmented_control::SegmentedControl;
 mod selection_toolbar;
 pub use self::selection_toolbar::SelectionToolbar;
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 mod shortcut_capture;
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 pub use self::shortcut_capture::ShortcutCapture;
 
 mod sidebar;
@@ -207,10 +243,18 @@ pub use self::tag_entry::TagEntry;
 mod text_area;
 pub use self::text_area::TextArea;
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 mod texture_stream;
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 pub use self::texture_stream::TextureStream;
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 mod timeline;
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 pub use self::timeline::Timeline;
 
 mod toast_overlay;
@@ -225,10 +269,18 @@ pub use self::token_set::TokenSet;
 mod toolbar;
 pub use self::toolbar::Toolbar;
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 mod volume_control;
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 pub use self::volume_control::VolumeControl;
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 mod waveform_view;
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 pub use self::waveform_view::WaveformView;
 
 mod window;
@@ -242,6 +294,8 @@ pub use self::enums::ButtonAppearance;
 pub use self::enums::CardAppearance;
 pub use self::enums::DataViewState;
 pub use self::enums::Elevation;
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 pub use self::enums::KeyboardPhysicalLayout;
 pub use self::enums::LayoutMode;
 pub use self::enums::LayoutPreset;
@@ -267,6 +321,8 @@ pub(crate) mod traits {
 }
 pub(crate) mod builders {
     pub use super::action_row::ActionRowBuilder;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub use super::aspect_paintable::AspectPaintableBuilder;
     pub use super::badge::BadgeBuilder;
     pub use super::badge_group::BadgeGroupBuilder;
@@ -281,6 +337,8 @@ pub(crate) mod builders {
     pub use super::data_view::DataViewBuilder;
     pub use super::detail_pane::DetailPaneBuilder;
     pub use super::dialog::DialogBuilder;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub use super::drop_zone::DropZoneBuilder;
     pub use super::dropdown::DropdownBuilder;
     pub use super::edge_panel::EdgePanelBuilder;
@@ -292,17 +350,25 @@ pub(crate) mod builders {
     pub use super::form_row::FormRowBuilder;
     pub use super::header::HeaderBuilder;
     pub use super::inspector::InspectorBuilder;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub use super::key_cap::KeyCapBuilder;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub use super::keyboard_view::KeyboardViewBuilder;
     pub use super::list_view::ListViewBuilder;
     pub use super::loading_state::LoadingStateBuilder;
     pub use super::master_detail::MasterDetailBuilder;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub use super::media_row::MediaRowBuilder;
     pub use super::menu_button::MenuButtonBuilder;
     pub use super::metadata_group::MetadataGroupBuilder;
     pub use super::metric_row::MetricRowBuilder;
     pub use super::navigation_item::NavigationItemBuilder;
     pub use super::navigation_view::NavigationViewBuilder;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub use super::overlay_bar::OverlayBarBuilder;
     pub use super::page::PageBuilder;
     pub use super::page_header::PageHeaderBuilder;
@@ -314,6 +380,8 @@ pub(crate) mod builders {
     pub use super::section::SectionBuilder;
     pub use super::segmented_control::SegmentedControlBuilder;
     pub use super::selection_toolbar::SelectionToolbarBuilder;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub use super::shortcut_capture::ShortcutCaptureBuilder;
     pub use super::sidebar::SidebarBuilder;
     pub use super::skeleton::SkeletonBuilder;
@@ -328,11 +396,17 @@ pub(crate) mod builders {
     pub use super::tab_view::TabViewBuilder;
     pub use super::tag_entry::TagEntryBuilder;
     pub use super::text_area::TextAreaBuilder;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub use super::timeline::TimelineBuilder;
     pub use super::toast_overlay::ToastOverlayBuilder;
     pub use super::toggle_button::ToggleButtonBuilder;
     pub use super::toolbar::ToolbarBuilder;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub use super::volume_control::VolumeControlBuilder;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub use super::waveform_view::WaveformViewBuilder;
     pub use super::window::WindowBuilder;
 }

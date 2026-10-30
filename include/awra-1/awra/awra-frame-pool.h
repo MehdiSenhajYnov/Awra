@@ -2,9 +2,19 @@
 #pragma once
 #include <gdk/gdk.h>
 G_BEGIN_DECLS
+/**
+ * AwraFramePool:
+ *
+ * Since: 1.1
+ */
 #define AWRA_TYPE_FRAME_POOL (awra_frame_pool_get_type ())
 G_DECLARE_FINAL_TYPE (AwraFramePool, awra_frame_pool, AWRA, FRAME_POOL,
                       GObject)
+/**
+ * AwraFrame:
+ *
+ * Since: 1.1
+ */
 #define AWRA_TYPE_FRAME (awra_frame_get_type ())
 G_DECLARE_FINAL_TYPE (AwraFrame, awra_frame, AWRA, FRAME, GObject)
 /**
@@ -26,6 +36,8 @@ G_DECLARE_FINAL_TYPE (AwraFrame, awra_frame, AWRA, FRAME, GObject)
  *
  * Returns: (transfer full) (nullable): a new bounded pool, or NULL on invalid
  * input
+ *
+ * Since: 1.1
  */
 AwraFramePool *awra_frame_pool_new (guint width, guint height,
                                     GdkMemoryFormat format, guint capacity,
@@ -35,15 +47,57 @@ AwraFramePool *awra_frame_pool_new (guint width, guint height,
  * @self: a pool
  * Returns: (transfer full) (nullable): writable storage, or NULL when all
  * frames are retained
+ *
+ * Since: 1.1
  */
 AwraFrame *awra_frame_pool_acquire (AwraFramePool *self);
+/**
+ * awra_frame_pool_get_width:
+ *
+ * Since: 1.1
+ */
 guint awra_frame_pool_get_width (AwraFramePool *self);
+/**
+ * awra_frame_pool_get_height:
+ *
+ * Since: 1.1
+ */
 guint awra_frame_pool_get_height (AwraFramePool *self);
+/**
+ * awra_frame_pool_get_capacity:
+ *
+ * Since: 1.1
+ */
 guint awra_frame_pool_get_capacity (AwraFramePool *self);
+/**
+ * awra_frame_pool_get_available:
+ *
+ * Since: 1.1
+ */
 guint awra_frame_pool_get_available (AwraFramePool *self);
+/**
+ * awra_frame_pool_get_n_planes:
+ *
+ * Since: 1.1
+ */
 guint awra_frame_pool_get_n_planes (AwraFramePool *self);
+/**
+ * awra_frame_pool_get_stride:
+ *
+ * Since: 1.1
+ */
 gsize awra_frame_pool_get_stride (AwraFramePool *self, guint plane);
+/**
+ * awra_frame_pool_get_lines:
+ *
+ * Since: 1.1
+ */
 guint awra_frame_pool_get_lines (AwraFramePool *self, guint plane);
+/**
+ * awra_frame_pool_get_allocated_bytes:
+ *
+ * Since: 1.1
+ */
 gsize awra_frame_pool_get_allocated_bytes (AwraFramePool *self);
 /**
  * awra_frame_get_address:
@@ -56,6 +110,8 @@ gsize awra_frame_pool_get_allocated_bytes (AwraFramePool *self);
  * an unsafe block to dereference the integer address.
  *
  * Returns: a 32-byte aligned address, or 0 when sealed
+ *
+ * Since: 1.1
  */
 guint64 awra_frame_get_address (AwraFrame *self, guint plane);
 /**
@@ -69,6 +125,8 @@ guint64 awra_frame_get_address (AwraFrame *self, guint plane);
  *
  * Returns: (transfer full) (nullable): a texture, or NULL for an uninitialized
  * frame
+ *
+ * Since: 1.1
  */
 GdkTexture *awra_frame_create_texture (AwraFrame *self);
 /**
@@ -84,6 +142,8 @@ GdkTexture *awra_frame_create_texture (AwraFrame *self);
  * destination. The original frame and its textures are unchanged.
  *
  * Returns: whether the preview was written
+ *
+ * Since: 1.1
  */
 gboolean awra_frame_copy_scaled (AwraFrame *self, AwraFrame *destination);
 G_END_DECLS
