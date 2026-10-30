@@ -47155,6 +47155,54 @@
         },
         {
           "attributes": {
+            "get-property": "scroll-selects",
+            "identifier": "awra_tab_view_get_scroll_selects",
+            "name": "get_scroll_selects",
+            "version": "1.1"
+          },
+          "children": [
+            {
+              "attributes": {},
+              "children": [
+                {
+                  "attributes": {
+                    "name": "self",
+                    "transfer-ownership": "none"
+                  },
+                  "children": [
+                    {
+                      "attributes": {
+                        "name": "TabView",
+                        "type": "AwraTabView*"
+                      },
+                      "tag": "type"
+                    }
+                  ],
+                  "tag": "instance-parameter"
+                }
+              ],
+              "tag": "parameters"
+            },
+            {
+              "attributes": {
+                "transfer-ownership": "none"
+              },
+              "children": [
+                {
+                  "attributes": {
+                    "name": "gboolean",
+                    "type": "gboolean"
+                  },
+                  "tag": "type"
+                }
+              ],
+              "tag": "return-value"
+            }
+          ],
+          "tag": "method"
+        },
+        {
+          "attributes": {
             "get-property": "selected-name",
             "identifier": "awra_tab_view_get_selected_name",
             "name": "get_selected_name"
@@ -47943,6 +47991,70 @@
         },
         {
           "attributes": {
+            "identifier": "awra_tab_view_set_scroll_selects",
+            "name": "set_scroll_selects",
+            "set-property": "scroll-selects",
+            "version": "1.1"
+          },
+          "children": [
+            {
+              "attributes": {},
+              "children": [
+                {
+                  "attributes": {
+                    "name": "self",
+                    "transfer-ownership": "none"
+                  },
+                  "children": [
+                    {
+                      "attributes": {
+                        "name": "TabView",
+                        "type": "AwraTabView*"
+                      },
+                      "tag": "type"
+                    }
+                  ],
+                  "tag": "instance-parameter"
+                },
+                {
+                  "attributes": {
+                    "name": "selects",
+                    "transfer-ownership": "none"
+                  },
+                  "children": [
+                    {
+                      "attributes": {
+                        "name": "gboolean",
+                        "type": "gboolean"
+                      },
+                      "tag": "type"
+                    }
+                  ],
+                  "tag": "parameter"
+                }
+              ],
+              "tag": "parameters"
+            },
+            {
+              "attributes": {
+                "transfer-ownership": "none"
+              },
+              "children": [
+                {
+                  "attributes": {
+                    "name": "none",
+                    "type": "void"
+                  },
+                  "tag": "type"
+                }
+              ],
+              "tag": "return-value"
+            }
+          ],
+          "tag": "method"
+        },
+        {
+          "attributes": {
             "identifier": "awra_tab_view_set_selected_name",
             "name": "set_selected_name",
             "set-property": "selected-name"
@@ -48072,6 +48184,26 @@
             "getter": "get_content_visible",
             "name": "content-visible",
             "setter": "set_content_visible",
+            "transfer-ownership": "none",
+            "writable": "1"
+          },
+          "children": [
+            {
+              "attributes": {
+                "name": "gboolean",
+                "type": "gboolean"
+              },
+              "tag": "type"
+            }
+          ],
+          "tag": "property"
+        },
+        {
+          "attributes": {
+            "default-value": "FALSE",
+            "getter": "get_scroll_selects",
+            "name": "scroll-selects",
+            "setter": "set_scroll_selects",
             "transfer-ownership": "none",
             "writable": "1"
           },

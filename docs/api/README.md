@@ -150,7 +150,8 @@ shrink uniformly between bounded minimum and
 maximum widths, then overflow into an internal horizontal viewport instead of
 changing the window's minimum width. Pinned tabs stay fixed while wheel,
 touchpad and horizontal gestures move the dynamic rail; selecting an offscreen
-page reveals it automatically. Close affordances appear only on selection or
+page reveals it automatically; `scroll-selects` makes scrolling move the
+selection instead. A middle click closes a closable tab. Close affordances appear only on selection or
 hover, and the neighboring short separators fade without changing layout. The
 minimum tab pitch deliberately favors calm labels and earlier scrolling over
 packing one more cramped destination into the rail. Its content stack is

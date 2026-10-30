@@ -230,6 +230,11 @@ awrapathbar text.awra-path-bar-text > selection {
   color: @awra_accent_content;
 }
 
+/* However long the trail, some of the field stays empty and opens the editor. */
+awrapathbar awrabreadcrumbbar {
+  margin-right: 36px;
+}
+
 awrapathbar awrabreadcrumbbar .awra-breadcrumb-button {
   min-height: 22px;
   padding: 1px 6px;
@@ -2914,7 +2919,7 @@ awraheader.awra-compact .awra-menu-button.awra-toolbar-button {
   font-size: .76em;
   font-weight: 650;
   color: @awra_muted;
-  margin: 18px 20px 6px;
+  margin: 20px 16px 6px;
 }
 .awra-role-view-switcher {
   background: alpha(@awra_foreground, .05);
@@ -2953,7 +2958,7 @@ awraheader.awra-compact .awra-menu-button.awra-toolbar-button {
 .awra-grid child { padding: 8px; margin: 4px; min-width: 108px; border-radius: 8px; }
 .awra-grid child:selected { background: @awra_selection; box-shadow: inset 0 0 0 1px alpha(@awra_focus, .28); }
 .awra-grid child:focus-visible { outline-offset: -1px; }
-.awra-role-compact-navigation .awra-navigation-item { min-height: 22px; padding: 6px 10px; margin: 1px 10px; }
+.awra-role-compact-navigation .awra-navigation-item { min-height: 22px; padding: 7px 8px; margin: 1px 8px; border-radius: 8px; }
 .awra-role-compact-navigation .awra-navigation-item:checked { background: @awra_selection; color: @awra_accent_content; box-shadow: none; }
 .awra-role-compact-table columnview cell { padding: 5px 10px; }
 .awra-role-compact-table columnview listview > row { min-height: 30px; border-radius: 4px; }

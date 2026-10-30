@@ -333,6 +333,8 @@ struct _AwraTabView {
   GPtrArray *pages;
   guint next_page_id;
   guint ensure_visible_tick;
+  gboolean scroll_selects;
+  double scroll_steps;
   AwraStyleManager *style_manager;
   gulong style_handler;
 };
@@ -507,6 +509,7 @@ enum {
   PROP_SELECTED_PAGE,
   PROP_CONTENT_VISIBLE,
   PROP_STACK,
+  PROP_SCROLL_SELECTS,
   N_PROPS,
 };
 
@@ -844,6 +847,21 @@ close_clicked_cb (GtkButton   *button,
   awra_tab_view_close_page (self, page);
 }
 
+static void
+tab_middle_released_cb (GtkGestureClick *gesture,
+                        int              n_press,
+                        double           x,
+                        double           y,
+                        AwraTabPage     *info)
+{
+  (void) n_press;
+  if (info->close_button == NULL ||
+      !gtk_widget_contains (info->tab, x, y))
+    return;
+  gtk_gesture_set_state (GTK_GESTURE (gesture), GTK_EVENT_SEQUENCE_CLAIMED);
+  awra_tab_view_close_page (info->view, info->page);
+}
+
 static AwraTabPage *
 append_page (AwraTabView *self,
              GtkWidget   *page,
@@ -854,6 +872,7 @@ append_page (AwraTabView *self,
 {
   AwraTabPage *info;
   GtkEventController *motion;
+  GtkGesture *middle_click;
 
   g_return_val_if_fail (find_page (self, page, NULL) == NULL, NULL);
 
@@ -900,6 +919,11 @@ append_page (AwraTabView *self,
   g_signal_connect (motion, "enter", G_CALLBACK (tab_enter_cb), info);
   g_signal_connect (motion, "leave", G_CALLBACK (tab_leave_cb), info);
   gtk_widget_add_controller (info->tab, motion);
+  middle_click = gtk_gesture_click_new ();
+  gtk_gesture_single_set_button (GTK_GESTURE_SINGLE (middle_click), GDK_BUTTON_MIDDLE);
+  g_signal_connect (middle_click, "released",
+                    G_CALLBACK (tab_middle_released_cb), info);
+  gtk_widget_add_controller (info->tab, GTK_EVENT_CONTROLLER (middle_click));
   gtk_widget_set_halign (GTK_WIDGET (info->select_content), GTK_ALIGN_CENTER);
   gtk_widget_set_valign (GTK_WIDGET (info->select_content), GTK_ALIGN_CENTER);
   gtk_widget_set_hexpand (GTK_WIDGET (info->title), TRUE);
@@ -946,6 +970,44 @@ append_page (AwraTabView *self,
   update_selected_tab (self);
 
   return info;
+}
+
+static void
+select_adjacent_page (AwraTabView *self,
+                      int          step)
+{
+  GtkWidget *selected = gtk_stack_get_visible_child (self->stack);
+
+  for (guint i = 0; i < self->pages->len; i++) {
+    AwraTabPage *info = g_ptr_array_index (self->pages, i);
+
+    if (info->page != selected)
+      continue;
+    /* The wheel stops at the ends: wrapping around hides where the user is. */
+    if ((step > 0 && i + 1 < self->pages->len) || (step < 0 && i > 0))
+      awra_tab_view_set_selected_page (
+        self, ((AwraTabPage *) g_ptr_array_index (self->pages, i + step))->page);
+    return;
+  }
+}
+
+static gboolean
+tab_bar_scroll_cb (GtkEventControllerScroll *controller,
+                   double                    dx,
+                   double                    dy,
+                   AwraTabView              *self)
+{
+  if (!self->scroll_selects)
+    return GDK_EVENT_PROPAGATE;
+  /* High-resolution wheels and touchpads report fractions of a step. */
+  self->scroll_steps += (fabs (dx) > fabs (dy) ? dx : dy) /
+    (gtk_event_controller_scroll_get_unit (controller) == GDK_SCROLL_UNIT_WHEEL
+       ? 1.0 : 48.0);
+  if (fabs (self->scroll_steps) >= 1.0) {
+    select_adjacent_page (self, self->scroll_steps > 0 ? 1 : -1);
+    self->scroll_steps = 0.0;
+  }
+  return GDK_EVENT_STOP;
 }
 
 static gboolean
@@ -1061,6 +1123,8 @@ awra_tab_view_get_property (GObject    *object,
     g_value_set_object (value, awra_tab_view_get_selected_page (self));
   else if (property_id == PROP_CONTENT_VISIBLE)
     g_value_set_boolean (value, awra_tab_view_get_content_visible (self));
+  else if (property_id == PROP_SCROLL_SELECTS)
+    g_value_set_boolean (value, awra_tab_view_get_scroll_selects (AWRA_TAB_VIEW (object)));
   else if (property_id == PROP_STACK)
     g_value_set_object (value, self->stack);
   else
@@ -1076,6 +1140,8 @@ awra_tab_view_set_property (GObject      *object,
   if (property_id == PROP_SELECTED_NAME)
     awra_tab_view_set_selected_name (AWRA_TAB_VIEW (object),
                                      g_value_get_string (value));
+  else if (property_id == PROP_SCROLL_SELECTS)
+    awra_tab_view_set_scroll_selects (AWRA_TAB_VIEW (object), g_value_get_boolean (value));
   else if (property_id == PROP_CONTENT_VISIBLE)
     awra_tab_view_set_content_visible (AWRA_TAB_VIEW (object),
                                        g_value_get_boolean (value));
@@ -1144,6 +1210,11 @@ awra_tab_view_class_init (AwraTabViewClass *klass)
   properties[PROP_STACK] =
     g_param_spec_object ("stack", NULL, NULL, GTK_TYPE_STACK,
                          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+  properties[PROP_SCROLL_SELECTS] =
+    g_param_spec_boolean ("scroll-selects", NULL, NULL, FALSE,
+                          G_PARAM_READWRITE |
+                          G_PARAM_EXPLICIT_NOTIFY |
+                          G_PARAM_STATIC_STRINGS);
   g_object_class_install_properties (object_class, N_PROPS, properties);
   signals[SIGNAL_CLOSE_PAGE] =
     g_signal_new ("close-page",
@@ -1212,6 +1283,10 @@ awra_tab_view_init (AwraTabView *self)
     GTK_EVENT_CONTROLLER_SCROLL_KINETIC);
   g_signal_connect (scroll, "scroll", G_CALLBACK (tab_scroll_cb), self);
   gtk_widget_add_controller (GTK_WIDGET (self->tab_scroller), scroll);
+  scroll = gtk_event_controller_scroll_new (GTK_EVENT_CONTROLLER_SCROLL_BOTH_AXES);
+  gtk_event_controller_set_propagation_phase (scroll, GTK_PHASE_CAPTURE);
+  g_signal_connect (scroll, "scroll", G_CALLBACK (tab_bar_scroll_cb), self);
+  gtk_widget_add_controller (GTK_WIDGET (self->tab_bar), scroll);
   gtk_box_append (self->tab_bar, GTK_WIDGET (self->pinned_tabs));
   gtk_box_append (self->tab_bar, self->tab_viewport_mask);
   gtk_widget_set_hexpand (GTK_WIDGET (self->stack), TRUE);
@@ -1338,6 +1413,26 @@ awra_tab_view_reorder_page (AwraTabView *self, GtkWidget *page, guint position)
   gtk_widget_queue_resize (GTK_WIDGET (strip));
   update_tab_separators (self);
   update_selected_tab (self);
+}
+
+gboolean
+awra_tab_view_get_scroll_selects (AwraTabView *self)
+{
+  g_return_val_if_fail (AWRA_IS_TAB_VIEW (self), FALSE);
+  return self->scroll_selects;
+}
+
+void
+awra_tab_view_set_scroll_selects (AwraTabView *self,
+                                  gboolean     selects)
+{
+  g_return_if_fail (AWRA_IS_TAB_VIEW (self));
+  selects = !!selects;
+  if (self->scroll_selects == selects)
+    return;
+  self->scroll_selects = selects;
+  self->scroll_steps = 0.0;
+  g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_SCROLL_SELECTS]);
 }
 
 void

@@ -306,8 +306,17 @@ pressed_cb (GtkGestureClick *gesture,
             double           y,
             AwraPathBar     *self)
 {
-  (void) n_press; (void) x; (void) y;
-  /* Breadcrumb and end-widget buttons claim their own presses. */
+  (void) n_press;
+  /* A press reaches this gesture even over a button, which only acts on
+   * release: editing now would hide the breadcrumb under the pointer. */
+  for (GtkWidget *picked = gtk_widget_pick (GTK_WIDGET (self), x, y, GTK_PICK_DEFAULT);
+       picked != NULL && picked != GTK_WIDGET (self);
+       picked = gtk_widget_get_parent (picked)) {
+    if (GTK_IS_BUTTON (picked)) {
+      gtk_gesture_set_state (GTK_GESTURE (gesture), GTK_EVENT_SEQUENCE_DENIED);
+      return;
+    }
+  }
   gtk_gesture_set_state (GTK_GESTURE (gesture), GTK_EVENT_SEQUENCE_CLAIMED);
   if (!self->editing)
     awra_path_bar_set_editing (self, TRUE);

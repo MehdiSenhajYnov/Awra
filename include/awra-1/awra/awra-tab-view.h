@@ -128,6 +128,27 @@ GtkWidget *awra_tab_view_get_page_tab (AwraTabView *self, GtkWidget *page);
  * Preserves the page, selected tab, controllers and page metadata.
  */
 void awra_tab_view_reorder_page (AwraTabView *self, GtkWidget *page, guint position);
+/**
+ * awra_tab_view_get_scroll_selects:
+ * @self: a tab view
+ *
+ * Returns: whether scrolling over the tab bar selects tabs
+ *
+ * Since: 1.1
+ */
+gboolean awra_tab_view_get_scroll_selects (AwraTabView *self);
+/**
+ * awra_tab_view_set_scroll_selects:
+ * @self: a tab view
+ * @selects: %TRUE to select the adjacent tab on scroll
+ *
+ * By default, scrolling moves an overflowing tab strip. With @selects, it
+ * moves the selection instead, stopping at the first and last tabs, and the
+ * strip follows the selected tab.
+ *
+ * Since: 1.1
+ */
+void awra_tab_view_set_scroll_selects (AwraTabView *self, gboolean selects);
 gboolean    awra_tab_view_get_content_visible (AwraTabView *self);
 void        awra_tab_view_set_content_visible (AwraTabView *self,
                                                gboolean     visible);
