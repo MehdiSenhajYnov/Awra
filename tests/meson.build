@@ -330,6 +330,9 @@ test('frame-pool', frame_pool_test, env: ['G_DEBUG=fatal-warnings', 'GTK_A11Y=no
 window_frame_test = executable('test-window-frame', 'integration/test-window-frame.c', dependencies: awra_dep)
 test('window-frame-states', window_frame_test, env: ['G_DEBUG=fatal-warnings', 'GTK_A11Y=none'], is_parallel: false)
 
+path_bar_test = executable('test-path-bar', 'widget/test-path-bar.c', dependencies: awra_dep)
+test('path-bar', path_bar_test, env: ['G_DEBUG=fatal-warnings', 'GTK_A11Y=none'], is_parallel: false)
+
 grid_test = executable('test-grid-view', 'widget/test-grid-view.c', dependencies: awra_dep)
 test('grid-view-collections', grid_test, env: ['G_DEBUG=fatal-warnings', 'GTK_A11Y=none'], is_parallel: false)
 

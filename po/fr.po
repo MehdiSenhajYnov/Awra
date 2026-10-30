@@ -261,3 +261,7 @@ msgstr "Dépose des fichiers pour les ajouter"
 
 msgid "Timeline"
 msgstr "Chronologie"
+
+#: src/navigation/awra-path-bar.c
+msgid "Location"
+msgstr "Emplacement"

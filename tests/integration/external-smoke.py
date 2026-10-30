@@ -122,6 +122,9 @@ def main() -> int:
     breadcrumbs = Awra.BreadcrumbBar.new()
     assert breadcrumb.get_name() == "library"
     assert breadcrumbs.get_model() is None
+    path_bar = Awra.PathBar.new()
+    path_bar.set_text("/library")
+    assert path_bar.get_text() == "/library" and not path_bar.get_editing()
     palette = Awra.CommandPalette.new(None)
     palette.set_title("Quick actions")
     palette.set_empty_text("Nothing found")

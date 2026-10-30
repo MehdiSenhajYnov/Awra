@@ -44,6 +44,7 @@ awrachoicegroup,
 awrastatusbanner,
 awraresponsivebin,
 awrabreadcrumbbar,
+awrapathbar,
 awrametricrow,
 awrastatbar,
 awrabadgegroup,
@@ -170,6 +171,88 @@ awrabreadcrumbbar .awra-breadcrumb-current {
 awrabreadcrumbbar .awra-breadcrumb-separator {
   color: @awra_disabled;
   -gtk-icon-size: 12px;
+}
+
+/* The location field keeps one silhouette in both modes: breadcrumbs and text
+ * swap inside it, so entering an edit never moves the surrounding chrome. */
+awrapathbar {
+  min-height: 30px;
+  padding: 0 3px 0 6px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  background-color: alpha(@awra_foreground, .055);
+  color: @awra_foreground;
+  transition: background-color 120ms ease-out, border-color 120ms ease-out;
+}
+
+awrapathbar:hover {
+  background-color: alpha(@awra_foreground, .085);
+}
+
+awrapathbar.awra-path-bar-editing {
+  background-color: @awra_well;
+  border-color: @awra_focus;
+}
+
+awrapathbar.awra-path-bar-invalid {
+  border-color: @awra_danger;
+}
+
+awrapathbar > box,
+awrapathbar stack {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+awrapathbar .awra-path-bar-icon {
+  margin: 0 4px 0 2px;
+  color: @awra_muted;
+  -gtk-icon-size: 15px;
+}
+
+awrapathbar text.awra-path-bar-text {
+  min-height: 0;
+  margin: 0 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: @awra_foreground;
+  caret-color: @awra_focus;
+  outline: 0;
+  box-shadow: none;
+}
+
+awrapathbar text.awra-path-bar-text > selection {
+  background-color: @awra_selection;
+  color: @awra_accent_content;
+}
+
+awrapathbar awrabreadcrumbbar .awra-breadcrumb-button {
+  min-height: 22px;
+  padding: 1px 6px;
+  border-radius: 6px;
+}
+
+awrapathbar awrabreadcrumbbar .awra-breadcrumb-current {
+  background-color: transparent;
+  box-shadow: none;
+  font-weight: 600;
+}
+
+awrapathbar awrabreadcrumbbar .awra-breadcrumb-button:hover {
+  background-color: @awra_control_hover;
+}
+
+.awra-menu-item.awra-path-bar-suggestion-highlighted {
+  background-color: @awra_selection;
+  color: @awra_accent_content;
+}
+
+.awra-reduced-motion awrapathbar {
+  transition: none;
 }
 
 awrapage > scrolledwindow,
@@ -1595,6 +1678,17 @@ window.awra-dialog .awra-header-content {
   font-weight: 520;
 }
 
+.awra-menu-item-accel {
+  margin-left: 18px;
+  color: @awra_muted;
+  font-size: .86em;
+}
+
+.awra-menu-item-check {
+  color: @awra_accent_content;
+  -gtk-icon-size: 14px;
+}
+
 .awra-menu-item-icon,
 .awra-menu-item-chevron {
   min-width: 16px;
@@ -1607,6 +1701,13 @@ window.awra-dialog .awra-header-content {
   min-height: 1px;
   margin: 5px 8px;
   background-color: @awra_separator;
+}
+
+button.awra-menu-item:checked {
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+  color: @awra_foreground;
 }
 
 button.awra-menu-item:hover,
@@ -2792,6 +2893,13 @@ awraheader.awra-compact .awra-header-content {
   padding: 6px 14px;
 }
 awraheader.awra-compact .awra-header-controls button { min-height: 28px; }
+awraheader.awra-compact .awra-button.awra-toolbar-button,
+awraheader.awra-compact .awra-menu-button.awra-toolbar-button {
+  min-height: 22px;
+  min-width: 22px;
+  padding: 5px 8px;
+  border-radius: 8px;
+}
 
 /* Public workspace roles: structural planes rather than additional cards. */
 .awra-role-workspace-canvas {
@@ -2853,6 +2961,7 @@ awraheader.awra-compact .awra-header-controls button { min-height: 28px; }
 .awra-role-compact-navigation .awra-navigation-item-label { font-weight: 400; }
 .awra-role-compact-navigation .awra-navigation-item:checked .awra-navigation-item-label { font-weight: 600; }
 .awra-role-floating-selection { margin-bottom: 48px; }
+.awra-role-floating-selection > awrasurface > box { padding: 2px 6px 2px 14px; }
 .awra-role-inline-search { min-width: 0; }
 awratoolbar.awra-role-focused-pane {
   background: alpha(@awra_foreground, .025);
@@ -2870,6 +2979,17 @@ awratoolbar.awra-role-focused-pane {
 }
 .awra-role-inline-search .awra-entry:focus-within { background: @awra_cap; outline: 0; border-color: @awra_border; }
 .awra-role-inline-search .awra-entry image { min-width: 16px; min-height: 16px; padding: 0 4px; }
+/* A search field that takes over the location slot keeps its silhouette. */
+.awra-role-location-search .awra-entry {
+  min-height: 20px;
+  padding: 5px 8px;
+  border-radius: 9px;
+}
+/* Metadata read as prose: dates and kinds, not figures to compare in columns. */
+.awra-role-prose-metadata .awra-monospace {
+  font-family: inherit;
+  font-size: inherit;
+}
 window.awra-window separator { background: @awra_separator; }
 window.awra-window separator.horizontal { min-height: 1px; }
 window.awra-window separator.vertical { min-width: 1px; }

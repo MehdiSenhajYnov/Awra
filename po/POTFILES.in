@@ -1,4 +1,5 @@
 src/layout/awra-edge-panel.c
+src/navigation/awra-path-bar.c
 src/navigation/awra-tab-view.c
 src/overlays/awra-command-palette.c
 src/overlays/awra-popover.c

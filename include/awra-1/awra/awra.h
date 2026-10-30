@@ -64,6 +64,7 @@
 #include <awra/awra-navigation-view.h>
 #include <awra/awra-breadcrumb-item.h>
 #include <awra/awra-breadcrumb-bar.h>
+#include <awra/awra-path-bar.h>
 #include <awra/awra-navigation-item.h>
 #include <awra/awra-motion.h>
 #include <awra/awra-badge.h>

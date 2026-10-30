@@ -2291,6 +2291,12 @@ make_navigation_page (ShowcaseState *state)
   awra_breadcrumb_bar_set_model (AWRA_BREADCRUMB_BAR (breadcrumbs),
                                  G_LIST_MODEL (breadcrumb_model));
   gtk_box_append (GTK_BOX (body), breadcrumbs);
+  GtkWidget *path_bar = awra_path_bar_new ();
+  awra_path_bar_set_model (AWRA_PATH_BAR (path_bar),
+                           G_LIST_MODEL (breadcrumb_model));
+  awra_path_bar_set_text (AWRA_PATH_BAR (path_bar), "/workspace/awra/navigation");
+  awra_path_bar_set_icon_name (AWRA_PATH_BAR (path_bar), "folder-symbolic");
+  gtk_box_append (GTK_BOX (body), path_bar);
   gtk_box_append (GTK_BOX (body), open_palette);
   g_signal_connect (open_palette, "clicked", G_CALLBACK (open_palette_cb),
                     state);

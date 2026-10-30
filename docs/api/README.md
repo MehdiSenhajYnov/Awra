@@ -167,7 +167,10 @@ selection, keyboard navigation and Awra-owned hover/selection/focus styling.
 It accepts ordinary GTK selection models and factories; its public delegate
 provides activation, column limits and `scroll_to()`. Long breadcrumb trails
 scroll horizontally and reveal the current segment without imposing their
-full width on an application.
+full width on an application. `AwraPathBar` adds an in-place text field to the
+same trail: the consumer supplies the committed text, answers `submit` and
+optionally fills `suggestions` from `notify::edit-text`, so the bar works with
+any hierarchical address.
 `AwraListView` similarly owns its scrollable viewport and accepts an optional
 `header` widget for compact row factories that intentionally remain a single
 GTK list column. Overlay scrollbar visibility and header presentation stay

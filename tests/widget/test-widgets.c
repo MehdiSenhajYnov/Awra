@@ -1853,7 +1853,7 @@ test_overlays_and_navigation (void)
   awra_popover_set_menu_model (AWRA_POPOVER (popover), G_MENU_MODEL (menu));
   g_assert_true (awra_popover_get_menu_model (AWRA_POPOVER (popover)) ==
                  G_MENU_MODEL (menu));
-  g_assert_true (GTK_IS_BOX (awra_popover_get_child (AWRA_POPOVER (popover))));
+  g_assert_true (GTK_IS_SCROLLED_WINDOW (awra_popover_get_child (AWRA_POPOVER (popover))));
   awra_menu_button_set_menu_model (AWRA_MENU_BUTTON (menu_button),
                                    G_MENU_MODEL (menu));
   g_assert_true (AWRA_IS_POPOVER (
