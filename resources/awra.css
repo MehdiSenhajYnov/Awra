@@ -2894,3 +2894,31 @@ window.awra-window paned > separator {
 }
 .awra-role-workspace-tabs .awra-tab-pill { border-radius: 6px; }
 .awra-role-workspace-tabs .awra-tab-item { min-height: 30px; }
+
+/* Reading guides on the continuous Canvas, without another toolbar plane. */
+.awra-role-canvas-table columnview > header,
+.awra-role-canvas-table columnview > header > button {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.awra-role-canvas-table columnview > header > button {
+  min-height: 24px;
+  font-weight: 500;
+  padding: 4px 10px 8px;
+}
+.awra-role-canvas-table columnview > header > button:hover {
+  background-color: @awra_control_hover;
+  border-radius: 7px;
+}
+.awra-role-pane-caption { color: @awra_muted; font-size: .86em; font-weight: 600; min-height: 20px; }
+.awra-role-active-pane-caption { color: @awra_accent_content; }
+
+/* GTK marks an accepting GtkDropTarget automatically. Domain consumers choose
+ * which targets accept a payload; Awra supplies the shared destination feedback. */
+.awra-role-drop-zone:drop(active) {
+  background: @awra_selection;
+  outline: 2px solid @awra_focus;
+  outline-offset: -2px;
+  border-radius: 8px;
+}

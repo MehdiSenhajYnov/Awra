@@ -642,6 +642,25 @@ test_mapped_header_center_geometry (void)
   header_center = gtk_widget_get_width (header) / 2.0f;
   widget_center = bounds.origin.x + bounds.size.width / 2.0f;
   g_assert_cmpfloat (fabsf (widget_center - header_center), <=, 1.0f);
+
+  /* Address controls may fill the actual gap instead of reserving symmetric
+   * gutters. Existing headers keep their centered allocation by default. */
+  g_assert_false (awra_header_get_expand_center (AWRA_HEADER (header)));
+  float centered_width = bounds.size.width;
+  awra_header_set_expand_center (AWRA_HEADER (header), TRUE);
+  settle_window (window);
+  graphene_rect_t start_bounds, end_bounds;
+  g_assert_true (gtk_widget_compute_bounds (center, header, &bounds));
+  g_assert_true (gtk_widget_compute_bounds (start, header, &start_bounds));
+  g_assert_true (gtk_widget_compute_bounds (end, header, &end_bounds));
+  g_assert_cmpfloat (bounds.size.width, >, centered_width + 50);
+  g_assert_cmpfloat (bounds.origin.x, >=, start_bounds.origin.x + start_bounds.size.width);
+  g_assert_cmpfloat (bounds.origin.x + bounds.size.width, <=, end_bounds.origin.x);
+  g_object_set (header, "expand-center", FALSE, NULL);
+  settle_window (window);
+  g_assert_false (awra_header_get_expand_center (AWRA_HEADER (header)));
+  g_assert_true (gtk_widget_compute_bounds (center, header, &bounds));
+  g_assert_cmpfloat (fabsf (bounds.size.width - centered_width), <=, 1.0f);
   gtk_window_destroy (GTK_WINDOW (window));
 }
 

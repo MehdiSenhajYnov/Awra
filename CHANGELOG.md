@@ -7,6 +7,26 @@
 API added in this release is documented `Since: 1.1`; every 1.0.0 API is
 unchanged (checked against the frozen 1.0.0 contract).
 
+### Desktop workspace composition
+
+- `AwraHeader:compact` provides compact titlebar proportions without changing
+  the default header. `AwraSelectionToolbar:clear-label` customizes the
+  localized clear-selection action.
+- Public workspace roles cover embedded tabs, dense navigation and tables,
+  pane focus, inline filtering, floating selection and docked document previews.
+- Metadata values ellipsize with a full-value tooltip in narrow panes.
+- Breadcrumb reveal runs after viewport allocation, keeping the visible path
+  synchronized with the adjustment when a pane changes size.
+- `AwraZoomController` adds scoped, bounded Ctrl+wheel content zoom. Text follows
+  the desktop font, ordinary scroll input remains native, and `scale` notifications
+  let consumers resize domain imagery without replacing their models.
+- `canvas-table` provides transparent column guides for continuous-Canvas layouts.
+- `AwraHeader:expand-center` fills the real gap between side controls for
+  shared navigation/address bars, preserving the centered default.
+- `drop-zone` follows GTK’s accepted-drop state for reusable destination feedback.
+
+### Framework updates
+
 - `AwraGridView` adds a public C/GI virtualized grid with shared GTK selection
   models, item factories, rubberband selection and semantic interaction styles.
 - `AwraTextArea` applies its semantic foreground directly to GtkTextView so
@@ -114,14 +134,3 @@ unchanged (checked against the frozen 1.0.0 contract).
 
 - Initial experimental C/GObject framework, semantic materials, AwraWindow,
   core controls, overlays and `ext-background-effect-v1` fallback backend.
-
-### Desktop workspace composition
-
-- `AwraHeader:compact` provides compact titlebar proportions without changing
-  the default header. `AwraSelectionToolbar:clear-label` customizes the
-  localized clear-selection action.
-- Public workspace roles cover embedded tabs, dense navigation and tables,
-  pane focus, inline filtering, floating selection and docked document previews.
-- Metadata values ellipsize with a full-value tooltip in narrow panes.
-- Breadcrumb reveal runs after viewport allocation, keeping the visible path
-  synchronized with the adjustment when a pane changes size.

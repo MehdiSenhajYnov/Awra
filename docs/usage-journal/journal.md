@@ -874,3 +874,27 @@ valeur de défilement du breadcrumb était correcte mais son viewport conservait
 l’ancienne transformation ; la révélation est désormais différée après
 l’allocation. Les tests couvrent aussi le chrome compact et les métadonnées
 longues dans un panneau étroit.
+
+## Canvas continu et zoom
+
+Le retour d’utilisation a précisé que le workspace devait rester un seul Canvas,
+avec les éléments posés dessus. ExplorerAwra fusionne maintenant navigation et
+chemin dans l’en-tête, réutilise le sidebar arrondi/inset d’Awra, et supprime les
+plaques séparant les intitulés de colonnes et le contenu.
+
+Le besoin Ctrl+molette devient un contrôleur réutilisable dans Awra. Il capture
+le geste modifié, conserve le défilement GTK ordinaire et expose une échelle
+bornée/observable. Le texte est agrandi localement à partir de la police système ;
+l’application adapte les icônes et miniatures en conservant modèles et sélection.
+Les tests C vérifient isolation et durée de vie ; le consommateur vérifie aussi
+l’interaction réelle avec XTest, sans événement synthétique limité au callback.
+
+La fusion du chemin dans le chrome a montré que la réservation symétrique des
+contrôles latéraux gaspillait la place d’une barre d’adresse. La propriété
+optionnelle `AwraHeader:expand-center` utilise tout l’intervalle disponible sans
+modifier l’allocation des en-têtes existants. Le test de géométrie vérifie les
+deux modes et l’absence de recouvrement avec les commandes latérales.
+
+Le dépôt de fichiers sur un dossier utilise GtkDropTarget. Le rôle générique
+`drop-zone` exprime la destination acceptée ; la décision d’accepter un dossier,
+le presse-papiers et les opérations restent dans l’application.

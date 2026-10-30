@@ -332,3 +332,6 @@ test('window-frame-states', window_frame_test, env: ['G_DEBUG=fatal-warnings', '
 
 grid_test = executable('test-grid-view', 'widget/test-grid-view.c', dependencies: awra_dep)
 test('grid-view-collections', grid_test, env: ['G_DEBUG=fatal-warnings', 'GTK_A11Y=none'], is_parallel: false)
+
+zoom_test = executable('test-zoom-controller', 'widget/test-zoom-controller.c', dependencies: awra_dep)
+test('zoom-controller', zoom_test, env: ['G_DEBUG=fatal-warnings', 'GTK_A11Y=none'], is_parallel: false)

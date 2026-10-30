@@ -72,6 +72,7 @@
 #include <awra/awra-tab-view.h>
 #include <awra/awra-list-view.h>
 #include <awra/awra-grid-view.h>
+#include <awra/awra-zoom-controller.h>
 #include <awra/awra-action-row.h>
 #include <awra/awra-inspector.h>
 #include <awra/awra-key-cap.h>

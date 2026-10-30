@@ -89,4 +89,22 @@ gboolean awra_header_get_compact (AwraHeader *self);
  */
 void awra_header_set_compact (AwraHeader *self, gboolean compact);
 
+/**
+ * awra_header_get_expand_center:
+ * @self: a header
+ * Returns: whether the center fills the space between side controls
+ * Since: 1.1
+ */
+gboolean awra_header_get_expand_center (AwraHeader *self);
+/**
+ * awra_header_set_expand_center:
+ * @self: a header
+ * @expand: whether to fill the remaining center space
+ *
+ * Useful for a shared navigation/address control. The default keeps the
+ * existing centered, natural-width presentation.
+ * Since: 1.1
+ */
+void awra_header_set_expand_center (AwraHeader *self, gboolean expand);
+
 G_END_DECLS

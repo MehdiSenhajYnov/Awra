@@ -141,6 +141,7 @@ typedef struct {
   GtkWidget *start;
   GtkWidget *center;
   GtkWidget *end;
+  gboolean expand_center;
 } AwraHeaderContent;
 
 typedef GtkWidgetClass AwraHeaderContentClass;
@@ -194,8 +195,8 @@ awra_header_content_measure (GtkWidget      *widget,
      * visually stable; the minimum does not, otherwise a wide end cluster
      * would force the whole window wider than the screen. */
     *minimum = start_minimum + center_minimum + end_minimum;
-    *natural = center_natural +
-               2 * MAX (start_natural, end_natural);
+    *natural = self->expand_center ? start_natural + center_natural + end_natural
+                                   : center_natural + 2 * MAX (start_natural, end_natural);
   } else {
     *minimum = MAX (center_minimum,
                     MAX (start_minimum, end_minimum));
@@ -268,7 +269,7 @@ awra_header_content_size_allocate (GtkWidget *widget,
   gap_start = rtl ? end_width : start_width;
   gap_end = width - (rtl ? start_width : end_width);
   gap = MAX (0, gap_end - gap_start);
-  center_width = MIN (center_natural, gap);
+  center_width = self->expand_center ? gap : MIN (center_natural, gap);
   center_width = MAX (center_width, MIN (center_minimum, gap));
   center_x = CLAMP ((width - center_width) / 2,
                     gap_start, MAX (gap_start, gap_end - center_width));
@@ -384,6 +385,7 @@ enum {
   PROP_MATERIAL,
   PROP_BLEND_WITH_WINDOW,
   PROP_COMPACT,
+  PROP_EXPAND_CENTER,
   N_PROPS
 };
 
@@ -551,6 +553,7 @@ awra_header_get_property (GObject    *object,
   case PROP_MATERIAL:
     g_value_set_object (value, awra_header_get_material (self));
     break;
+  case PROP_EXPAND_CENTER: g_value_set_boolean (value, self->content->expand_center); break;
   case PROP_COMPACT: g_value_set_boolean (value, self->compact); break;
   case PROP_BLEND_WITH_WINDOW:
     g_value_set_boolean (value, self->blend_with_window);
@@ -593,6 +596,7 @@ awra_header_set_property (GObject      *object,
   case PROP_MATERIAL:
     awra_header_set_material (self, g_value_get_object (value));
     break;
+  case PROP_EXPAND_CENTER: awra_header_set_expand_center (self, g_value_get_boolean (value)); break;
   case PROP_COMPACT: awra_header_set_compact (self, g_value_get_boolean (value)); break;
   case PROP_BLEND_WITH_WINDOW:
     awra_header_set_blend_with_window (self, g_value_get_boolean (value));
@@ -641,6 +645,9 @@ awra_header_class_init (AwraHeaderClass *klass)
     G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
   properties[PROP_COMPACT] = g_param_spec_boolean (
     "compact", NULL, NULL, FALSE,
+    G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+  properties[PROP_EXPAND_CENTER] = g_param_spec_boolean (
+    "expand-center", NULL, NULL, FALSE,
     G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
   g_object_class_install_properties (object_class, N_PROPS, properties);
   gtk_widget_class_set_layout_manager_type (widget_class, GTK_TYPE_BIN_LAYOUT);
@@ -928,4 +935,19 @@ awra_header_set_compact (AwraHeader *self, gboolean compact)
   if (compact) gtk_widget_add_css_class (GTK_WIDGET (self), "awra-compact");
   else gtk_widget_remove_css_class (GTK_WIDGET (self), "awra-compact");
   g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_COMPACT]);
+}
+
+gboolean awra_header_get_expand_center (AwraHeader *self)
+{
+  g_return_val_if_fail (AWRA_IS_HEADER (self), FALSE);
+  return self->content->expand_center;
+}
+void awra_header_set_expand_center (AwraHeader *self, gboolean expand)
+{
+  g_return_if_fail (AWRA_IS_HEADER (self));
+  expand = !!expand;
+  if (self->content->expand_center == expand) return;
+  self->content->expand_center = expand;
+  gtk_widget_queue_resize (GTK_WIDGET (self->content));
+  g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_EXPAND_CENTER]);
 }

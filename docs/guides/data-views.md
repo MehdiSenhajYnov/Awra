@@ -83,3 +83,30 @@ and domain commands belong to the consuming application.
 State views use a preferred text width and wrap within narrow panes. Data
 column headers keep padding on cells rather than the enclosing layout row,
 so fixed column widths still work when horizontally scrolled.
+
+## Content zoom (since 1.1)
+
+`AwraZoomController` attaches to one content widget. Ctrl+wheel changes its
+observable `scale`; ordinary scrolling stays with GTK. Its private, scoped
+font scaling preserves the desktop font and leaves chrome outside the target
+unchanged. The controller holds its target weakly and detaches its input and
+style provider when disposed.
+
+```python
+zoom = Awra.ZoomController.new(content_view)
+zoom.set_range(0.5, 3.0)
+zoom.connect("notify::scale", update_domain_geometry)
+zoom.zoom_in()
+zoom.reset()
+```
+
+Keep one controller per target. `set_range()` clamps the current scale;
+`handle_scroll(delta, modifiers)` is the public input adapter used by the GTK
+controller. Only Ctrl-modified wheel input is consumed, including at a bound.
+Applications resize domain content such as thumbnails or drawing canvases in
+`notify::scale`. Keep the existing factories and models when changing size so
+GTK retains virtualization, focus and selection.
+
+`canvas-table` is an opt-in `AwraDataView` style role for column headings on the
+continuous Canvas: no filled header strip or separator, while column controls
+retain hover, keyboard and resize behavior.

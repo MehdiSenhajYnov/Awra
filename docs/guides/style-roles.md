@@ -74,6 +74,9 @@ preferences as the rest of Awra.
 | `compact-navigation` | AwraSidebar | Dense navigation items with selection feedback |
 | `sidebar-heading` | GtkLabel | Muted heading aligned with navigation items |
 | `compact-table` | AwraDataView | Compact rows and column headers |
+| `canvas-table` | AwraDataView | Transparent column headings on a shared Canvas |
+| `pane-caption` / `active-pane-caption` | GtkLabel | Quiet caption and focus indication in a divided workspace |
+| `drop-zone` | GtkWidget with GtkDropTarget | Destination highlight while GTK marks an accepted drop active |
 | `focused-pane` | AwraToolbar | Subtle focus feedback for independent panes |
 | `inline-search` | AwraSearchEntry | Quiet filter in a pane footer |
 | `view-switcher` | GtkBox containing AwraToggleButton | Compact, observable view selection |
@@ -87,3 +90,13 @@ preferences as the rest of Awra.
 `AwraHeader:compact` for the matching compact titlebar. Its default remains the
 existing spacious header. `AwraSelectionToolbar:clear-label` lets applications
 localize or customize the dismiss-selection action alongside their own titles.
+
+Set `AwraHeader:expand-center` when a navigation or address control should fill
+the actual space between its start and end controls. The default remains the
+centered, natural-width allocation. This opt-in avoids a second navigation bar
+and wasted symmetric gutters when the side controls have different widths.
+The header keeps its native window controls, drag behavior and Canvas material.
+
+`drop-zone` is visual only: attach a `GtkDropTarget` and accept payloads according
+to the application's domain. GTK owns the `:drop(active)` state; the role adds
+destination feedback without changing its resting geometry.
