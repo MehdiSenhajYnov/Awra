@@ -161,7 +161,9 @@ static void test_aspect_paintable(void) {
   g_object_unref(aspect);
 }
 int main(int argc, char **argv) {
-  gtk_test_init(&argc, &argv, NULL);
+  g_test_init(&argc, &argv, NULL);
+  if (!gtk_init_check())
+    return 77;
   awra_init();
   g_test_add_func("/overlay-bar/geometry-idle-focus", test_geometry_and_idle);
   g_test_add_func("/overlay-bar/window-composition", test_window_composition);

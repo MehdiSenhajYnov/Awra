@@ -317,7 +317,9 @@ test_scaled_alpha (void)
 int
 main (int argc, char **argv)
 {
-  gtk_test_init (&argc, &argv, NULL);
+  g_test_init (&argc, &argv, NULL);
+  if (!gtk_init_check ())
+    return 77;
   awra_init ();
   g_test_add_func ("/frames/lease-lifetime-immutability", test_leases);
   g_test_add_func ("/frames/threaded-bounded-reuse", test_threads);

@@ -144,7 +144,9 @@ test_input (void)
 int
 main (int argc, char **argv)
 {
-  gtk_test_init (&argc, &argv, NULL);
+  g_test_init (&argc, &argv, NULL);
+  if (!gtk_init_check ())
+    return 77;
   awra_init ();
   g_test_add_func ("/timeline/contract", test_contract);
   g_test_add_func ("/timeline/input", test_input);
