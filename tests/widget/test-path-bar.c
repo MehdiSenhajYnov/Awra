@@ -139,9 +139,10 @@ path_bar_contract (void)
     while (row != NULL && !GTK_IS_BUTTON (row))
       row = gtk_widget_get_first_child (row);
     g_assert_nonnull (row);
-    accepted = FALSE;
+    g_clear_pointer (&submitted, g_free);
     g_signal_emit_by_name (row, "clicked");
-    g_assert_cmpstr (submitted, ==, "/home/inserted/");
+    g_assert_null (submitted);
+    g_assert_true (awra_path_bar_get_editing (bar));
     g_assert_cmpstr (awra_path_bar_get_edit_text (bar), ==, "/home/inserted/");
     g_signal_handler_disconnect (bar, handler);
   }

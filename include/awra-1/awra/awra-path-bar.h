@@ -163,7 +163,8 @@ GListModel *awra_path_bar_get_suggestions (AwraPathBar *self);
  * @model: (nullable): a model containing #AwraBreadcrumbItem objects
  *
  * Offers completions for the text being typed: each item shows its label and
- * inserts its name. The consumer owns the lookup, usually in response to
+ * inserts its name without committing, so the user can keep descending. The
+ * consumer owns the lookup, usually in response to
  * #AwraPathBar:edit-text, so the bar works with any hierarchical address.
  *
  * Since: 1.1

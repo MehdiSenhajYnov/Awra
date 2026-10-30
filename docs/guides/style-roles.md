@@ -81,6 +81,7 @@ preferences as the rest of Awra.
 | `inline-search` | AwraSearchEntry | Quiet filter in a pane footer |
 | `location-search` | AwraSearchEntry | Search that takes over a location slot and keeps its proportions |
 | `prose-metadata` | AwraMetadataGroup | Metadata read as text rather than compared as figures |
+| `active-tabs` | AwraTabView | Marks the focused view when several views each have their tabs |
 | `view-switcher` | GtkBox containing AwraToggleButton | Compact, observable view selection |
 | `floating-selection` | AwraSelectionToolbar | Selection actions over content without moving it |
 | `collection-tile` | GtkBox item factory content | Compact icon/thumbnail and caption composition |

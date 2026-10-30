@@ -25,7 +25,7 @@ unchanged (checked against the frozen 1.0.0 contract).
   shared navigation/address bars, preserving the centered default.
 - `drop-zone` follows GTK’s accepted-drop state for reusable destination feedback.
 - `AwraPathBar` combines breadcrumbs with an in-place text field: click, Tab
-  completion from consumer-supplied suggestions, refusal without losing the
+  completion from consumer-supplied suggestions that insert without committing, refusal without losing the
   typed text, and a trailing widget slot that survives both modes.
 - Menus built from a `GMenuModel` now show the state of boolean and radio
   actions, and the shortcut registered for an action or set through the `accel`

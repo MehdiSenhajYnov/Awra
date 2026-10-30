@@ -3014,6 +3014,9 @@ window.awra-window paned > separator {
 }
 .awra-role-workspace-tabs .awra-tab-pill { border-radius: 6px; }
 .awra-role-workspace-tabs .awra-tab-item { min-height: 30px; }
+/* The focused view of a divided workspace, told apart by its current tab. */
+.awra-role-active-tabs .awra-tab-item.awra-tab-selected > .awra-tab-pill { background-color: @awra_selection; }
+.awra-role-active-tabs .awra-tab-item.awra-tab-selected .awra-tab-title { color: @awra_accent_content; }
 
 /* Reading guides on the continuous Canvas, without another toolbar plane. */
 .awra-role-canvas-table columnview > header,

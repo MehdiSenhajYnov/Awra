@@ -110,6 +110,8 @@ replace_text (AwraPathBar *self,
   gtk_editable_set_text (GTK_EDITABLE (self->entry), owned);
   gtk_editable_set_position (GTK_EDITABLE (self->entry), -1);
   self->syncing = FALSE;
+  self->highlighted = -1;
+  apply_highlight (self);
   /* GtkEditable reports the intermediate empty text: announce only the result. */
   g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_EDIT_TEXT]);
 }
@@ -137,11 +139,10 @@ static void
 suggestion_clicked_cb (GtkButton   *button,
                        AwraPathBar *self)
 {
-  g_autofree char *text = g_strdup (awra_breadcrumb_item_get_name (
+  /* A suggestion is a step, not a destination: the user may keep descending. */
+  replace_text (self, awra_breadcrumb_item_get_name (
     g_object_get_data (G_OBJECT (button), "awra-path-bar-item")));
-
-  replace_text (self, text);
-  submit_text (self, text);
+  gtk_widget_grab_focus (GTK_WIDGET (self->entry));
 }
 
 static void
@@ -223,8 +224,10 @@ entry_activate_cb (GtkText     *entry,
 {
   AwraBreadcrumbItem *item = highlighted_suggestion (self, self->highlighted);
 
-  if (item != NULL)
+  if (item != NULL) {
     replace_text (self, awra_breadcrumb_item_get_name (item));
+    return;
+  }
   g_autofree char *text = g_strdup (gtk_editable_get_text (GTK_EDITABLE (entry)));
   submit_text (self, text);
 }
@@ -261,8 +264,7 @@ entry_key_pressed_cb (GtkEventControllerKey *controller,
   case GDK_KEY_Tab:
     if (count == 0)
       return FALSE;
-    /* A folder suggestion usually leads to its own children: Tab keeps
-     * descending with the keyboard, Enter commits. */
+    /* Without a highlight, Tab takes the first suggestion. */
     replace_text (self, awra_breadcrumb_item_get_name (
       highlighted_suggestion (self, MAX (self->highlighted, 0))));
     return TRUE;
