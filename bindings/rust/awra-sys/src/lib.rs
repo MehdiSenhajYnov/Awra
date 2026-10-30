@@ -3068,15 +3068,24 @@ unsafe extern "C" {
     pub fn awra_header_get_drag_enabled(self_: *mut AwraHeader) -> gboolean;
     pub fn awra_header_get_end_widget(self_: *mut AwraHeader) -> *mut gtk::GtkWidget;
     pub fn awra_header_get_material(self_: *mut AwraHeader) -> *mut AwraMaterial;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_header_get_max_width(self_: *mut AwraHeader) -> c_uint;
     pub fn awra_header_get_show_window_controls(self_: *mut AwraHeader) -> gboolean;
     pub fn awra_header_get_start_widget(self_: *mut AwraHeader) -> *mut gtk::GtkWidget;
     pub fn awra_header_get_subtitle(self_: *mut AwraHeader) -> *const c_char;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_header_get_surface(self_: *mut AwraHeader) -> *mut AwraSurface;
     pub fn awra_header_get_title(self_: *mut AwraHeader) -> *const c_char;
     pub fn awra_header_set_blend_with_window(self_: *mut AwraHeader, blend: gboolean);
     pub fn awra_header_set_center_widget(self_: *mut AwraHeader, widget: *mut gtk::GtkWidget);
     pub fn awra_header_set_drag_enabled(self_: *mut AwraHeader, drag_enabled: gboolean);
     pub fn awra_header_set_end_widget(self_: *mut AwraHeader, widget: *mut gtk::GtkWidget);
     pub fn awra_header_set_material(self_: *mut AwraHeader, material: *mut AwraMaterial);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_header_set_max_width(self_: *mut AwraHeader, width: c_uint);
     pub fn awra_header_set_show_window_controls(self_: *mut AwraHeader, show_controls: gboolean);
     pub fn awra_header_set_start_widget(self_: *mut AwraHeader, widget: *mut gtk::GtkWidget);
     pub fn awra_header_set_subtitle(self_: *mut AwraHeader, subtitle: *const c_char);
@@ -4095,6 +4104,9 @@ unsafe extern "C" {
     pub fn awra_surface_get_type() -> GType;
     pub fn awra_surface_new() -> *mut gtk::GtkWidget;
     pub fn awra_surface_new_with_role(role: AwraSurfaceRole) -> *mut gtk::GtkWidget;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_surface_get_backdrop_widget(self_: *mut AwraSurface) -> *mut gtk::GtkWidget;
     pub fn awra_surface_get_child(self_: *mut AwraSurface) -> *mut gtk::GtkWidget;
     pub fn awra_surface_get_clip_child(self_: *mut AwraSurface) -> gboolean;
     pub fn awra_surface_get_corner_mask(self_: *mut AwraSurface) -> AwraSurfaceCorner;
@@ -4104,6 +4116,9 @@ unsafe extern "C" {
     pub fn awra_surface_get_material(self_: *mut AwraSurface) -> *mut AwraMaterial;
     pub fn awra_surface_get_radius(self_: *mut AwraSurface) -> c_double;
     pub fn awra_surface_get_role(self_: *mut AwraSurface) -> AwraSurfaceRole;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_surface_set_backdrop_widget(self_: *mut AwraSurface, widget: *mut gtk::GtkWidget);
     pub fn awra_surface_set_child(self_: *mut AwraSurface, child: *mut gtk::GtkWidget);
     pub fn awra_surface_set_clip_child(self_: *mut AwraSurface, clip_child: gboolean);
     pub fn awra_surface_set_corner_mask(self_: *mut AwraSurface, corners: AwraSurfaceCorner);

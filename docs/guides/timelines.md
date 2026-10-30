@@ -98,3 +98,28 @@ canvas can therefore extend beneath both header and controls. Keep interactive
 inspector content outside their measured regions, using scrollable panels.
 `AwraToastOverlay.bottom-inset` reserves clearance for messages above a floating
 bar without changing the content allocation (default 24 logical pixels).
+
+## Frosted controls over application content
+
+Native compositor blur samples behind the window. For an overlay over video,
+images or another application subtree, set an explicit local source instead:
+
+```python
+controls.get_surface().set_backdrop_widget(video_picture)
+header.get_surface().set_backdrop_widget(video_picture)
+header.set_max_width(1200)  # optional; zero keeps the normal full width
+```
+
+The source must be an independent widget in the same native surface; neither
+widget may contain the other. It is held weakly and contributes no size request.
+For `GtkPicture`, Awra observes and samples the image paintable directly,
+preserving content-fit and avoiding an extra cache of the entire video widget.
+Other widgets supply their cached GTK render node without CPU readback. The blur
+input is clipped to the overlay plus kernel padding, and rounded clipping keeps
+corners clean. Dark glass attenuates luminous content to preserve text contrast.
+
+The source's invalidations redraw the surface. A missing, unmapped or destroyed
+source uses the opaque fallback. High contrast and reduced transparency also
+use that fallback. Clear a header's backdrop when switching back to a docked
+window canvas. A constrained header retains its content minimum and lets
+pointer events outside its visible width pass through to the content.

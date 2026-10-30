@@ -369,6 +369,7 @@ struct _AwraHeader {
   gboolean show_window_controls;
   gboolean drag_enabled;
   gboolean blend_with_window;
+  guint max_width;
 };
 
 enum {
@@ -382,6 +383,7 @@ enum {
   PROP_DRAG_ENABLED,
   PROP_MATERIAL,
   PROP_BLEND_WITH_WINDOW,
+  PROP_MAX_WIDTH,
   N_PROPS
 };
 
@@ -507,6 +509,52 @@ awra_header_dispose (GObject *object)
 }
 
 static void
+awra_header_expand (GtkWidget *widget, gboolean *horizontal, gboolean *vertical)
+{
+  AwraHeader *self = AWRA_HEADER (widget);
+  *horizontal = self->root && gtk_widget_compute_expand (self->root, GTK_ORIENTATION_HORIZONTAL);
+  *vertical = self->root && gtk_widget_compute_expand (self->root, GTK_ORIENTATION_VERTICAL);
+}
+
+static void
+awra_header_measure (GtkWidget *widget, GtkOrientation orientation, int size,
+                     int *minimum, int *natural, int *min_base, int *nat_base)
+{
+  AwraHeader *self = AWRA_HEADER (widget);
+  if (orientation == GTK_ORIENTATION_VERTICAL && self->max_width && size >= 0) {
+    int root_minimum;
+    gtk_widget_measure (self->root, GTK_ORIENTATION_HORIZONTAL, -1,
+                          &root_minimum, NULL, NULL, NULL);
+    size = MIN (size, MAX (root_minimum, (int) self->max_width));
+  }
+  gtk_widget_measure (self->root, orientation, size, minimum, natural, min_base, nat_base);
+  if (orientation == GTK_ORIENTATION_HORIZONTAL && self->max_width)
+    *natural = MAX (*minimum, MIN (*natural, (int) self->max_width));
+}
+
+static void
+awra_header_allocate (GtkWidget *widget, int width, int height, int baseline)
+{
+  AwraHeader *self = AWRA_HEADER (widget);
+  int minimum;
+  gtk_widget_measure (self->root, GTK_ORIENTATION_HORIZONTAL, height, &minimum, NULL, NULL, NULL);
+  int span = self->max_width ? MIN (width, MAX (minimum, (int) self->max_width)) : width;
+  graphene_point_t origin = GRAPHENE_POINT_INIT ((width - span) / 2.0f, 0);
+  gtk_widget_allocate (self->root, span, height, baseline,
+                        gsk_transform_translate (NULL, &origin));
+}
+
+static gboolean
+awra_header_contains (GtkWidget *widget, double x, double y)
+{
+  AwraHeader *self = AWRA_HEADER (widget);
+  graphene_rect_t bounds;
+  graphene_point_t point = GRAPHENE_POINT_INIT (x, y);
+  return self->root && gtk_widget_compute_bounds (self->root, widget, &bounds) &&
+         graphene_rect_contains_point (&bounds, &point);
+}
+
+static void
 awra_header_snapshot (GtkWidget   *widget,
                       GtkSnapshot *snapshot)
 {
@@ -525,6 +573,9 @@ awra_header_get_property (GObject    *object,
   AwraHeader *self = AWRA_HEADER (object);
 
   switch (id) {
+  case PROP_MAX_WIDTH:
+    g_value_set_uint (value, self->max_width);
+    break;
   case PROP_TITLE:
     g_value_set_string (value, awra_header_get_title (self));
     break;
@@ -566,6 +617,9 @@ awra_header_set_property (GObject      *object,
   AwraHeader *self = AWRA_HEADER (object);
 
   switch (id) {
+  case PROP_MAX_WIDTH:
+    awra_header_set_max_width (self, g_value_get_uint (value));
+    break;
   case PROP_TITLE:
     awra_header_set_title (self, g_value_get_string (value));
     break;
@@ -608,6 +662,10 @@ awra_header_class_init (AwraHeaderClass *klass)
   object_class->get_property = awra_header_get_property;
   object_class->set_property = awra_header_set_property;
   widget_class->snapshot = awra_header_snapshot;
+  widget_class->compute_expand = awra_header_expand;
+  widget_class->measure = awra_header_measure;
+  widget_class->size_allocate = awra_header_allocate;
+  widget_class->contains = awra_header_contains;
   properties[PROP_TITLE] = g_param_spec_string (
     "title", NULL, NULL, NULL,
     G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
@@ -635,8 +693,16 @@ awra_header_class_init (AwraHeaderClass *klass)
   properties[PROP_BLEND_WITH_WINDOW] = g_param_spec_boolean (
     "blend-with-window", NULL, NULL, FALSE,
     G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+  /**
+   * AwraHeader:max-width:
+   *
+   * Maximum centred visual width, respecting the content minimum. Zero is unbounded.
+   * Since: 1.1
+   */
+  properties[PROP_MAX_WIDTH] = g_param_spec_uint (
+    "max-width", NULL, "Maximum visual width; zero means unbounded", 0, 8192, 0,
+    G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
   g_object_class_install_properties (object_class, N_PROPS, properties);
-  gtk_widget_class_set_layout_manager_type (widget_class, GTK_TYPE_BIN_LAYOUT);
   gtk_widget_class_set_css_name (widget_class, "awraheader");
   gtk_widget_class_set_accessible_role (widget_class, GTK_ACCESSIBLE_ROLE_BANNER);
 }
@@ -902,4 +968,30 @@ awra_header_set_blend_with_window (AwraHeader *self,
   update_surface_grammar (self);
   g_object_notify_by_pspec (G_OBJECT (self),
                             properties[PROP_BLEND_WITH_WINDOW]);
+}
+
+AwraSurface *
+awra_header_get_surface (AwraHeader *self)
+{
+  g_return_val_if_fail (AWRA_IS_HEADER (self), NULL);
+  return self->surface;
+}
+
+guint
+awra_header_get_max_width (AwraHeader *self)
+{
+  g_return_val_if_fail (AWRA_IS_HEADER (self), 0);
+  return self->max_width;
+}
+
+void
+awra_header_set_max_width (AwraHeader *self, guint width)
+{
+  g_return_if_fail (AWRA_IS_HEADER (self));
+  width = MIN (width, 8192);
+  if (self->max_width == width)
+    return;
+  self->max_width = width;
+  gtk_widget_queue_resize (GTK_WIDGET (self));
+  g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_MAX_WIDTH]);
 }

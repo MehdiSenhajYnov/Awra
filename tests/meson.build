@@ -329,3 +329,6 @@ test('frame-pool', frame_pool_test, env: ['G_DEBUG=fatal-warnings', 'GTK_A11Y=no
 
 window_frame_test = executable('test-window-frame', 'integration/test-window-frame.c', dependencies: awra_dep)
 test('window-frame-states', window_frame_test, env: ['G_DEBUG=fatal-warnings', 'GTK_A11Y=none'], is_parallel: false)
+
+backdrop_test = executable('test-backdrop', 'visual/test-backdrop.c', dependencies: awra_dep)
+test('local-backdrop', backdrop_test)
