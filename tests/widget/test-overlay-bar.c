@@ -84,6 +84,28 @@ static void test_window_composition(void) {
   gtk_window_destroy(GTK_WINDOW(w));
   g_object_unref(app);
 }
+static void test_window_minimum_geometry(void) {
+  GtkApplication *app =
+      gtk_application_new("org.awra.Test.FrameMinimum", G_APPLICATION_NON_UNIQUE);
+  g_application_register(G_APPLICATION(app), NULL, NULL);
+  AwraWindow *window = AWRA_WINDOW(awra_window_new(app));
+  awra_context_get_for_display(gtk_widget_get_display(GTK_WIDGET(window)));
+  awra_window_set_content(window, gtk_drawing_area_new());
+  awra_window_set_overlay_chrome(window, TRUE);
+  /* Exercise the Win32 frame recipe on every platform. An overlaid header
+   * must not turn empty content's zero request into a negative minimum. */
+  gtk_widget_add_css_class(GTK_WIDGET(window), "awra-win32");
+  gtk_widget_add_css_class(GTK_WIDGET(window), "csd");
+  for (guint orientation = 0; orientation < 2; orientation++) {
+    int minimum, natural;
+    gtk_widget_measure(GTK_WIDGET(window), orientation, -1, &minimum, &natural,
+                       NULL, NULL);
+    g_assert_cmpint(minimum, >=, 0);
+    g_assert_cmpint(natural, >=, minimum);
+  }
+  gtk_window_destroy(GTK_WINDOW(window));
+  g_object_unref(app);
+}
 static void test_properties(void) {
   g_autoptr(GtkWidget) bar = g_object_ref_sink(awra_overlay_bar_new());
   g_object_set(bar, "auto-hide", TRUE, "hide-delay", 700u, "max-width", 700u,
@@ -167,6 +189,7 @@ int main(int argc, char **argv) {
   awra_init();
   g_test_add_func("/overlay-bar/geometry-idle-focus", test_geometry_and_idle);
   g_test_add_func("/overlay-bar/window-composition", test_window_composition);
+  g_test_add_func("/overlay-bar/window-minimum-geometry", test_window_minimum_geometry);
   g_test_add_func("/overlay-bar/properties", test_properties);
   g_test_add_func("/controls/focus-delegation", test_focus_delegation);
   g_test_add_func("/window/toplevel-lifetime", test_toplevel_lifetime);

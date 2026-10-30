@@ -2732,6 +2732,10 @@ window.awra-window.awra-win32:backdrop {
  * window is the visible one (it resizes through native borders instead). */
 window.awra-window.awra-win32.csd:not(.maximized):not(.fullscreen) {
   margin: -12px;
+  /* Embedded chrome has an empty native titlebar. Keep the CSS minimum at
+   * least as large as the removed resize margins, even with empty content. */
+  min-width: 24px;
+  min-height: 24px;
 }
 
 /* Windows popups are rounded by DWM with its small radius (none on Windows
