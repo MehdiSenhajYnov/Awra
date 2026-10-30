@@ -35,6 +35,18 @@ original offset. Left/Right adjusts the offset by 100 ms (Shift: one second).
 In seek mode, the same keys request one-second steps (Shift: ten seconds), and
 Home/End request the start/end. Horizontal movement follows RTL direction.
 
+Applications can set `step-increment` and `page-increment` to use the same
+arrow-key steps inside the timeline as their global transport shortcuts. For
+example, a player can choose five and thirty seconds. Changing either property
+does not move the cursor or request a seek; defaults remain one and ten seconds.
+The edit-mode displacement remains one tenth of the configured step.
+
+An asynchronous player should retain its latest requested position separately
+from its decoder clock. Keep the cursor at that target until the backend has
+confirmed the transition, and accumulate repeated shortcuts from that target.
+Network downloads, request coalescing and playback confirmation belong to the
+player backend; the timeline does not own a playback timer or decoder.
+
 `hover-time` is read-only, in seconds, and is -1 outside the view. Consumers can
 use it to provide a decoder-backed preview without putting decoding into Awra.
 The widget owns no timeout or playback thread. The framework's token snapshot

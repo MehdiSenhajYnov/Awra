@@ -35,6 +35,11 @@ unchanged (checked against the frozen 1.0.0 contract).
   without making a long path the window minimum width.
 - Empty/loading/error descriptions wrap in narrow panes; data table header
   padding no longer causes fixed-column row underallocation.
+- `AwraTimeline` exposes configurable `step-increment` and `page-increment`
+  properties so local and global transport shortcuts can use consistent steps.
+  Defaults and editable-mode scaling remain compatible; C/GI/Vala/Rust expose
+  both properties.
+
 - Responsive layout: `AwraMasterDetail`, `AwraFilterBar` and `AwraFormRow`
   are measured in the layout their width gives, so no frame is drawn with the
   previous layout's sizes after creation or a resize across a breakpoint.

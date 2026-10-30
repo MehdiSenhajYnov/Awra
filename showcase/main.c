@@ -1966,6 +1966,8 @@ make_controls_page (void)
     GtkWidget *timeline = awra_timeline_new ();
     gtk_widget_set_size_request (GTK_WIDGET (overlay), -1, 240);
     awra_timeline_set_duration (AWRA_TIMELINE (timeline), 120);
+    awra_timeline_set_step_increment (AWRA_TIMELINE (timeline), 5);
+    awra_timeline_set_page_increment (AWRA_TIMELINE (timeline), 30);
     awra_timeline_set_position (AWRA_TIMELINE (timeline), 32);
     awra_timeline_set_preview (AWRA_TIMELINE (timeline), gtk_label_new ("Backend-owned preview"));
     gtk_widget_set_hexpand (timeline, TRUE);

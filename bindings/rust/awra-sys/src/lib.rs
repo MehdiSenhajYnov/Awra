@@ -4270,6 +4270,9 @@ unsafe extern "C" {
     pub fn awra_timeline_get_offset(self_: *mut AwraTimeline) -> c_double;
     #[cfg(feature = "v1_1")]
     #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_timeline_get_page_increment(self_: *mut AwraTimeline) -> c_double;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_timeline_get_position(self_: *mut AwraTimeline) -> c_double;
     #[cfg(feature = "v1_1")]
     #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
@@ -4277,6 +4280,9 @@ unsafe extern "C" {
     #[cfg(feature = "v1_1")]
     #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_timeline_get_preview_popover(self_: *mut AwraTimeline) -> *mut AwraPopover;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_timeline_get_step_increment(self_: *mut AwraTimeline) -> c_double;
     #[cfg(feature = "v1_1")]
     #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_timeline_get_view_duration(self_: *mut AwraTimeline) -> c_double;
@@ -4294,10 +4300,16 @@ unsafe extern "C" {
     pub fn awra_timeline_set_offset(self_: *mut AwraTimeline, offset: c_double);
     #[cfg(feature = "v1_1")]
     #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_timeline_set_page_increment(self_: *mut AwraTimeline, increment: c_double);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_timeline_set_position(self_: *mut AwraTimeline, position: c_double);
     #[cfg(feature = "v1_1")]
     #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_timeline_set_preview(self_: *mut AwraTimeline, preview: *mut gtk::GtkWidget);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_timeline_set_step_increment(self_: *mut AwraTimeline, increment: c_double);
     #[cfg(feature = "v1_1")]
     #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_timeline_set_view_duration(self_: *mut AwraTimeline, duration: c_double);
