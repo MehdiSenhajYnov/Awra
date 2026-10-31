@@ -1,0 +1,474 @@
+import { type Box, Rng, TILE, clamp, overlap } from '../engine/core';
+import { type Ledge, fits, move } from '../engine/physics';
+import { type Room, type RoomDef, T, buildRoom, setTile, tileAt } from '../world/room';
+import { Blade, segDist } from './blade';
+import type { Controls } from './controls';
+import { type DamageSource, Entity } from './entity';
+import type { FxEvent } from './events';
+import { type AttackDir, PHYS, Player, type PlayerWorld } from './player';
+import type { Save } from './save';
+
+export interface SceneHooks {
+  roomDef(id: string): RoomDef | undefined;
+  neighbour(room: RoomDef, side: 'l' | 'r' | 'u' | 'd', px: number, py: number): { def: RoomDef; x: number; y: number } | null;
+  spawn(scene: Scene, kind: string, x: number, y: number, opts: Record<string, unknown>, uid: string): Entity | null;
+}
+
+/** Base damage of one slash at forge level 0. Foes have HP in the same unit. */
+export const BASE_DAMAGE = 10;
+export const LUMEN_PER_HIT = 8;
+export const HEAL_COST = 33;
+export const ART_COST = 33;
+
+/**
+ * The running world: one room, the hero, the blade and the things living there. Pure simulation, no drawing,
+ * so it runs headless in tests. Everything visible is reported through `events`.
+ */
+export class Scene implements PlayerWorld {
+  room!: Room;
+  player: Player;
+  blade = new Blade();
+  entities: Entity[] = [];
+  events: FxEvent[] = [];
+  rng = new Rng(7);
+  /** Global freeze frames (hit-stop). */
+  freeze = 0;
+  /** Éclipse: foes run at a fraction of speed. */
+  eclipse = 0;
+  private enemyClock = 0;
+  lumen = 0;
+  /** Slain foes stay dead until the next rest. */
+  killed = new Set<string>();
+  /** Pending room change, handled by the game screen (fade). */
+  pending: { def: RoomDef; x: number; y: number; vx: number; vy: number } | null = null;
+  /** Set while respawning from a hazard. */
+  respawnT = 0;
+  god = false;
+  headless = false;
+  t = 0;
+  private hitBy = new Map<number, number>();
+  /** Fixed focus for the camera (boss arenas). */
+  cameraFocus: { x: number; y: number } | null = null;
+  boss: Entity | null = null;
+  toast: { text: string; t: number } | null = null;
+
+  constructor(public save: Save, public hooks: SceneHooks) {
+    this.player = new Player(0, 0);
+    this.player.maxHp = save.maxHp;
+    this.player.hp = save.maxHp;
+  }
+
+  get flags(): Record<string, boolean | number> {
+    return this.save.flags;
+  }
+
+  setFlag(k: string, v: boolean | number = true): void {
+    this.save.flags[k] = v;
+  }
+
+  has(a: string): boolean {
+    return this.save.abilities.includes(a);
+  }
+
+  maxLumen(): number {
+    return 99 + this.save.vessels * 33;
+  }
+
+  damageMul(): number {
+    return 1 + this.save.forge * 0.25;
+  }
+
+  emit(e: FxEvent): void {
+    if (!this.headless) this.events.push(e);
+  }
+
+  sfx(name: string, x?: number, y?: number, vol?: number): void {
+    this.emit({ t: 'sfx', name, x, y, vol });
+  }
+
+  // ---- Rooms -------------------------------------------------------------------------------------------
+
+  enter(def: RoomDef | string, x?: number, y?: number): void {
+    const d = typeof def === 'string' ? this.hooks.roomDef(def)! : def;
+    this.room = buildRoom(d, this.save.flags);
+    this.entities = [];
+    this.boss = null;
+    this.cameraFocus = null;
+    this.blade.catchNow();
+    if (!this.save.seen.includes(d.id)) this.save.seen.push(d.id);
+    for (const [i, e] of (d.ents ?? []).entries()) {
+      const uid = `${d.id}:${i}`;
+      if (this.killed.has(uid)) continue;
+      const ent = this.hooks.spawn(this, e[0], e[1] * TILE + TILE / 2, (e[2] + 1) * TILE, e[3] ?? {}, uid);
+      if (ent) {
+        ent.uid = uid;
+        this.entities.push(ent);
+      }
+    }
+    const p = this.player;
+    if (x !== undefined && y !== undefined) {
+      p.body.x = x;
+      p.body.y = y;
+    }
+    p.safe = { x: p.body.x, y: p.body.y };
+    this.pending = null;
+  }
+
+  add(e: Entity): void {
+    this.entities.push(e);
+  }
+
+  // ---- PlayerWorld ---------------------------------------------------------------------------------------
+
+  get ledges(): Ledge[] {
+    const l = this.blade.ledge();
+    return l ? [l] : [];
+  }
+
+  bladeHeld(): boolean {
+    return this.blade.held();
+  }
+
+  bladeOut(): boolean {
+    return this.blade.out();
+  }
+
+  throwBlade(dx: number, dy: number): void {
+    const p = this.player;
+    this.blade.throw(p.cx + dx * 20, p.cy - 8 + dy * 10, dx, dy);
+    this.emit({ t: 'throw', x: p.cx, y: p.cy, dir: p.facing });
+  }
+
+  recallBlade(): void {
+    const b = this.blade;
+    // Ripping the blade out of a branded foe hurts it badly.
+    if (b.state === 'branded' && b.target) {
+      const e = b.target as unknown as Entity;
+      this.strike(e, BASE_DAMAGE * 2.2 * this.damageMul(), b.x, 'rip');
+    }
+    b.recall();
+    this.emit({ t: 'recall', x: b.x, y: b.y });
+  }
+
+  blinkTarget(): { x: number; y: number; execute: boolean } | null {
+    const b = this.blade;
+    if (b.state === 'held' || b.state === 'returning') return null;
+    if (b.state === 'branded' && b.target) {
+      const e = b.target as unknown as Entity;
+      // Land just beside the foe, on the hero's side.
+      const side = Math.sign(this.player.cx - e.cx) || -1;
+      return { x: e.cx + side * (e.body.w / 2 + 30), y: e.cy, execute: true };
+    }
+    // From a wall, stand just out of it.
+    return { x: b.x - b.wallSide * 26, y: b.y + 20, execute: false };
+  }
+
+  afterBlink(execute: boolean): void {
+    const b = this.blade;
+    const p = this.player;
+    const from = { x: p.trail[p.trail.length - 1]?.x ?? p.cx, y: (p.trail[p.trail.length - 1]?.y ?? p.feet) - 42 };
+    if (execute && b.target) {
+      const e = b.target as unknown as Entity;
+      this.strike(e, BASE_DAMAGE * 3.5 * this.damageMul(), p.cx, 'execute');
+      this.freeze = 10;
+      this.gainLumen(20);
+      this.emit({ t: 'shockwave', x: e.cx, y: e.cy, r: 260, color: 0xffe6a8 });
+    }
+    b.catchNow();
+    this.emit({ t: 'blink', x0: from.x, y0: from.y, x1: p.cx, y1: p.cy, big: execute });
+  }
+
+  lumenValue(): number {
+    return this.lumen;
+  }
+
+  spendLumen(n: number): boolean {
+    if (this.lumen < n) return false;
+    this.lumen -= n;
+    return true;
+  }
+
+  gainLumen(n: number): void {
+    this.lumen = clamp(this.lumen + n, 0, this.maxLumen());
+  }
+
+  canHeal(): boolean {
+    return this.lumen >= HEAL_COST && this.player.hp < this.player.maxHp;
+  }
+
+  heal(): void {
+    if (!this.spendLumen(HEAL_COST)) return;
+    this.player.hp = Math.min(this.player.maxHp, this.player.hp + 1);
+    this.emit({ t: 'heal', x: this.player.cx, y: this.player.cy });
+  }
+
+  castArt(dir: AttackDir): boolean {
+    const name = dir === 'up' ? 'ascension' : dir === 'down' ? 'chute' : 'comete';
+    if (!this.save.arts.includes(name)) return false;
+    if (!this.spendLumen(ART_COST)) return false;
+    this.artCast(name);
+    return true;
+  }
+
+  /** Hook filled by arts.ts. */
+  artCast: (name: string) => void = () => {};
+
+  // ---- Combat ---------------------------------------------------------------------------------------------
+
+  /** Deals damage with all the feedback. Returns true when it landed. */
+  strike(e: Entity, amount: number, fromX: number, source: DamageSource): boolean {
+    if (!e.damage(amount, fromX, source)) return false;
+    const p = this.player;
+    const big = source === 'rip' || source === 'execute' || source === 'art' || e.dead;
+    const dx = Math.sign(e.cx - fromX) || p.facing;
+    this.emit({ t: 'hit', x: e.cx, y: e.cy, dx, dy: 0, big, kind: source });
+    this.freeze = Math.max(this.freeze, e.dead ? 7 : big ? 6 : 3);
+    if (source === 'slash' || source === 'palm') this.gainLumen(LUMEN_PER_HIT);
+    else if (source === 'blade') this.gainLumen(4);
+    return true;
+  }
+
+  killFx(e: Entity): void {
+    this.emit({ t: 'kill', x: e.cx, y: e.cy, size: Math.max(e.body.w, e.body.h), color: 0x8a5cff, sprite: e.sprite, id: e.id });
+    if (e.uid) this.killed.add(e.uid);
+    if (e.dust > 0) {
+      this.save.dust += e.dust;
+      this.emit({ t: 'dust', x: e.cx, y: e.cy, n: e.dust });
+    }
+  }
+
+  hurtPlayer(amount: number, fromX: number, dodgeable = true): void {
+    const p = this.player;
+    if (p.dead || this.respawnT > 0 || this.god) return;
+    // Perfect dodge: a dash that meets the blow in its first frames slips through it.
+    if (dodgeable && p.dashT > PHYS.dashFrames - 8 && p.dashT > 0) {
+      this.triggerEclipse();
+      return;
+    }
+    if (p.invuln > 0) return;
+    const dmg = this.save.hard ? amount * 2 : amount;
+    p.hp -= dmg;
+    p.hurt(fromX);
+    this.freeze = 10;
+    this.blade.state === 'held' || this.blade.recall();
+    this.emit({ t: 'hurt', x: p.cx, y: p.cy });
+    if (p.hp <= 0) this.die();
+  }
+
+  triggerEclipse(): void {
+    if (this.eclipse > 0) return;
+    this.eclipse = 90;
+    this.player.invuln = Math.max(this.player.invuln, 40);
+    this.gainLumen(25);
+    this.emit({ t: 'dodge', x: this.player.cx, y: this.player.cy });
+  }
+
+  die(): void {
+    const p = this.player;
+    p.dead = true;
+    p.hp = 0;
+    this.save.deaths++;
+  }
+
+  private hazard(): void {
+    const p = this.player;
+    if (this.respawnT > 0 || p.dead) return;
+    this.emit({ t: 'hurt', x: p.cx, y: p.cy });
+    if (!this.god) p.hp -= this.save.hard ? 2 : 1;
+    if (p.hp <= 0) {
+      this.die();
+      return;
+    }
+    this.respawnT = 40;
+    p.invuln = 60;
+    p.attack = null;
+    p.dashT = 0;
+    this.blade.catchNow();
+  }
+
+  // ---- Frame ----------------------------------------------------------------------------------------------
+
+  update(c: Controls): void {
+    this.t++;
+    if (this.toast && --this.toast.t <= 0) this.toast = null;
+    if (this.freeze > 0) {
+      this.freeze--;
+      return;
+    }
+    const p = this.player;
+    if (this.respawnT > 0) {
+      this.respawnT--;
+      if (this.respawnT === 20) {
+        p.body.x = p.safe.x;
+        p.body.y = p.safe.y;
+        p.body.vx = 0;
+        p.body.vy = 0;
+      }
+      return;
+    }
+    if (this.eclipse > 0) this.eclipse--;
+
+    const evs = p.update(c, this);
+    for (const e of evs) {
+      if (e.kind === 'attack') {
+        const a = e.attack;
+        this.emit({ t: 'slash', x: p.cx, y: p.cy, dir: a.dir, facing: e.facing, combo: a.combo, palm: a.palm });
+      } else if (e.kind === 'jump' || e.kind === 'doubleJump' || e.kind === 'land' || e.kind === 'footstep' || e.kind === 'wallJump') {
+        this.emit({ t: e.kind, x: e.x ?? p.cx, y: e.y ?? p.feet, dir: e.dir, big: e.big });
+      } else if (e.kind === 'dash') {
+        this.emit({ t: 'dash', x: p.cx, y: p.cy, dir: e.dir ?? p.facing });
+      } else if (e.kind === 'healStart') {
+        this.emit({ t: 'healStart', x: p.cx, y: p.cy });
+      } else if (e.kind === 'art') {
+        this.emit({ t: 'art', x: p.cx, y: p.cy, art: e.art ?? 'side', dir: p.facing });
+      }
+    }
+
+    this.updateBlade();
+    this.playerAttacks();
+
+    // Foes (slowed during the Éclipse).
+    this.enemyClock += this.eclipse > 0 ? 0.3 : 1;
+    while (this.enemyClock >= 1) {
+      this.enemyClock -= 1;
+      for (const e of this.entities) {
+        if (e.dead) continue;
+        e.tick();
+        e.update();
+      }
+      this.enemyHits();
+    }
+    this.entities = this.entities.filter((e) => !e.dead || (e as unknown as { keep?: boolean }).keep);
+
+    // Hazards.
+    if (!p.dead && this.touchesHazard()) this.hazard();
+    this.checkExit();
+  }
+
+  private touchesHazard(): boolean {
+    const b = this.player.body;
+    const x0 = Math.floor((b.x + 6) / TILE);
+    const x1 = Math.floor((b.x + b.w - 6) / TILE);
+    const y0 = Math.floor((b.y + 8) / TILE);
+    const y1 = Math.floor((b.y + b.h - 2) / TILE);
+    for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++) {
+      const t = tileAt(this.room, tx, ty);
+      if (t === T.Spike || t === T.Gloam) return true;
+    }
+    return false;
+  }
+
+  private updateBlade(): void {
+    const b = this.blade;
+    const p = this.player;
+    if (b.state === 'held') return;
+    const r = b.update(this.room, p.cx, p.cy - 8);
+    if (r === 'caught') this.emit({ t: 'catch', x: p.cx, y: p.cy });
+    if (r === 'lodged') {
+      this.emit({ t: 'lodge', x: b.x, y: b.y, angle: b.angle });
+      // Lodged under the hero's feet would trap them inside the step; nothing to do, the step is one-way.
+    }
+    if (b.state === 'flying' || b.state === 'returning') {
+      const s = b.sweep();
+      for (const e of this.entities) {
+        if (e.dead || !e.hurtable || b.pierced.has(e.id)) continue;
+        const reach = Math.max(e.body.w, e.body.h) / 2 + 16;
+        if (segDist(e.cx, e.cy, s.x0, s.y0, s.x1, s.y1) > reach) continue;
+        b.pierced.add(e.id);
+        const dmg = BASE_DAMAGE * (b.state === 'returning' ? 1.2 : 0.8) * this.damageMul();
+        const landed = this.strike(e, dmg, b.x - b.vx, 'blade');
+        if (b.state === 'flying' && landed && !e.dead && e.brandable) {
+          b.brand(e);
+          this.emit({ t: 'lodge', x: b.x, y: b.y, angle: b.angle });
+          break;
+        }
+        if (b.state === 'flying' && !landed && !e.prop) {
+          // Bounced off armour.
+          this.emit({ t: 'clank', x: b.x, y: b.y });
+          b.recall();
+          break;
+        }
+      }
+    }
+  }
+
+  private playerAttacks(): void {
+    const p = this.player;
+    const a = p.attack;
+    const box = p.attackBox();
+    if (!a || !box) return;
+    for (const e of this.entities) {
+      if (e.dead || !e.hurtable) continue;
+      if (this.hitBy.get(e.id) === a.id) continue;
+      if (!overlap(box, e.box())) continue;
+      this.hitBy.set(e.id, a.id);
+      const dmg = BASE_DAMAGE * a.mul * this.damageMul();
+      const landed = this.strike(e, dmg, p.cx, a.palm ? 'palm' : 'slash');
+      p.onAttackLanded(landed ? 'foe' : 'wall', true);
+      if (!landed) this.emit({ t: 'clank', x: (box.x + box.w / 2 + e.cx) / 2, y: e.cy });
+    }
+    // Down-strikes bounce off spikes too.
+    if (a.dir === 'down' && !a.landed && this.boxHasTile(box, T.Spike)) {
+      p.onAttackLanded('spike', true);
+      this.emit({ t: 'spark', x: p.cx, y: box.y + box.h / 2, n: 8, color: 0xffffff });
+    }
+  }
+
+  boxHasTile(box: Box, t: T): boolean {
+    const x0 = Math.floor(box.x / TILE);
+    const x1 = Math.floor((box.x + box.w - 1) / TILE);
+    const y0 = Math.floor(box.y / TILE);
+    const y1 = Math.floor((box.y + box.h - 1) / TILE);
+    for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++) if (tileAt(this.room, tx, ty) === t) return true;
+    return false;
+  }
+
+  private enemyHits(): void {
+    const p = this.player;
+    if (p.dead) return;
+    const pb = p.box();
+    for (const e of this.entities) {
+      if (e.dead || e.stun > 0) continue;
+      if (e.contact > 0 && overlap(pb, e.box())) this.hurtPlayer(e.contact, e.cx, true);
+      for (const h of e.hits()) if (overlap(pb, h.box)) this.hurtPlayer(h.damage, h.box.x + h.box.w / 2, h.dodgeable !== false);
+    }
+  }
+
+  /** Opens a breakable wall (flag) and refreshes tiles. */
+  openBreakable(flag: string): void {
+    this.setFlag(flag);
+    for (const [x, y, w, h, f] of this.room.def.brk ?? []) {
+      if (f !== flag) continue;
+      for (let ty = y; ty < y + h; ty++) for (let tx = x; tx < x + w; tx++) setTile(this.room, tx, ty, T.Empty);
+      this.emit({ t: 'break', x: x * TILE, y: y * TILE, w: w * TILE, h: h * TILE });
+    }
+  }
+
+  private checkExit(): void {
+    const p = this.player;
+    const b = p.body;
+    const r = this.room;
+    let side: 'l' | 'r' | 'u' | 'd' | null = null;
+    if (b.x + b.w / 2 < 0) side = 'l';
+    else if (b.x + b.w / 2 > r.pxW) side = 'r';
+    else if (b.y + b.h / 2 < 0) side = 'u';
+    else if (b.y > r.pxH) side = 'd';
+    if (!side || this.pending) return;
+    const n = this.hooks.neighbour(r.def, side, p.cx, p.cy);
+    if (!n) return;
+    this.pending = { def: n.def, x: n.x, y: n.y, vx: b.vx, vy: b.vy };
+  }
+
+  /** Moves a free body with the room's collisions (helpers for entities). */
+  moveBody(e: Entity): ReturnType<typeof move> {
+    return move(this.room, e.body, e.body.vx, e.body.vy);
+  }
+
+  fits(x: number, y: number, w: number, h: number): boolean {
+    return fits(this.room, x, y, w, h);
+  }
+
+  say(text: string, frames = 180): void {
+    this.toast = { text, t: frames };
+  }
+}
