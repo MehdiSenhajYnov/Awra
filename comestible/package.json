@@ -1,0 +1,23 @@
+{
+  "name": "comestible",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Comestible ? — une horreur de comptoir où l'on trie les champignons qui tuent.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "assets": "python3 tools/import_assets.py"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11",
+    "vitest": "^2.1.8"
+  },
+  "dependencies": {
+    "@fontsource/eb-garamond": "^5.3.0",
+    "@fontsource/im-fell-english": "^5.3.0"
+  }
+}
