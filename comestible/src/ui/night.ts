@@ -245,7 +245,11 @@ export function runNight(state: GameState, plan: NightPlan, onEnd: (report: Nigh
       case 'couteau': {
         audio.play('knife');
         const view = h('div.cut-view', {}, img(strange ? s.anomaly! : CUT_IMG[sp!.cut], 'lens-img'));
-        if (sp?.cutTint && !tell) view.append(h('div.cut-tint', { style: `--tint:${sp.cutTint}` }));
+        if (sp?.cutTint && !tell) {
+          // The tint is masked by the cut illustration so only the flesh changes colour.
+          const mask = `url('img/${CUT_IMG[sp.cut]}.webp')`;
+          view.append(h('div.cut-tint', { style: `--tint:${sp.cutTint};-webkit-mask-image:${mask};mask-image:${mask}` }));
+        }
         if (sp?.milk && !tell) view.append(h('div.milk', { style: `--milk:${sp.milk}` }));
         if (tell || strange) {
           view.append(h('div.blood'));

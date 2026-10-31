@@ -35,7 +35,7 @@ describe('locales', () => {
         if (c?.lines) expect(fr.scripted[c.lines as keyof typeof fr.scripted], c.lines).toBeDefined();
       }
     }
-    for (let n = 1; n < NIGHT_COUNT; n++) expect(fr.articles[`story${n}` as keyof typeof fr.articles]).toBeDefined();
+    for (let n = 1; n <= NIGHT_COUNT; n++) expect(fr.articles[`story${n}` as keyof typeof fr.articles]).toBeDefined();
   });
 });
 
@@ -107,6 +107,7 @@ function playCampaign(player: Player, seed: number, denounce: boolean) {
       }
     }
     const morning = resolveNight(state, report);
+    for (const a of morning.articles) expect(fr.articles[a.key as keyof typeof fr.articles], a.key).toBeDefined();
     if (morning.gameOver) return { ending: morning.gameOver, state, money };
     if (isFinalNight(state)) return { ending: finalEnding(state), state, money };
     const ending = payAndAdvance(state, { candles: true, meal: true });
@@ -138,5 +139,27 @@ describe('campaign balance', () => {
     const finished = results.filter((r) => ['officine', 'mycologue', 'lison', 'brume'].includes(r.ending));
     console.log('85% player:', results.map((r) => `${r.ending}@${r.state.night} money=${r.money.join(',')}`).join(' | '));
     expect(finished.length).toBeGreaterThanOrEqual(2);
+  });
+});
+
+describe('seasons mode', () => {
+  it('runs many nights for a perfect player and reports valid articles', () => {
+    const state = newGame('endless', false, 99);
+    for (let n = 0; n < 15; n++) {
+      const plan = planNight(state);
+      expect(plan.clients.length).toBeGreaterThan(3);
+      const report = emptyReport();
+      for (const c of plan.clients) {
+        if (c.infected) report.denounced.push({ char: c.char, infected: true });
+        for (const sp of c.specimens) {
+          const right = correctVerdict(sp, plan.rules);
+          report.verdicts.push({ char: c.char, specimen: sp, given: right, outcome: judge(sp, right, plan.rules), pay: payFor('ok', right) });
+        }
+      }
+      const morning = resolveNight(state, report);
+      for (const a of morning.articles) expect(fr.articles[a.key as keyof typeof fr.articles], a.key).toBeDefined();
+      expect(morning.gameOver).toBeUndefined();
+      expect(payAndAdvance(state, { candles: true, meal: true })).toBeUndefined();
+    }
   });
 });

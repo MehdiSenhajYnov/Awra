@@ -357,8 +357,11 @@ button { font-family: inherit; font-size: inherit; color: inherit; }
 @keyframes lashes { 50% { transform: scale(1.05) skewX(3deg); filter: brightness(1.1); } }
 .cut-view { position: absolute; inset: 0; background: var(--paper); }
 .cut-view .lens-img { object-fit: contain; }
-.cut-tint { position: absolute; inset: 20% 22%; border-radius: 40%; background: var(--tint); mix-blend-mode: multiply; opacity: 0; animation: tint 2.2s 0.4s ease forwards; }
-@keyframes tint { to { opacity: 0.75; } }
+.cut-tint {
+  position: absolute; inset: 0; background: var(--tint); mix-blend-mode: multiply; opacity: 0; animation: tint 2.2s 0.4s ease forwards;
+  -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center;
+}
+@keyframes tint { to { opacity: 0.6; } }
 .milk { position: absolute; left: 58%; top: 46%; width: 12px; height: 12px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg) scale(0); background: var(--milk); box-shadow: 0 0 0 1px #0003; animation: milk 1.6s 0.3s ease forwards; }
 @keyframes milk { to { transform: rotate(-45deg) scale(2.2); } }
 .blood { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 45%, #8e1a12dd, #5a0d08aa 40%, transparent 65%); mix-blend-mode: multiply; animation: bleed 2s ease forwards; transform-origin: top; }
@@ -497,16 +500,24 @@ body.no-shake .shaking, body.no-shake .poisoned { animation: none; }
 .masthead { font-family: var(--display); font-size: 64px; text-align: center; line-height: 1; border-bottom: 3px double #1c1612; padding-bottom: 6px; }
 .issue { text-align: center; font-size: 0.7em; letter-spacing: 0.15em; text-transform: uppercase; border-bottom: 1px solid #1c1612; padding: 4px 0; margin-bottom: 14px; }
 .gazette article h3 { font-family: var(--display); font-weight: 400; margin: 0 0 4px; line-height: 1.1; }
-.gazette article p { margin: 0; font-size: 0.78em; text-align: justify; hyphens: auto; }
+.gazette article p { margin: 0; font-size: 0.86em; text-align: justify; hyphens: auto; }
 .gazette .lead h3 { font-size: 2.1em; text-align: center; }
 .gazette .lead p { font-size: 1em; margin-bottom: 4px; }
 .gazette-portrait { float: left; width: 150px; height: 150px; object-fit: cover; margin: 4px 22px 8px 0; filter: grayscale(1) sepia(0.5) contrast(1.2); border: 3px solid #1c1612; }
 .gazette .lead { overflow: hidden; margin-bottom: 10px; }
 .memorial { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 26px; border-top: 1px solid #8a6a4366; padding-top: 18px; }
-.memorial figure { margin: 0; width: 110px; text-align: center; font-size: 0.65em; }
-.memorial-img { width: 110px; height: 110px; object-fit: cover; filter: grayscale(1) sepia(0.4); border: 2px solid var(--ink); }
+.memorial figure { margin: 0; width: 84px; text-align: center; font-size: 0.65em; }
+.memorial-img { width: 84px; height: 84px; object-fit: cover; filter: grayscale(1) sepia(0.4); border: 2px solid var(--ink); }
 .memorial-img.dead { filter: grayscale(1) brightness(0.7) contrast(1.2); }
-.columns { column-count: 3; column-gap: 26px; column-rule: 1px solid #1c161255; }
+.gazette-body { display: grid; grid-template-columns: 1fr 260px; gap: 26px; }
+.gazette-side { border-left: 1px solid #1c161255; padding-left: 22px; }
+.gazette-side figure { margin: 0 0 14px; text-align: center; }
+.engraving { width: 100%; height: 230px; object-fit: contain; filter: grayscale(1) sepia(0.35) contrast(1.35) brightness(0.95); mix-blend-mode: multiply; }
+.gazette-side figcaption { font-style: italic; font-size: 0.72em; border-top: 1px solid #1c1612; padding-top: 4px; }
+.weather { border: 1px solid #1c1612; padding: 8px 12px; font-size: 0.75em; }
+.weather h4 { margin: 0 0 4px; font-family: var(--display); font-weight: 400; font-size: 1.2em; text-align: center; }
+.weather p { margin: 0; text-align: center; }
+.columns { column-count: 2; column-gap: 26px; column-rule: 1px solid #1c161255; }
 .columns article { break-inside: avoid; margin-bottom: 14px; }
 .columns .big h3, .columns .normal h3 { font-size: 1.2em; }
 .columns .small h3 { font-size: 1em; }
@@ -515,7 +526,7 @@ body.no-shake .shaking, body.no-shake .poisoned { animation: none; }
   position: absolute; left: 50%; top: 50px; transform: translateX(-50%); width: 1200px; height: 720px;
   display: grid; grid-template-columns: 1fr 1fr; background: #2a1d14; padding: 14px; border-radius: 8px; box-shadow: 0 30px 80px #000c; animation: rise 0.6s ease;
 }
-.ledger-page { background: var(--paper) var(--tex-paper); background-size: 600px; color: var(--ink); padding: 34px 44px; }
+.ledger-page { background: var(--paper) var(--tex-paper); background-size: 600px; color: var(--ink); padding: 30px 44px; overflow-y: auto; }
 .ledger-page:first-child { box-shadow: inset -20px 0 30px -20px #6b4b2a; }
 .ledger-page:last-child { box-shadow: inset 20px 0 30px -20px #6b4b2a; }
 .ledger-page h2, .ledger-page h3 { font-family: var(--display); font-weight: 400; margin: 0 0 18px; font-size: 1.7em; }
@@ -527,7 +538,11 @@ body.no-shake .shaking, body.no-shake .poisoned { animation: none; }
 .ledger-total { display: flex; justify-content: space-between; margin-top: 18px; padding-top: 10px; border-top: 3px double var(--ink); font-size: 1.15em; font-family: var(--display); }
 .ledger-hint { font-size: 0.72em; font-style: italic; color: #6b2a1a; margin: 2px 0 6px; }
 .ledger-warning { color: var(--blood); font-size: 0.8em; font-style: italic; min-height: 1.2em; }
-.status p { margin: 8px 0; }
+.status p { margin: 6px 0; }
+.doctor { margin-top: 18px; border-top: 1px solid #8a6a4366; padding-top: 10px; font-size: 0.78em; }
+.doctor h3 { font-size: 1.4em; margin-bottom: 8px; }
+.doctor p { margin: 4px 0; }
+.doctor em { color: var(--blood); }
 .status strong { font-family: var(--display); font-weight: 400; }
 .lvl0 { color: var(--moss); }
 .lvl1 { color: #7a6a2a; }

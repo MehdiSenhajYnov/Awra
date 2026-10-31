@@ -5,6 +5,7 @@ import {
   CANDLE_COST, DEBT_LIMIT, MEAL_COST, rentFor,
 } from '../game/state';
 import { CHARACTER_BY_ID } from '../data/characters';
+import { SPECIES } from '../data/species';
 import { Rng, hashSeed } from '../game/rng';
 import { button, h, img, onKeys, show } from './dom';
 
@@ -41,7 +42,9 @@ function showGazette(state: GameState, result: MorningResult, onDone: () => void
     h('div.masthead', {}, t.morning.gazette),
     h('div.issue', {}, state.mode === 'endless' ? `— ${state.night} —` : fmt(t.morning.issue, { n: 312 + state.night, date })),
     lead ? article(lead.key, lead.params, 'lead') : null,
-    h('div.columns', {}, ...rest.map((a) => article(a.key, a.params, a.size))),
+    h('div.gazette-body', {},
+      h('div.columns', {}, ...rest.map((a) => article(a.key, a.params, a.size))),
+      sidebar(state, result, rng)),
   );
   const scene = h('div.scene.morning', {},
     h('div.bg.dawn'),
@@ -107,6 +110,7 @@ function showLedger(state: GameState, result: MorningResult, onNext: (e?: Expens
     h('p', {}, fmt(t.morning.gone, { n: state.disappeared.length })),
     h('p', {}, `${t.morning.mist} : `, h(`strong.lvl${Math.min(4, Math.floor(state.brume / 2))}` as 'strong', {}, mist)),
     h('p', {}, `${t.morning.you} : `, h(`strong.lvl${Math.min(4, Math.floor(state.contamination / 2))}` as 'strong', {}, you)),
+    doctorNotes(result),
     memorial(state),
   );
 
@@ -138,4 +142,34 @@ function memorial(state: GameState): HTMLElement | null {
   return h('div.memorial', {}, ...lost.map(([c, mark]) => h('figure', {},
     img(CHARACTER_BY_ID[c].portrait, `memorial-img${mark === '†' ? ' dead' : ''}`),
     h('figcaption', {}, `${mark} ${t.charTitle[c as keyof typeof t.charTitle]}`))));
+}
+
+/** Lists the night's wrong verdicts so the player can learn from them. */
+function doctorNotes(result: MorningResult): HTMLElement {
+  const t = L();
+  const shown = result.mistakes.slice(0, 6);
+  const name = (m: MorningResult['mistakes'][number]) => {
+    if (m.specimen.anomaly) return t.anomalies[m.specimen.anomaly];
+    const n = t.species[m.specimen.speciesId as keyof typeof t.species].name;
+    return m.specimen.mimic ? fmt(t.doctor.mimic, { name: n }) : n;
+  };
+  return h('div.doctor', {},
+    h('h3', {}, t.doctor.title),
+    ...(shown.length
+      ? shown.map((m) => h('p', {},
+        capitalize(fmt(t.doctor.line, { who: m.char, what: name(m), given: t.stamps[m.given] })), ' ',
+        h('em', {}, t.doctor.outcome[m.outcome as keyof typeof t.doctor.outcome] ?? '')))
+      : [h('p', {}, h('em', {}, t.doctor.none))]),
+    result.mistakes.length > shown.length ? h('p', {}, fmt(t.doctor.more, { n: result.mistakes.length - shown.length })) : null);
+}
+
+/** Engraving of a specimen seen at the shop, plus the weather: keeps the page full. */
+function sidebar(state: GameState, result: MorningResult, rng: Rng): HTMLElement {
+  const t = L();
+  const featured = result.mistakes.find((m) => m.specimen.speciesId)?.specimen.speciesId
+    ?? rng.pick(SPECIES.filter((s) => state.mode === 'endless' || s.night <= state.night)).id;
+  return h('aside.gazette-side', {},
+    h('figure', {}, img(`sp_${featured}`, 'engraving'),
+      h('figcaption', {}, fmt(t.morning.plate, { name: t.species[featured as keyof typeof t.species].name }))),
+    h('div.weather', {}, h('h4', {}, t.morning.weatherTitle), h('p', {}, rng.pick(t.morning.weather))));
 }

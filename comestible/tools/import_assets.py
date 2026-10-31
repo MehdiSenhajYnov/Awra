@@ -14,10 +14,13 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 OUT = Path(__file__).resolve().parent.parent / "public" / "img"
 CUTOUT_PREFIXES = ("sp_", "an_", "obj_", "chr_", "ct_", "ui_")
+# Objects have no white parts of their own: white areas enclosed by them (the gap under a
+# basket handle) are background too. Mushrooms keep enclosed whites.
+ENCLOSED_WHITE_PREFIXES = ("obj_",)
 WHITE_THRESHOLD = 236
 
 
-def cutout(img: Image.Image) -> Image.Image:
+def cutout(img: Image.Image, enclosed: bool = False) -> Image.Image:
     rgb = img.convert("RGB")
     # Pixels close to white in every channel are background candidates.
     lightest = rgb.convert("L").point(lambda v: 255 if v >= WHITE_THRESHOLD else 0)
@@ -30,7 +33,7 @@ def cutout(img: Image.Image) -> Image.Image:
     for seed in seeds:
         if mask.getpixel(seed) == 255:
             ImageDraw.floodfill(mask, seed, 128)
-    background = mask.point(lambda v: 255 if v == 128 else 0)
+    background = mask.point(lambda v: 255 if v in (128, 255) else 0) if enclosed else mask.point(lambda v: 255 if v == 128 else 0)
     # Grow the cut by one pixel to drop the white halo, then feather.
     background = background.filter(ImageFilter.MaxFilter(3)).filter(ImageFilter.GaussianBlur(1.1))
     alpha = ImageChops.invert(background)
@@ -48,7 +51,7 @@ def main(dirs: list[str]) -> None:
             img = Image.open(png)
             name = png.stem
             if name.startswith(CUTOUT_PREFIXES):
-                img = cutout(img)
+                img = cutout(img, enclosed=name.startswith(ENCLOSED_WHITE_PREFIXES))
                 img.save(OUT / f"{name}.webp", "WEBP", quality=88, method=6)
             else:
                 img.convert("RGB").save(OUT / f"{name}.webp", "WEBP", quality=84, method=6)

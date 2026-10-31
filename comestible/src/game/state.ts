@@ -188,8 +188,17 @@ export interface LedgerLine {
   params?: Record<string, string | number>;
 }
 
+export interface Mistake {
+  char: string;
+  specimen: Specimen;
+  given: Verdict;
+  outcome: Outcome;
+}
+
 export interface MorningResult {
   articles: Article[];
+  /** Wrong verdicts of the night, for the doctor's notes in the ledger. */
+  mistakes: Mistake[];
   ledger: LedgerLine[];
   earned: number;
   /** Ending triggered before expenses (arrest, mist, mycelium). */
@@ -258,7 +267,9 @@ export function resolveNight(state: GameState, report: NightReport): MorningResu
   }
 
   for (const d of report.denounced) {
-    state.arrested.push(d.char);
+    // Seasons never end, so villagers come back from quarantine instead of emptying the village.
+    if (state.mode === 'endless' && VILLAGERS.includes(d.char)) state.sick[d.char] = state.night + 3;
+    else state.arrested.push(d.char);
     state.stats.denounced++;
     if (d.infected) {
       earned += 3;
@@ -297,7 +308,10 @@ export function resolveNight(state: GameState, report: NightReport): MorningResu
   if (state.deaths.length >= DEATHS_FOR_ARREST) gameOver = 'arrete';
   else if (state.contamination >= CONTAMINATION_MAX) gameOver = 'cueilleur';
   else if (state.brume >= BRUME_MAX) gameOver = 'brume';
-  return { articles, ledger, earned: earned - fines, gameOver };
+  const mistakes = report.verdicts
+    .filter((v) => v.outcome !== 'ok' && v.outcome !== 'ok_burned')
+    .map(({ char, specimen, given, outcome }) => ({ char, specimen, given, outcome }));
+  return { articles, mistakes, ledger, earned: earned - fines, gameOver };
 }
 
 export interface Expenses {
