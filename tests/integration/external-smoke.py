@@ -30,6 +30,14 @@ def main() -> int:
     assert surface.get_child() is child
     surface.set_child(None)
     assert surface.get_child() is None
+    source = Gtk.Picture()
+    surface.set_backdrop_widget(source)
+    assert surface.get_backdrop_widget() is source
+    surface.set_backdrop_widget(None)
+    header = Awra.Header.new()
+    header.set_max_width(1000)
+    assert header.get_max_width() == 1000
+    assert isinstance(header.get_surface(), Awra.Surface)
 
     dropdown = Awra.Dropdown.new_from_strings(["One", "Two", "Three"])
     dropdown.set_selected(1)

@@ -65,6 +65,12 @@ unchanged (checked against the frozen 1.0.0 contract).
   without making a long path the window minimum width.
 - Empty/loading/error descriptions wrap in narrow panes; data table header
   padding no longer causes fixed-column row underallocation.
+- `AwraSurface:backdrop-widget` samples an independent local widget behind a
+  frosted material. Blur runs on bounded GSK nodes, follows accessibility
+  fallback and does not copy pixels through consumers. `AwraHeader` exposes
+  its surface and an optional centred maximum width with pointer pass-through
+  outside the visual chrome. C/GI/Vala/Rust and GtkBuilder expose the additions.
+
 - `AwraTimeline` exposes configurable `step-increment` and `page-increment`
   properties so local and global transport shortcuts can use consistent steps.
   Defaults and editable-mode scaling remain compatible; C/GI/Vala/Rust expose

@@ -342,3 +342,5 @@ test('grid-view-collections', grid_test, env: ['G_DEBUG=fatal-warnings', 'GTK_A1
 
 zoom_test = executable('test-zoom-controller', 'widget/test-zoom-controller.c', dependencies: awra_dep)
 test('zoom-controller', zoom_test, env: ['G_DEBUG=fatal-warnings', 'GTK_A11Y=none'], is_parallel: false)
+backdrop_test = executable('test-backdrop', 'visual/test-backdrop.c', dependencies: awra_dep)
+test('local-backdrop', backdrop_test)

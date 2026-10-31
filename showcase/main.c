@@ -1975,6 +1975,7 @@ make_controls_page (void)
     gtk_box_append (GTK_BOX (controls), timeline);
     awra_overlay_bar_set_content (overlay, canvas);
     awra_overlay_bar_set_bar (overlay, controls);
+    awra_surface_set_backdrop_widget (awra_overlay_bar_get_surface (overlay), canvas);
     awra_overlay_bar_set_auto_hide (overlay, TRUE);
     gtk_box_append (GTK_BOX (body), GTK_WIDGET (overlay));
   }

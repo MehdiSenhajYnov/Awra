@@ -3,6 +3,9 @@
 // from subprojects/gir-files
 // DO NOT EDIT
 
+#[cfg(feature = "v1_1")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+use crate::Surface;
 use crate::{ffi, Material};
 use glib::{
     prelude::*,
@@ -103,6 +106,15 @@ impl Header {
         unsafe { from_glib_none(ffi::awra_header_get_material(self.to_glib_none().0)) }
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    #[doc(alias = "awra_header_get_max_width")]
+    #[doc(alias = "get_max_width")]
+    #[doc(alias = "max-width")]
+    pub fn max_width(&self) -> u32 {
+        unsafe { ffi::awra_header_get_max_width(self.to_glib_none().0) }
+    }
+
     #[doc(alias = "awra_header_get_show_window_controls")]
     #[doc(alias = "get_show_window_controls")]
     #[doc(alias = "show-window-controls")]
@@ -125,6 +137,14 @@ impl Header {
     #[doc(alias = "get_subtitle")]
     pub fn subtitle(&self) -> glib::GString {
         unsafe { from_glib_none(ffi::awra_header_get_subtitle(self.to_glib_none().0)) }
+    }
+
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    #[doc(alias = "awra_header_get_surface")]
+    #[doc(alias = "get_surface")]
+    pub fn surface(&self) -> Surface {
+        unsafe { from_glib_none(ffi::awra_header_get_surface(self.to_glib_none().0)) }
     }
 
     #[doc(alias = "awra_header_get_title")]
@@ -199,6 +219,16 @@ impl Header {
         }
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    #[doc(alias = "awra_header_set_max_width")]
+    #[doc(alias = "max-width")]
+    pub fn set_max_width(&self, width: u32) {
+        unsafe {
+            ffi::awra_header_set_max_width(self.to_glib_none().0, width);
+        }
+    }
+
     #[doc(alias = "awra_header_set_show_window_controls")]
     #[doc(alias = "show-window-controls")]
     pub fn set_show_window_controls(&self, show_controls: bool) {
@@ -261,6 +291,20 @@ impl Header {
     #[doc(alias = "expand-center")]
     pub fn set_expand_center(&self, expand_center: bool) {
         ObjectExt::set_property(self, "expand-center", expand_center)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "max-width")]
+    pub fn max_width(&self) -> u32 {
+        ObjectExt::property(self, "max-width")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "max-width")]
+    pub fn set_max_width(&self, max_width: u32) {
+        ObjectExt::set_property(self, "max-width", max_width)
     }
 
     #[doc(alias = "blend-with-window")]
@@ -441,6 +485,31 @@ impl Header {
         }
     }
 
+    #[doc(alias = "max-width")]
+    pub fn connect_max_width_notify<F: Fn(&Self) + 'static>(&self, f: F) -> SignalHandlerId {
+        unsafe extern "C" fn notify_max_width_trampoline<F: Fn(&Header) + 'static>(
+            this: *mut ffi::AwraHeader,
+            _param_spec: glib::ffi::gpointer,
+            f: glib::ffi::gpointer,
+        ) {
+            unsafe {
+                let f: &F = &*(f as *const F);
+                f(&from_glib_borrow(this))
+            }
+        }
+        unsafe {
+            let f: Box_<F> = Box_::new(f);
+            connect_raw(
+                self.as_ptr() as *mut _,
+                c"notify::max-width".as_ptr(),
+                Some(std::mem::transmute::<*const (), unsafe extern "C" fn()>(
+                    notify_max_width_trampoline::<F> as *const (),
+                )),
+                Box_::into_raw(f),
+            )
+        }
+    }
+
     #[doc(alias = "show-window-controls")]
     pub fn connect_show_window_controls_notify<F: Fn(&Self) + 'static>(
         &self,
@@ -612,6 +681,12 @@ impl HeaderBuilder {
     pub fn material(self, material: &Material) -> Self {
         Self {
             builder: self.builder.property("material", material.clone()),
+        }
+    }
+
+    pub fn max_width(self, max_width: u32) -> Self {
+        Self {
+            builder: self.builder.property("max-width", max_width),
         }
     }
 
