@@ -4,7 +4,7 @@
 
 `AwraTimeline` is a backend-independent time ruler for seeking and editing
 interval offsets. It does not parse subtitles, decode media or store application
-history. VLC Awra motivated the component; editors, annotation tools, audio
+history. Media players, editors, annotation tools, audio
 workstations and chapter browsers can use the same API.
 
 ```c

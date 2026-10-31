@@ -1202,8 +1202,8 @@ make_launcher_workspace (ShowcaseState *state,
     const char *icon;
   } tiles[] = {
     { "Rocket League", "Last opened today", "applications-games-symbolic" },
-    { "Pokédex", "Reference workspace", "system-search-symbolic" },
-    { "KeyToMusic", "Audio automation", "audio-card-symbolic" },
+    { "Catalogue", "Reference workspace", "system-search-symbolic" },
+    { "Soundboard", "Audio automation", "audio-card-symbolic" },
     { "SupaCodex", "Development tools", "utilities-terminal-symbolic" },
     { "Studio", "Creative session", "applications-multimedia-symbolic" },
     { "Archive", "12 saved presets", "folder-documents-symbolic" },

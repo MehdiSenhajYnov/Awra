@@ -9,6 +9,8 @@ unchanged (checked against the frozen 1.0.0 contract).
 
 ### Desktop workspace composition
 
+- `AwraFormRow` asks for its side-by-side width as natural width, so a container
+  fitting it to a height can no longer report inconsistent sizes.
 - Scrolling menus and their shortcut labels resist hostile themes, and theme
   slider margins can no longer give an Awra scrollbar a negative size.
 - Rust bindings cover `AwraPathBar`, `AwraDragPreview` and `AwraTransitionBin`.
@@ -169,7 +171,7 @@ unchanged (checked against the frozen 1.0.0 contract).
   artifacts remain excluded; normalized dist mtimes make repeated archives
   byte-identical.
 - Stabilized the `Awra-1.0` GIR namespace and `libawra-1.so.1` ABI after the
-  complete Showcase and Pokedia reference-application gates.
+  complete Showcase and reference-application gates.
 
 ## 0.1.0 — 2026-08-17
 

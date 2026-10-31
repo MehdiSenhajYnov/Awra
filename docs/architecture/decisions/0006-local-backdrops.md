@@ -28,4 +28,4 @@ retaining the control minimum. Default unbounded headers remain compatible.
 
 Validation covers rendered edge smoothing, live source invalidation, accessibility
 fallbacks, weak lifetime, GTK construction, bindings, constrained hit testing and
-RTL. VLC exercises the API with live frames and native 4K/60 qualification.
+RTL. A media player exercises the API with live frames and native 4K/60 qualification.

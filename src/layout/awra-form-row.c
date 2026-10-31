@@ -252,7 +252,9 @@ awra_form_row_measure (GtkWidget *widget, GtkOrientation orientation,
   int label_min, label_nat, field_min, field_nat, spacing;
 
   if (orientation == GTK_ORIENTATION_HORIZONTAL) {
-    gtk_widget_measure (GTK_WIDGET (self->root), orientation, for_size, minimum,
+    /* Height follows width here: a width for a given height means nothing,
+     * and wrapped text would report inconsistent sizes. */
+    gtk_widget_measure (GTK_WIDGET (self->root), orientation, -1, minimum,
                         natural, minimum_baseline, natural_baseline);
     /* Too narrow for side by side, it stacks: no wider than that. */
     if (!self->compact) {
@@ -260,6 +262,9 @@ awra_form_row_measure (GtkWidget *widget, GtkOrientation orientation,
       measure_part (field, orientation, -1, &field_min, &field_nat);
       *minimum = MIN (*minimum, MAX (label_min, field_min));
     }
+    /* Side by side is shorter than stacked. A container looking for the
+     * width that fits a height lands there, so it must be a natural width. */
+    *natural = MAX (*natural, MAX (COMPACT_BELOW, side_by_side_minimum (self)));
     return;
   }
   if (for_size < 0 || compact_for_width (self, for_size) == self->compact) {

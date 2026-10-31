@@ -179,7 +179,7 @@ test_builder (void)
     " </object>"
     " <object class='AwraDetailPane' id='detail-pane'>"
     "  <property name='title'>Bulbasaur</property>"
-    "  <property name='subtitle'>Seed Pokémon</property>"
+    "  <property name='subtitle'>Sample item</property>"
     "  <child type='section'>"
     "   <object class='AwraSection'><property name='title'>Overview</property></object>"
     "  </child>"
@@ -913,7 +913,7 @@ test_filter_and_master_detail (void)
                       AWRA_FILTER_BAR (filter_bar)), ==, 1);
 
   awra_detail_pane_set_title (AWRA_DETAIL_PANE (detail), "Bulbasaur");
-  awra_detail_pane_set_subtitle (AWRA_DETAIL_PANE (detail), "Seed Pokémon");
+  awra_detail_pane_set_subtitle (AWRA_DETAIL_PANE (detail), "Sample item");
   awra_detail_pane_set_media (AWRA_DETAIL_PANE (detail),
                               gtk_image_new_from_icon_name (
                                 "image-x-generic-symbolic"));
@@ -2263,9 +2263,9 @@ test_dynamic_tabs (void)
     g_assert_false (gtk_widget_get_focusable (page_icon));
   }
   awra_tab_view_set_page_tooltip (AWRA_TAB_VIEW (tabs), details,
-                                  "Pokémon #002");
+                                  "Item #002");
   g_assert_cmpstr (gtk_widget_get_tooltip_text (details_tab), ==,
-                   "Pokémon #002");
+                   "Item #002");
   awra_tab_view_set_selected_page (AWRA_TAB_VIEW (tabs), details);
   g_assert_true (awra_tab_view_get_selected_page (AWRA_TAB_VIEW (tabs)) ==
                  details);
@@ -2755,13 +2755,13 @@ test_public_style_roles (void)
   g_assert_true (awra_widget_remove_style_role (widget, "data-root"));
   g_assert_false (gtk_widget_has_css_class (widget, "awra-data-root"));
 
-  g_assert_true (awra_widget_add_style_role (widget, "section-card"));
+  g_assert_true (awra_widget_add_style_role (widget, "sample-role"));
   g_assert_true (gtk_widget_has_css_class (widget,
-                                          "awra-role-section-card"));
-  g_assert_false (gtk_widget_has_css_class (widget, "section-card"));
-  g_assert_true (awra_widget_remove_style_role (widget, "section-card"));
+                                          "awra-role-sample-role"));
+  g_assert_false (gtk_widget_has_css_class (widget, "sample-role"));
+  g_assert_true (awra_widget_remove_style_role (widget, "sample-role"));
   g_assert_false (gtk_widget_has_css_class (widget,
-                                           "awra-role-section-card"));
+                                           "awra-role-sample-role"));
 
   /* Generic theme class names must never be introduced by public roles. */
   g_assert_true (awra_widget_add_style_role (widget, "sidebar-pane"));
@@ -2770,6 +2770,23 @@ test_public_style_roles (void)
   g_assert_false (gtk_widget_has_css_class (widget, "sidebar-pane"));
   g_assert_false (awra_widget_add_style_role (widget, "Invalid role"));
   g_assert_false (awra_widget_add_style_role (widget, ""));
+}
+
+static void
+test_form_row_prefers_side_by_side (void)
+{
+  GtkWidget *row = g_object_ref_sink (awra_form_row_new ());
+  int minimum = 0;
+  int natural = 0;
+
+  awra_form_row_set_label (AWRA_FORM_ROW (row), "Name");
+  awra_form_row_set_control (AWRA_FORM_ROW (row), awra_entry_new ());
+  /* Side by side is shorter than stacked: a container fitting a height lands
+   * on that width, so it has to stay within the natural width. */
+  gtk_widget_measure (row, GTK_ORIENTATION_HORIZONTAL, -1, &minimum, &natural, NULL, NULL);
+  g_assert_cmpint (natural, >=, 560);
+  g_assert_cmpint (minimum, <=, natural);
+  g_object_unref (row);
 }
 
 int
@@ -2852,6 +2869,8 @@ main (int   argc,
                    test_public_typography);
   g_test_add_func ("/awra/widgets/badge-appearances",
                    test_badge_appearances);
+  g_test_add_func ("/awra/widgets/form-row-natural-width",
+                   test_form_row_prefers_side_by_side);
   g_test_add_func ("/awra/widgets/public-style-roles",
                    test_public_style_roles);
   return g_test_run ();

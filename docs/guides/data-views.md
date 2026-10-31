@@ -56,7 +56,7 @@ awra_badge_group_append (AWRA_BADGE_GROUP (types),
 ```
 
 They replace repeated label/grid/progress compositions observed in both the
-Showcase data workspace and Pokedia-style detail pages. Domain-specific colors
+Showcase data workspace and catalogue detail pages. Domain-specific colors
 remain badge configuration, never new framework widget types.
 
 ## Virtualized grids (since 1.1)
