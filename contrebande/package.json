@@ -1,0 +1,53 @@
+{
+  "name": "contrebande",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Contrebande — un roguelite de valise : passez la douane de Grisonie sans vous faire prendre.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "assets": "python3 tools/import_assets.py",
+    "desktop": "npm run build && electron .",
+    "package": "npm run build && electron-builder --dir"
+  },
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11",
+    "vitest": "^2.1.8"
+  },
+  "main": "electron/main.cjs",
+  "build": {
+    "appId": "com.contrebande.game",
+    "productName": "Contrebande",
+    "files": [
+      "dist/**",
+      "electron/**",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": "dir",
+      "icon": "dist/icon.png"
+    },
+    "linux": {
+      "target": "dir",
+      "icon": "dist/icon.png"
+    },
+    "mac": {
+      "target": "dir",
+      "icon": "dist/icon.png"
+    }
+  },
+  "dependencies": {
+    "@fontsource/archivo": "^5.3.0",
+    "@fontsource/courier-prime": "^5.3.0",
+    "@fontsource/shrikhand": "^5.3.0"
+  }
+}
