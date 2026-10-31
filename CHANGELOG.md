@@ -9,6 +9,8 @@ unchanged (checked against the frozen 1.0.0 contract).
 
 ### Desktop workspace composition
 
+- Style roles `inline-edit`, `inline-action` and `usage-meter` cover editing in
+  a row, actions inside a row and capacity gauges.
 - `AwraTransitionBin` animates content replaced in place, such as a list that
   receives another model, from the last frame it showed.
 - Rows, breadcrumbs, tabs and menus ease between states; presses give way,

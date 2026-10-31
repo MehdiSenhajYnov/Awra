@@ -3120,6 +3120,42 @@ window.awra-window paned > separator {
   border-radius: 8px;
 }
 
+/* Editing a name in place keeps the height of the text it replaces. */
+.awra-role-inline-edit,
+.awra-role-inline-edit > text {
+  min-height: 0;
+  min-width: 0;
+}
+
+.awra-role-inline-edit {
+  padding: 1px 5px;
+  margin: -2px 0;
+  border-radius: 6px;
+}
+
+/* A button inside a row: quiet, and as tall as the text beside it. */
+.awra-button.awra-toolbar-button.awra-role-inline-action {
+  min-width: 18px;
+  min-height: 18px;
+  padding: 2px;
+  border-radius: 6px;
+}
+
+/* How full something is, under the row that names it. */
+.awra-role-usage-meter {
+  margin: 0 18px 4px 40px;
+}
+
+.awra-role-usage-meter trough,
+.awra-role-usage-meter progress {
+  min-height: 3px;
+  border-radius: 2px;
+}
+
+.awra-role-usage-meter.awra-usage-low progress {
+  background-color: @awra_danger;
+}
+
 /* Drag preview */
 .awra-drag-preview-count {
   min-width: 14px;

@@ -84,6 +84,9 @@ preferences as the rest of Awra.
 | `active-tabs` | AwraTabView | Marks the focused view when several views each have their tabs |
 | `view-switcher` | GtkBox containing AwraToggleButton | Compact, observable view selection |
 | `floating-selection` | AwraSelectionToolbar | Selection actions over content without moving it |
+| `inline-edit` | AwraEntry replacing text in a row | Edit in place at the height of the text |
+| `inline-action` | AwraButton inside a row | Quiet action as tall as the row's text |
+| `usage-meter` | AwraProgressBar under a row | Thin capacity gauge; `awra-usage-low` turns it red |
 | `collection-tile` | GtkBox item factory content | Compact icon/thumbnail and caption composition |
 | `inspector-pane` | GtkBox | Docked inspection pane, separated from content |
 | `document-preview` | AwraTextArea | Readable document surface without input-field decoration |
