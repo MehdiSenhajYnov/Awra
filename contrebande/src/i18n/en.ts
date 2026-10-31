@@ -133,7 +133,7 @@ export const en: Locale = {
     dog: 'Brutus sniffs: {n} alert',
     dogPlural: 'Brutus sniffs: {n} alerts',
     dogAll: 'Brutus sniffs everything that smells',
-    dogLazy: 'Brutus has a cold: smell 2 minimum',
+    dogLazy: 'Brutus has a cold: {n} alert, only on smell 2 or more',
     search: 'Search of {n} cell',
     searchPlural: 'Search of {n} cells',
     largest: 'Opens the biggest item',

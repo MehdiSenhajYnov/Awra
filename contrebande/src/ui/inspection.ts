@@ -16,7 +16,7 @@ export function showInspection(lay: Layout, pieces: Piece[], lane: Lane, result:
   bag.render(pieces);
   const sweep = h('div.sweep');
   bag.el.append(sweep);
-  const dog = img('chr_brutus', 'dog');
+  const dog = img('chr_brutus', 'dog-walker');
   bag.el.append(dog);
 
   const o = t.officers[lane.officer];

@@ -132,7 +132,7 @@ export const fr = {
     dog: 'Brutus renifle : {n} alerte',
     dogPlural: 'Brutus renifle : {n} alertes',
     dogAll: 'Brutus renifle tout ce qui sent',
-    dogLazy: 'Brutus enrhumé : odeur 2 minimum',
+    dogLazy: 'Brutus enrhumé : {n} alerte, seulement à partir d’une odeur de 2',
     search: 'Fouille de {n} case',
     searchPlural: 'Fouille de {n} cases',
     largest: 'Ouverture du plus gros objet',

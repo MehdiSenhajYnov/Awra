@@ -11,7 +11,8 @@ export function checkLabel(c: Check): string {
       return c.half ? t.scannerHalf : t.scanner;
     case 'dog':
       if (c.alerts >= 99) return t.dogAll;
-      return (c.sensitivity >= 2 ? `${t.dogLazy} · ` : '') + fmt(c.alerts > 1 ? t.dogPlural : t.dog, { n: c.alerts });
+      if (c.sensitivity >= 2) return fmt(t.dogLazy, { n: c.alerts });
+      return fmt(c.alerts > 1 ? t.dogPlural : t.dog, { n: c.alerts });
     case 'search':
       return fmt(c.cells > 1 ? t.searchPlural : t.search, { n: c.cells });
     case 'largest':

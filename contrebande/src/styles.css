@@ -245,8 +245,8 @@ h1, h2, h3 { margin: 0; font-weight: 800; }
 .insp-log p.good { color: var(--olive); }
 .sweep { position: absolute; top: -10px; bottom: -10px; width: 6px; background: #9cd3ff; box-shadow: 0 0 24px 10px #9cd3ffaa; opacity: 0; z-index: 4; }
 .sweep.on { opacity: 1; }
-.dog { position: absolute; left: 0; top: 0; width: 150px; z-index: 6; opacity: 0; transition: transform 0.55s ease, opacity 0.3s; pointer-events: none; filter: drop-shadow(3px 4px 0 #0005); }
-.dog.on { opacity: 1; }
+.dog-walker { position: absolute; left: 0; top: 0; width: 150px; z-index: 6; opacity: 0; transition: transform 0.55s ease, opacity 0.3s; pointer-events: none; filter: drop-shadow(3px 4px 0 #0005); }
+.dog-walker.on { opacity: 1; }
 .piece.alerted { animation: wobble 0.5s ease 2; }
 @keyframes wobble { 25% { transform: rotate(-4deg); } 75% { transform: rotate(4deg); } }
 .piece.opened { box-shadow: 0 0 0 4px var(--orange); border-radius: 6px; }

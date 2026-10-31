@@ -17,7 +17,7 @@ export function showEnding(run: RunState, best: number, unlocked: string[]): voi
   const scene = h('div.scene.ending', {},
     h('div.ending-art', { style: `background-image:url('img/${art}.webp')` }),
     h('div.ending-panel', {},
-      run.daily ? h('div.kicker', {}, fmt(t.endings.daily, { d: run.daily })) : h('div.kicker', {}, `${Math.min(run.border, BORDERS)} / ${BORDERS}`),
+      run.daily ? h('div.kicker', {}, fmt(t.endings.daily, { d: run.daily })) : h('div.kicker', {}, fmt(t.market.border, { b: Math.min(run.border, BORDERS) })),
       h('h1', {}, e.t),
       h('p', {}, e.b),
       h('div.score', {}, fmt(t.endings.score, { n: s })),

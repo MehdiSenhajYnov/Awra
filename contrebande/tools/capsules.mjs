@@ -22,7 +22,7 @@ const SIZES = {
 function html(w, h, kind) {
   const portrait = h > w;
   const showLogo = kind !== 'hero';
-  const logoSize = Math.round(portrait ? w * 0.15 : h * 0.2);
+  const logoSize = Math.round(portrait ? w * 0.125 : h * 0.22);
   return `<!doctype html><html><head><style>
   @font-face { font-family: Fell; src: url('${font}'); }
   html, body { margin: 0; width: ${w}px; height: ${h}px; overflow: hidden; background: #4a2b1b; }
@@ -35,13 +35,13 @@ function html(w, h, kind) {
   .stamp { position: absolute; left: 50%; top: 48%; transform: translate(-50%, -50%) rotate(-14deg); font-family: Fell;
     font-size: ${(portrait ? w : h) * 0.09}px; color: #8e2a1e; border: ${Math.max(3, h * 0.008)}px double #8e2a1e; padding: 0 0.35em;
     border-radius: 8px; mix-blend-mode: multiply; opacity: 0.85; white-space: nowrap; }
-  .logo { position: absolute; ${portrait ? `left: 0; right: 0; bottom: ${h * 0.07}px; text-align: center;` : `left: ${w * 0.05}px; top: 50%; transform: translateY(-50%); text-align: left;`}
+  .logo { position: absolute; left: 0; right: 0; top: ${h * (portrait ? 0.05 : 0.06)}px; text-align: center; transform: rotate(-3deg);
     font-family: Fell; font-size: ${logoSize}px; color: #e3a728; text-shadow: ${logoSize * 0.04}px ${logoSize * 0.04}px 0 #a63b28, ${logoSize * 0.08}px ${logoSize * 0.08}px 0 #1f1a16; }
-  .tag { display: inline-block; font-size: 0.22em; background: #1f1a16; color: #f3e7cc; padding: 0.1em 0.5em; margin-top: 0.2em; text-shadow: none; font-family: monospace; }
+  .tag { display: table; margin-left: auto; margin-right: auto; font-size: 0.22em; background: #1f1a16; color: #f3e7cc; padding: 0.1em 0.5em; margin-top: 0.2em; text-shadow: none; font-family: monospace; }
   </style></head><body><div class="bg"></div><div class="vignette"></div>
-  ${kind === 'hero' || kind === 'small' ? '' : `<div class="tray"><img class="shroom" src="${img('it_guitare')}"></div>`}
+
   ${showLogo && kind !== 'small' ? `<div class="logo">${title}<span class="tag">${tagline}</span></div>` : ''}
-  ${kind === 'small' ? `<div class="logo" style="font-size:${h * 0.3}px">${title}</div>` : ''}
+  ${kind === 'small' ? `<div class="logo" style="font-size:${h * 0.34}px;top:${h * 0.22}px">${title}</div>` : ''}
   </body></html>`;
 }
 
