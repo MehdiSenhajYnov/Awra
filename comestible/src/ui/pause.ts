@@ -8,12 +8,19 @@ export function openPause(onResume: () => void): void {
   const t = L();
   const box = h('div.menu-box', {}, h('h2', {}, t.hud.pause));
   const m = modal(box);
-  const resume = () => { m.close(); onResume(); };
+  const onEsc = (e: KeyboardEvent) => { if (e.code === 'Escape') resume(); };
+  const resume = () => {
+    window.removeEventListener('keydown', onEsc);
+    m.close();
+    onResume();
+  };
+  setTimeout(() => window.addEventListener('keydown', onEsc), 0);
   box.append(
     button(t.options.resume, resume),
     button(t.title.options, () => openOptions(false)),
     button(t.options.toTitle, async () => {
       if (await confirmBox(t.options.toTitle + ' ?', t.hud.yes, t.hud.no)) {
+        window.removeEventListener('keydown', onEsc);
         m.close();
         goTitle();
       }

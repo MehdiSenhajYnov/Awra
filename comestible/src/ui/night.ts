@@ -3,7 +3,7 @@ import { CHARACTER_BY_ID } from '../data/characters';
 import { SPECIES_BY_ID, TOOL_NIGHT, type Tool } from '../data/species';
 import { L, fmt } from '../i18n';
 import { Rng, hashSeed } from '../game/rng';
-import { type Specimen, type Verdict, judge, payFor } from '../game/rules';
+import { type Specimen, type Verdict, correctVerdict, judge, payFor } from '../game/rules';
 import {
   type ClientVisit, type GameState, type NightPlan, type NightReport,
   CONTAMINATION_MAX, emptyReport, tasteContamination,
@@ -261,7 +261,15 @@ export function runNight(state: GameState, plan: NightPlan, onEnd: (report: Nigh
         ruler.className = 'ruler show';
         const label = h('span.ruler-label', {}, strange ? '?' : `${s.sizeCm} cm`);
         ruler.replaceChildren(label);
-        ruler.style.setProperty('--scale', specimenWrap.style.getPropertyValue('--scale'));
+        // Fit the ruler to the specimen as drawn, one graduation per centimetre.
+        const zoom = tray.getBoundingClientRect().width / tray.offsetWidth;
+        const box = specimenImg.getBoundingClientRect();
+        const trayBox = tray.getBoundingClientRect();
+        const height = box.height / zoom;
+        ruler.style.height = `${height}px`;
+        ruler.style.bottom = `${(trayBox.bottom - box.bottom) / zoom}px`;
+        ruler.style.left = `${Math.min((box.right - trayBox.left) / zoom + 18, tray.offsetWidth - 70)}px`;
+        ruler.style.setProperty('--cm', `${height / Math.max(s.sizeCm, 1)}px`);
         if (strange) {
           addLog(tool, t.anomalyResults.regle, 'bad');
         } else if (tell) {
@@ -552,6 +560,12 @@ export function runNight(state: GameState, plan: NightPlan, onEnd: (report: Nigh
     candle.classList.add('infinite');
   }
 
+  // Past half the contamination threshold, the mycelium starts talking.
+  const whispers = setInterval(() => {
+    if (ended) clearInterval(whispers);
+    else if (!paused && state.contamination >= CONTAMINATION_MAX / 2 && rng.chance(0.35)) audio.play('whisper');
+  }, 9000);
+
   // ---------- input ----------
   const openGuidePanel = () => {
     toggleGuide({ rules: plan.rules, night: state.night, endless }, () => advanceTutorial('guide'));
@@ -579,6 +593,18 @@ export function runNight(state: GameState, plan: NightPlan, onEnd: (report: Nigh
     if (e.code === 'KeyH' && plan.rules.hands) showHands();
     if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); takeSpecimen(); }
   });
+
+  // Test hook used by tools/autoplay.mjs to play whole campaigns through the real UI
+  // (dev server, or a build opened with ?autoplay).
+  if (import.meta.env.DEV || location.search.includes('autoplay')) {
+    (window as unknown as { __night: unknown }).__night = {
+      current: () => current,
+      right: () => (current ? correctVerdict(current, plan.rules) : null),
+      client: () => client,
+      infected: () => !!client && (client.infected || CHARACTER_BY_ID[client.char].hands.startsWith('mycelium')),
+      rules: plan.rules,
+    };
+  }
 
   refreshButtons();
   setTimeout(nextClient, 700);

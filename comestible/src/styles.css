@@ -96,7 +96,7 @@ button { font-family: inherit; font-size: inherit; color: inherit; }
 }
 .modal.open { opacity: 1; }
 .modal-box {
-  background: var(--paper) url('/img/tx_papier.webp');
+  background: var(--paper) var(--tex-paper);
   background-size: 600px;
   color: var(--ink);
   border-radius: 4px;
@@ -147,7 +147,7 @@ button { font-family: inherit; font-size: inherit; color: inherit; }
 .letter {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-0.6deg);
   width: 860px; min-height: 560px; padding: 60px 80px 40px;
-  background: var(--paper) url('/img/tx_papier.webp'); background-size: 700px;
+  background: var(--paper) var(--tex-paper); background-size: 700px;
   color: var(--ink); box-shadow: 0 30px 80px #000d, inset 0 0 120px #8a6a4366;
   display: flex; flex-direction: column; justify-content: space-between;
 }
@@ -207,7 +207,7 @@ button { font-family: inherit; font-size: inherit; color: inherit; }
 .hands-img.fade { opacity: 0; }
 .nameplate { font-family: var(--display); font-size: 1.15em; color: var(--candle-hot); min-height: 1.3em; }
 .bubble {
-  width: 100%; min-height: 128px; background: var(--paper) url('/img/tx_papier.webp'); background-size: 500px; color: var(--ink);
+  width: 100%; min-height: 128px; background: var(--paper) var(--tex-paper); background-size: 500px; color: var(--ink);
   padding: 14px 18px; border-radius: 4px; font-size: 0.86em; font-style: italic; position: relative; box-shadow: 0 6px 18px #000a;
 }
 .bubble::before { content: ''; position: absolute; top: -10px; left: 50%; margin-left: -10px; border: 10px solid transparent; border-top: 0; border-bottom-color: var(--paper); }
@@ -226,7 +226,7 @@ button { font-family: inherit; font-size: inherit; color: inherit; }
 
 .tray {
   position: absolute; left: 440px; top: 74px; width: 640px; height: 620px;
-  background: var(--paper) url('/img/tx_papier.webp'); background-size: 640px;
+  background: var(--paper) var(--tex-paper); background-size: 640px;
   border-radius: 6px; box-shadow: 0 20px 50px #000d, inset 0 0 90px #6b4b2a88;
   overflow: hidden;
 }
@@ -276,16 +276,15 @@ button { font-family: inherit; font-size: inherit; color: inherit; }
 .specimen-wrap.glow .specimen { filter: brightness(0.35) drop-shadow(0 0 18px #9dff8a) drop-shadow(0 0 40px #74ff6a); }
 .specimen-wrap.face::after {
   content: ''; position: absolute; left: 50%; top: 18%; width: 180px; height: 220px; margin-left: -90px;
-  background: url('/img/pt_cueilleur.webp') center/cover; border-radius: 50%;
+  background: var(--tex-face) center/cover; border-radius: 50%;
   mix-blend-mode: screen; opacity: 0.55; filter: grayscale(1) sepia(1) hue-rotate(60deg) saturate(3) contrast(1.4);
   -webkit-mask-image: radial-gradient(closest-side, #000 50%, transparent); mask-image: radial-gradient(closest-side, #000 50%, transparent);
   z-index: 20;
 }
 .ruler {
-  position: absolute; right: 40px; bottom: 40px; width: 46px; opacity: 0; pointer-events: none;
-  height: calc(540px * var(--scale, 1));
-  background: repeating-linear-gradient(to top, #6b4b2a 0 2px, transparent 2px 18px), linear-gradient(90deg, #d8b98a, #c8a26b);
-  border: 1px solid #6b4b2a; transition: opacity 0.3s;
+  position: absolute; width: 40px; opacity: 0; pointer-events: none; z-index: 4;
+  background: repeating-linear-gradient(to top, #6b4b2a 0 2px, transparent 2px var(--cm, 18px)), linear-gradient(90deg, #d8b98a, #c8a26b);
+  border: 1px solid #6b4b2a; transition: opacity 0.3s; box-shadow: 2px 4px 8px #3b281655;
 }
 .ruler.show { opacity: 1; }
 .ruler-label { position: absolute; top: -34px; right: -6px; white-space: nowrap; color: var(--ink); font-family: var(--display); font-size: 1.1em; }
@@ -304,23 +303,30 @@ button { font-family: inherit; font-size: inherit; color: inherit; }
 
 .stamps { position: absolute; left: 440px; top: 712px; width: 640px; display: flex; gap: 14px; justify-content: center; }
 .stamp {
-  flex: 1; max-width: 160px; height: 110px; border: none; cursor: pointer; position: relative;
-  background: radial-gradient(ellipse at 50% 30%, #5a3e26, #2a1c11); border-radius: 10px 10px 6px 6px;
-  box-shadow: 0 8px 0 #160e08, 0 12px 18px #000a; transition: transform 0.12s, box-shadow 0.12s;
-  display: flex; align-items: center; justify-content: center;
+  flex: 1; max-width: 158px; height: 120px; border: none; cursor: pointer; position: relative; background: none; padding: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-end; transition: transform 0.12s;
 }
+.stamp::before {
+  content: ''; position: absolute; top: 2px; left: 50%; width: 46px; height: 46px; margin-left: -23px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #8a6040, #3a2416 70%); box-shadow: 0 4px 6px #000a;
+}
+.stamp::after {
+  content: ''; position: absolute; top: 40px; left: 50%; width: 18px; height: 22px; margin-left: -9px;
+  background: linear-gradient(90deg, #2a1a0e, #6a4a2e, #2a1a0e);
+}
+.stamp > .stamp-face { position: relative; z-index: 1; width: 100%; box-shadow: 0 -8px 0 #3a2416, 0 6px 0 #1a0f08, 0 10px 14px #000b; }
 .stamp-face {
-  background: var(--paper); padding: 6px 12px; border-radius: 4px; font-family: var(--display); text-transform: uppercase;
-  font-size: 0.95em; letter-spacing: 0.04em; border: 3px double currentColor;
+  background: var(--paper); padding: 10px 6px; border-radius: 4px; font-family: var(--display); text-transform: uppercase;
+  font-size: 0.9em; letter-spacing: 0.04em; border: 3px double currentColor; text-align: center;
 }
-.stamp:hover:not(:disabled) { transform: translateY(-3px); }
-.stamp.pressed, .stamp:active:not(:disabled) { transform: translateY(6px); box-shadow: 0 2px 0 #160e08, 0 4px 8px #000a; }
+.stamp:hover:not(:disabled) { transform: translateY(-4px); }
+.stamp.pressed, .stamp:active:not(:disabled) { transform: translateY(8px); }
 .stamp:disabled { opacity: 0.45; cursor: default; }
 .key {
   position: absolute; right: 6px; top: 4px; font-size: 0.6em; opacity: 0.6; font-family: var(--serif);
   border: 1px solid currentColor; border-radius: 3px; padding: 0 5px; line-height: 1.4;
 }
-.stamp .key { color: var(--paper); }
+.stamp .key { color: var(--paper); top: auto; bottom: -26px; right: 50%; margin-right: -12px; }
 
 .right-panel { position: absolute; left: 1104px; top: 74px; width: 470px; height: 790px; display: flex; flex-direction: column; gap: 14px; }
 .tools { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
@@ -432,7 +438,7 @@ body.no-shake .shaking, body.no-shake .poisoned { animation: none; }
 .guide-overlay.open { opacity: 1; }
 .guide-book {
   width: 1420px; height: 820px; position: relative; color: var(--ink);
-  background: url('/img/tx_papier.webp') var(--paper); background-size: 700px;
+  background: var(--tex-paper) var(--paper); background-size: 700px;
   border-radius: 6px; box-shadow: 0 0 0 14px #4a1d12, 0 0 0 16px #a0703a, 0 30px 80px #000;
   padding: 24px 36px; display: flex; flex-direction: column;
 }
@@ -454,7 +460,7 @@ body.no-shake .shaking, body.no-shake .poisoned { animation: none; }
 .plate { display: grid; grid-template-columns: 300px 1fr; gap: 24px; align-items: start; }
 .plate-img { width: 100%; max-height: 480px; object-fit: contain; filter: drop-shadow(0 8px 8px #3b28163a); }
 .plate-img.faded { opacity: 0.35; filter: sepia(1); }
-.plate-img.sepia { filter: sepia(0.7) brightness(0.9); border-radius: 50%; width: 300px; }
+.plate-img.sepia { filter: sepia(0.8) brightness(0.85); border-radius: 50%; width: 420px; height: 420px; object-fit: cover; box-shadow: 0 0 0 6px #4a2a14, 0 10px 30px #3b28166a; }
 .plate-text h2 { font-family: var(--display); font-weight: 400; margin: 0; font-size: 1.7em; }
 .latin { font-style: italic; color: var(--ink-soft); margin-bottom: 6px; }
 .verdict { display: inline-block; padding: 2px 12px; border: 2px solid currentColor; border-radius: 3px; text-transform: uppercase; font-size: 0.8em; letter-spacing: 0.08em; margin-bottom: 10px; }
@@ -485,7 +491,7 @@ body.no-shake .shaking, body.no-shake .poisoned { animation: none; }
 .bg.dawn { background: radial-gradient(ellipse at 50% 0, #9a8a6a, #4a3a2a 60%, #1a120c); }
 .gazette {
   position: absolute; left: 50%; top: 30px; transform: translateX(-50%) rotate(0.4deg); width: 1100px; height: 760px;
-  background: #e8dcc0 url('/img/tx_journal.webp'); background-size: 800px; color: #1c1612;
+  background: #e8dcc0 var(--tex-news); background-size: 800px; color: #1c1612;
   padding: 26px 48px; box-shadow: 0 30px 80px #000c; animation: rise 0.8s ease; overflow: hidden;
 }
 .masthead { font-family: var(--display); font-size: 64px; text-align: center; line-height: 1; border-bottom: 3px double #1c1612; padding-bottom: 6px; }
@@ -509,7 +515,7 @@ body.no-shake .shaking, body.no-shake .poisoned { animation: none; }
   position: absolute; left: 50%; top: 50px; transform: translateX(-50%); width: 1200px; height: 720px;
   display: grid; grid-template-columns: 1fr 1fr; background: #2a1d14; padding: 14px; border-radius: 8px; box-shadow: 0 30px 80px #000c; animation: rise 0.6s ease;
 }
-.ledger-page { background: var(--paper) url('/img/tx_papier.webp'); background-size: 600px; color: var(--ink); padding: 34px 44px; }
+.ledger-page { background: var(--paper) var(--tex-paper); background-size: 600px; color: var(--ink); padding: 34px 44px; }
 .ledger-page:first-child { box-shadow: inset -20px 0 30px -20px #6b4b2a; }
 .ledger-page:last-child { box-shadow: inset 20px 0 30px -20px #6b4b2a; }
 .ledger-page h2, .ledger-page h3 { font-family: var(--display); font-weight: 400; margin: 0 0 18px; font-size: 1.7em; }

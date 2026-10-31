@@ -18,6 +18,14 @@ function fit(): void {
   stage.style.transform = `translate(-50%, -50%) scale(${scale})`;
 }
 
+// Image URLs live in custom properties set here so they resolve against the page, which keeps
+// the build working from file:// (desktop) as well as from any web sub-path.
+const stageEl = document.getElementById('stage')!;
+const abs = (name: string) => `url('${new URL(`img/${name}.webp`, document.baseURI).href}')`;
+stageEl.style.setProperty('--tex-paper', abs('tx_papier'));
+stageEl.style.setProperty('--tex-news', abs('tx_journal'));
+stageEl.style.setProperty('--tex-face', abs('pt_cueilleur'));
+
 window.addEventListener('resize', fit);
 window.addEventListener('contextmenu', (e) => e.preventDefault());
 applySettings();

@@ -149,5 +149,5 @@ function renderNotes(left: HTMLElement, right: HTMLElement, night: number): void
   const t = L();
   const count = Math.min(night, t.guide.notes.length);
   left.replaceChildren(h('div.notes', {}, ...t.guide.notes.slice(0, count).map((n) => h('p.handwritten', {}, n))));
-  right.replaceChildren(h('div.sign-plate', {}, img('pt_lison', 'plate-img sepia')));
+  right.replaceChildren(h('div.sign-plate', {}, img('bg_titre', 'plate-img sepia')));
 }
