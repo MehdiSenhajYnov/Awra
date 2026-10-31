@@ -55,6 +55,7 @@ export interface GameState {
 }
 
 export const REALM_COUNT = REALMS.length;
+export const REALMS_IDS = REALMS.map((r) => r.id);
 export const FLOOR_MULT = [1, 3, 8, 8];
 export const FLOOR_GOALS = [100000, 5000000, 300000000];
 export const DAY_LENGTH = 240;
@@ -490,6 +491,8 @@ export function buyPerk(s: GameState, id: string): boolean {
   if (s.shares < cost) return false;
   s.shares -= cost;
   s.perks[id] = perk(s, id) + 1;
+  // Interns join at once, not only from the next realm.
+  if (id === 'stagiaires') s.staff.clerc = (s.staff.clerc ?? 0) + 2;
   if (id.startsWith('clause_')) {
     const clause = id.slice(7);
     s.deck.push(clause);
@@ -518,11 +521,9 @@ export const ACHIEVEMENTS = [
 export function short(n: number, lang: 'fr' | 'en'): string {
   const units = lang === 'fr' ? ['', ' k', ' M', ' Md', ' Bn', ' Bd'] : ['', 'K', 'M', 'B', 'T', 'Qa'];
   let u = 0;
-  let v = Math.floor(n);
-  if (v < 10000) return v.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-US');
+  if (n < 10000) return Math.floor(n).toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-US');
   let x = n;
   while (x >= 1000 && u < units.length - 1) { x /= 1000; u++; }
   const str = x >= 100 ? x.toFixed(0) : x.toFixed(1);
-  v = 0;
   return (lang === 'fr' ? str.replace('.', ',') : str) + units[u];
 }
