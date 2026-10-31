@@ -53,7 +53,7 @@ export const FONDERIE: RoomDef[] = [
   },
   {
     id: 'f_cave', zone: 'fonderie', at: [15, 6], bg: 'a',
-    exits: { u: [[14, 17]], d: [[14, 17]] },
+    exits: { u: [[14, 17]], d: [[14, 17]], r: [[11, 14]] },
     solid: [[0, 15, 32, 3], [0, 0, 14, 3], [18, 0, 14, 3]],
     slam: [[14, 15, 4, 2]],
     plat: [[6, 11, 5], [22, 11, 5], [13, 7, 6]],
@@ -68,9 +68,9 @@ export const FONDERIE: RoomDef[] = [
   },
   {
     id: 'f_sortie', zone: 'fonderie', at: [19, 5], bg: 'a',
-    exits: { l: [[11, 14]] },
+    exits: { l: [[11, 14]], u: [[14, 17]] },
     solid: [[0, 15, 32, 3]],
-    plat: [[18, 11, 6]],
+    plat: [[18, 11, 6], [13, 7, 5], [14, 3, 4]],
     ents: [['vessel', 21, 10, { id: 'vessel_f' }], ['hint', 8, 14, { text: 'swap' }], ['lectern', 12, 14]],
   },
 ];

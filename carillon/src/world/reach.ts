@@ -7,6 +7,11 @@ import { ROOMS, bounds, roomAt, roomDef } from './world';
 // manoeuvres (walk, jumps of several heights, dashes, double jumps, wall climbs, grapples) and follows the
 // abilities in the order the bosses give them.
 
+const arenaKey = (o: unknown) => {
+  const opts = (o ?? {}) as { boss: string; variant?: string };
+  return opts.variant ? `${opts.boss}_${opts.variant}` : opts.boss;
+};
+
 export interface Progress {
   abilities: Set<Ability>;
   bosses: Set<string>;
@@ -80,6 +85,8 @@ interface Macro {
   climb?: 'away' | 'back';
   grapple?: number;
   chain?: boolean;
+  /** Down-strikes on spikes to bounce across them. */
+  pogo?: boolean;
   drop?: boolean;
 }
 
@@ -95,6 +102,7 @@ function macros(a: Set<Ability>): Macro[] {
     if (a.has('walljump')) { list.push({ dir, hold: 40, climb: 'away' }); list.push({ dir, hold: 40, climb: 'back' }); }
     if (a.has('grapple')) { for (const g of [4, 14]) list.push({ dir, hold: 40, grapple: g }); list.push({ dir, hold: 40, chain: true }); }
     list.push({ dir, hold: 0, drop: true });
+    if (dir) list.push({ dir, hold: 40, pogo: true });
   }
   return list;
 }
@@ -143,6 +151,14 @@ function simulate(room: Room, def: RoomDef, prog: Progress, start: Start, m: Mac
       if (m.double !== undefined && f > m.double && f < m.double + 30) c.jumpHeld = true;
       if (m.grapple !== undefined && f === m.grapple) { c.dashPressed = true; c.y = -1; }
       if (m.chain && f > 3 && !p.grapple && !p.body.onGround && f % 3 === 0) c.dashPressed = true;
+      if (m.pogo && p.body.vy > 0 && !p.attack && p.attackCd === 0) {
+        // Strike down when spikes are just below the feet.
+        const tx = Math.floor((p.body.x + p.body.w / 2) / TILE);
+        const ty = Math.floor((p.body.y + p.body.h + 40) / TILE);
+        const t = tileAt(room, tx, ty);
+        if (t === T.Spikes) { c.y = 1; c.attackPressed = true; }
+      }
+      if (m.pogo) c.jumpHeld = true;
       if (m.climb && f > 2 && !p.body.onGround && p.body.wall !== 0) {
         towardWall = p.body.wall;
         if (p.wallLock === 0) { c.jumpPressed = true; c.jumpHeld = true; }
@@ -239,7 +255,7 @@ export function reachRoom(def: RoomDef, prog: Progress, entry: Side | 'spawn', s
   }
   // While its keeper lives, an arena locks behind the player: the fight is the only way on.
   const arena = (def.ents ?? []).find((e) => e[0] === 'arena');
-  if (arena && !prog.bosses.has((arena[3] as { boss: string }).boss)) exits.clear();
+  if (arena && !prog.bosses.has(arenaKey(arena[3]))) exits.clear();
   if (process.env.REACH_DEBUG === def.id) console.log('seen', [...seen].join(' '));
   const ents = new Set<number>();
   (def.ents ?? []).forEach(([, ex, ey], i) => {
@@ -300,10 +316,10 @@ export function playthrough(log: string[] = [], ban: Ability | null = null): { p
           if (!reachedItems.has(id2)) reachedItems.add(id2);
           if (k === 'ability' && opts.value !== ban && !prog.abilities.has(opts.value as Ability)) { prog.abilities.add(opts.value as Ability); changed = true; log.push(`+${opts.value} (${def.id})`); }
         }
-        if (k === 'arena' && !prog.bosses.has(opts.boss)) {
-          prog.bosses.add(opts.boss);
+        if (k === 'arena' && !prog.bosses.has(arenaKey(opts))) {
+          prog.bosses.add(arenaKey(opts));
           changed = true;
-          log.push(`boss ${opts.boss} (${def.id})`);
+          log.push(`boss ${arenaKey(opts)} (${def.id})`);
           const reward: Record<string, Ability> = { dechu: 'dash', gargouille: 'walljump', mere: 'swap', souffleur: 'double', jumeaux: 'slam', cantatrice: 'grapple' };
           if (reward[opts.boss] && reward[opts.boss] !== ban) { prog.abilities.add(reward[opts.boss]); log.push(`+${reward[opts.boss]}`); }
         }

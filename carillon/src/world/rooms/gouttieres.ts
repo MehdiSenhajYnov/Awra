@@ -8,7 +8,7 @@ export const GOUTTIERES: RoomDef[] = [
     exits: { l: [[11, 14]], r: [[11, 14]] },
     solid: [[0, 15, 64, 3], [44, 12, 6, 3], [10, 12, 5, 3]],
     hole: [[26, 15, 8, 2]],
-    spike: [[26, 16, 8, 1]],
+    ink: [[26, 16, 8, 1]],
     plat: [[52, 9, 6], [36, 9, 4]],
     ents: [['hint', 38, 14, { text: 'dash' }], ['gargouillette', 47, 11], ['ver', 56, 14], ['sonnaille', 18, 14], ['chauve', 30, 5]],
   },
@@ -43,10 +43,10 @@ export const GOUTTIERES: RoomDef[] = [
   },
   {
     id: 'g_egout', zone: 'gouttieres', at: [7, 3], size: [1, 2], bg: 'a',
-    exits: { u: [[14, 17]], l: [[29, 32]], r: [[29, 32]], d: [[14, 17]] },
+    exits: { u: [[14, 17]], l: [[29, 32]], r: [[11, 14], [29, 32]], d: [[14, 17]] },
     solid: [[0, 33, 32, 3]],
     slam: [[14, 33, 4, 2]],
-    plat: [[18, 4, 8], [6, 8, 7], [19, 12, 7], [6, 16, 7], [19, 20, 7], [6, 24, 7], [17, 28, 7]],
+    plat: [[26, 15, 6], [18, 4, 8], [6, 8, 7], [19, 12, 7], [6, 16, 7], [19, 20, 7], [6, 24, 7], [17, 28, 7]],
     ents: [['gargouillette', 3, 7], ['gargouillette', 28, 19], ['sonnaille', 10, 32], ['chauve', 16, 14], ['hint', 16, 32, { text: 'slam' }]],
   },
   {
@@ -66,9 +66,10 @@ export const GOUTTIERES: RoomDef[] = [
   },
   {
     id: 'g_sortie', zone: 'gouttieres', at: [10, 4], bg: 'b',
-    exits: { l: [[11, 14]], r: [[11, 14]] },
-    plat: [[12, 11, 8]],
+    exits: { l: [[11, 14]], r: [[11, 14]], d: [[4, 7]] },
+    plat: [[12, 11, 8], [3, 15, 6]],
     solid: [[0, 15, 32, 3], [29, 0, 3, 11]],
+    hole: [[4, 15, 4, 3]],
     ents: [
       ['lectern', 8, 14], ['page', 16, 10, { value: '10' }], ['hint', 20, 14, { text: 'heal' }],
       ['bell', 16, 12, { flag: 'g_timed', timed: 48, bars: [[29, 11, 1, 4]] }],

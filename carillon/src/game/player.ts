@@ -67,6 +67,8 @@ export interface Attack {
   combo: number;
   /** Entity ids already struck by this swing. */
   hit: Set<number>;
+  /** Already bounced off spikes with this swing. */
+  pogoed?: boolean;
 }
 
 /** One recorded frame, replayed by the echo. */
@@ -368,6 +370,16 @@ export class Player {
     if (r.hazard) ev.push({ kind: 'hazard' });
     if (b.onGround && b.vy === 0 && !r.hazard && fits(room, b.x, b.y, b.w, b.h) && groundIsSafe(room, b)) this.safe = { x: b.x, y: b.y };
 
+    // A downward swing that meets spikes bounces the Sonneur (the hammer rings on the points).
+    const atk = this.attack;
+    if (atk && atk.dir === 'down' && !atk.pogoed) {
+      const box = this.attackBox();
+      if (box && spikesIn(room, box)) {
+        atk.pogoed = true;
+        this.pogo();
+        ev.push({ kind: 'pogoSpike' });
+      }
+    }
     this.pose = this.attack?.dir === 'slam' ? 'slam'
       : this.parryT > 0 ? 'parry'
       : onWall ? 'wall'
@@ -397,7 +409,7 @@ export class Player {
 }
 
 export type PlayerEvent =
-  | { kind: 'jump' | 'double' | 'dash' | 'parry' | 'healStart' | 'healed' | 'echo' | 'hazard' | 'slamLand' | 'grapple' }
+  | { kind: 'jump' | 'double' | 'dash' | 'parry' | 'healStart' | 'healed' | 'echo' | 'hazard' | 'slamLand' | 'grapple' | 'pogoSpike' }
   | { kind: 'swing'; dir: AttackDir };
 
 export function attackBoxFor(dir: AttackDir | null, t: number, x: number, y: number, facing: number): Box | null {
@@ -407,6 +419,17 @@ export function attackBoxFor(dir: AttackDir | null, t: number, x: number, y: num
   if (dir === 'side') return facing > 0 ? { x: x + 10, y: y + 1, w: 34, h: 24 } : { x: x - 32, y: y + 1, w: 34, h: 24 };
   if (dir === 'up') return { x: x - 10, y: y - 30, w: 32, h: 34 };
   return { x: x - 10, y: y + 18, w: 32, h: 32 };
+}
+
+function spikesIn(room: Room, box: Box): boolean {
+  for (let ty = Math.floor(box.y / 20); ty <= Math.floor((box.y + box.h) / 20); ty++) {
+    for (let tx = Math.floor(box.x / 20); tx <= Math.floor((box.x + box.w) / 20); tx++) {
+      if (tx < 0 || ty < 0 || tx >= room.w || ty >= room.h) continue;
+      const t = room.tiles[ty * room.w + tx];
+      if (t === 3) return true;
+    }
+  }
+  return false;
 }
 
 function onPlatform(room: Room, b: Body): boolean {

@@ -41,8 +41,9 @@ export const HORLOGERIE: RoomDef[] = [
   },
   {
     id: 'h_echap', zone: 'horlogerie', at: [17, 11], size: [1, 2], bg: 'a',
-    exits: { u: [[14, 17]], l: [[29, 32]] },
+    exits: { u: [[14, 17]], l: [[29, 32]], r: [[11, 14]] },
     solid: [[0, 33, 32, 3], [28, 0, 4, 33]],
+    hole: [[28, 11, 4, 4]],
     plat: [[12, 4, 8], [4, 9, 6], [18, 13, 6], [4, 17, 6], [18, 21, 6], [6, 25, 6], [16, 29, 6]],
     ents: [['automate', 10, 32], ['engrenage', 20, 32], ['chauve', 14, 12], ['squelette', 6, 16]],
   },

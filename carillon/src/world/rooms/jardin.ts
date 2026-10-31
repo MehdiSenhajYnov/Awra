@@ -28,10 +28,12 @@ export const JARDIN: RoomDef[] = [
   },
   {
     id: 'j_fleurs', zone: 'jardin', at: [19, 7], bg: 'b',
-    exits: { l: [[11, 14]] },
+    exits: { l: [[11, 14]], d: [[4, 7]] },
     solid: [[0, 15, 32, 3], [10, 11, 2, 4], [18, 9, 2, 6], [26, 7, 6, 8]],
+    hole: [[4, 15, 4, 3]],
+    plat: [[3, 15, 6]],
     spike: [[12, 14, 6, 1], [20, 14, 6, 1]],
-    ents: [['note', 29, 6, { value: 'point_orgue', id: 'note_point_orgue' }], ['shard', 15, 8, { id: 'shard_j1' }], ['choriste', 22, 8], ['eclat', 4, 14]],
+    ents: [['note', 29, 6, { value: 'point_orgue', id: 'note_point_orgue' }], ['shard', 15, 8, { id: 'shard_j1' }], ['choriste', 22, 8], ['eclat', 8, 14]],
   },
   {
     id: 'j_cristaux', zone: 'jardin', at: [17, 8], size: [1, 2], bg: 'a',

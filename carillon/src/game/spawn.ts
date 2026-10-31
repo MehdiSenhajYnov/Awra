@@ -20,6 +20,9 @@ export const BOSS_REWARD: Record<string, { kind: ItemKind; value: string }> = {
   noye: { kind: 'vessel', value: 'noye' },
   echappement: { kind: 'slot', value: 'echappement' },
   silence: { kind: 'key', value: 'fin' },
+  dechu_v: { kind: 'slot', value: 'dechu_v' },
+  jumeaux_v: { kind: 'vessel', value: 'jumeaux_v' },
+  echappement_v: { kind: 'shard', value: 'echappement_v' },
 };
 
 export const GREAT_BELLS = ['dechu', 'gargouille', 'mere', 'souffleur', 'jumeaux', 'cantatrice', 'noye', 'echappement'];
@@ -28,16 +31,19 @@ export const GREAT_BELLS = ['dechu', 'gargouille', 'mere', 'souffleur', 'jumeaux
 export class Arena extends Entity {
   bosses: Boss[] = [];
   started = false;
-  constructor(scene: Scene, x: number, y: number, public key: string, public doors: [number, number, number, number][], public trigger: [number, number], public hard = false) {
+  /** Flag name of this fight (variations reuse a keeper under another key). */
+  flagKey: string;
+  constructor(scene: Scene, x: number, y: number, public key: string, public doors: [number, number, number, number][], public trigger: [number, number], public hard = false, variant = '') {
     super(scene, x, y, 10, 10);
     this.hurtable = false;
     this.contact = 0;
     this.prop = true;
     this.back = true;
+    this.flagKey = variant ? `${key}_${variant}` : key;
   }
   update(): void {
     const s = this.scene;
-    const done = s.flags[`boss_${this.key}`];
+    const done = s.flags[`boss_${this.flagKey}`];
     if (!this.started) {
       const tx = s.player.cx / TILE;
       if (done || tx < this.trigger[0] || tx > this.trigger[1] || s.player.dead) return;
@@ -46,7 +52,7 @@ export class Arena extends Entity {
       s.locked = true;
       s.sfx('gate');
       this.bosses = makeBoss(s, this.key, this.cx, this.body.y + this.body.h, this.hard);
-      for (const b of this.bosses) s.spawn(b);
+      for (const b of this.bosses) { b.flagKey = this.flagKey; s.spawn(b); }
       s.boss = this.bosses[0];
       s.bossName = this.key;
       s.ui.bossBar(this.bosses[0], this.key);
@@ -83,7 +89,7 @@ export function spawnEntity(scene: Scene, kind: string, x: number, y: number, o:
     case 'wind': return new Wind(scene, x, y, (o.w as number) ?? 2, (o.h as number) ?? 8, (o.s as number) ?? 0.95);
     case 'mover': return new Mover(scene, x, y, (o.w as number) ?? 3, (o.dx as number) ?? 0, (o.dy as number) ?? 0, (o.period as number) ?? 240, (o.phase as number) ?? 0);
     case 'crumble': return new Crumble(scene, x, y, (o.w as number) ?? 3);
-    case 'arena': return new Arena(scene, x, y, o.boss as string, (o.doors as [number, number, number, number][]) ?? [], (o.trigger as [number, number]) ?? [8, 24], !!scene.save.hard);
+    case 'arena': return new Arena(scene, x, y, o.boss as string, (o.doors as [number, number, number, number][]) ?? [], (o.trigger as [number, number]) ?? [8, 24], !!scene.save.hard || !!o.variant, (o.variant as string) ?? '');
     // Items: removed for good once taken.
     case 'shard': case 'vessel': case 'tin': case 'page': case 'note': case 'ability': case 'key': case 'slot': {
       const flag = flagOf();

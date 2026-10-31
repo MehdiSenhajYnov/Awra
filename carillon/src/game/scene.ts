@@ -38,6 +38,9 @@ export interface UiHooks {
   ended(kind: 'cloche' | 'silence'): void;
 }
 
+/** The world is drawn slightly magnified; the camera shows VIEW / ZOOM pixels of the room. */
+export const ZOOM = 1.2;
+
 export class Scene {
   room!: Room;
   terrain!: HTMLCanvasElement | null;
@@ -236,6 +239,7 @@ export class Scene {
         case 'hazard': this.hazard(); break;
         case 'slamLand': this.slamLand(); break;
         case 'grapple': this.sfx('grapple'); break;
+        case 'pogoSpike': this.sfx('clang'); this.particles.burst(p.cx, p.body.y + p.body.h + 8, 6, '#fff2d0', { speed: 3, kind: 'spark' }); break;
       }
     }
     for (const echo of this.echoes) echo.update();
@@ -343,7 +347,7 @@ export class Scene {
         if (p.attack.dir === 'down' && (landed || !e.prop)) p.pogo();
         if (landed && p.attack.dir === 'side' && !e.heavy) p.body.vx -= p.facing * 1.2;
       }
-      this.tileHits(atk, p.attack.dir, p.attack.hit);
+      this.tileHits(atk, p.attack.hit);
     }
     for (const echo of this.echoes) {
       const box = echo.attackBox();
@@ -353,7 +357,7 @@ export class Scene {
         echo.hit.add(e.id);
         this.strike(e, this.damageFor('echo'), echo.frame.x + 6, 'echo');
       }
-      this.tileHits(box, echo.frame.attack ?? 'side', echo.hit);
+      this.tileHits(box, echo.hit);
     }
     if (p.dead || this.god) return;
     // Hits on the player: parry first, then damage.
@@ -491,24 +495,17 @@ export class Scene {
     this.ui.rest();
   }
 
-  private tileHits(box: Box, dir: string, hit: Set<number>): void {
+  private tileHits(box: Box, hit: Set<number>): void {
     const x0 = Math.floor(box.x / TILE);
     const x1 = Math.floor((box.x + box.w) / TILE);
     const y0 = Math.floor(box.y / TILE);
     const y1 = Math.floor((box.y + box.h) / TILE);
-    let pogoed = false;
     for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++) {
       const t = tileAt(this.room, tx, ty);
       const key = -(ty * 10000 + tx) - 1;
       if (t === T.Breakable && !hit.has(key)) {
         hit.add(key);
         this.breakTile(tx, ty);
-      }
-      // Pogo off spikes with a downward swing.
-      if (dir === 'down' && (t === T.Spikes || t === T.Ink) && !pogoed && this.player.attack?.dir === 'down') {
-        pogoed = true;
-        this.player.pogo();
-        this.sfx('clang');
       }
     }
   }
@@ -604,7 +601,7 @@ export class Scene {
   /** A great bell rings again: rewards, save, and the way opens. */
   bossDefeated(b: Boss): void {
     this.killFx(b);
-    this.setFlag(`boss_${b.key}`);
+    this.setFlag(`boss_${b.flagKey}`);
     this.sfx('bellBig');
     this.shakeBy(12);
     this.freeze = 40;
@@ -616,9 +613,9 @@ export class Scene {
       this.ui.ended(this.save.flags.secret ? 'cloche' : 'silence');
       return;
     }
-    const reward = BOSS_REWARD[b.key];
+    const reward = BOSS_REWARD[b.flagKey];
     if (reward) {
-      const e = spawnEntity(this, reward.kind, b.cx, Math.min(b.body.y + b.body.h, this.room.h * TILE - TILE * 2), { value: reward.value, id: `reward_${b.key}` }, '');
+      const e = spawnEntity(this, reward.kind, b.cx, Math.min(b.body.y + b.body.h, this.room.h * TILE - TILE * 2), { value: reward.value, id: `reward_${b.flagKey}` }, '');
       if (e) this.entities.push(e);
     }
     writeSlot(this.save);
@@ -654,8 +651,10 @@ export class Scene {
     const H = this.room.h * TILE;
     const lookX = p.facing * 34 + p.body.vx * 6;
     const lookY = input.held('up') && p.body.onGround && p.pose === 'idle' ? -70 : input.held('down') && p.body.onGround && p.pose === 'idle' ? 70 : 0;
-    const tx = clamp(p.cx + lookX - VIEW_W / 2, 0, W - VIEW_W);
-    const ty = clamp(p.cy - 20 + lookY - VIEW_H / 2, 0, H - VIEW_H);
+    const vw = VIEW_W / ZOOM;
+    const vh = VIEW_H / ZOOM;
+    const tx = clamp(p.cx + lookX - vw / 2, 0, W - vw);
+    const ty = clamp(p.cy - 20 + lookY - vh / 2, 0, H - vh);
     if (snap) { this.cam.x = tx; this.cam.y = ty; return; }
     this.cam.x += (tx - this.cam.x) * 0.12;
     this.cam.y += (ty - this.cam.y) * 0.1;
@@ -669,6 +668,7 @@ export class Scene {
     const camY = Math.round(this.cam.y + sy);
     drawBackdrop(ctx, this.room, camX, camY, this.time);
     ctx.save();
+    ctx.scale(ZOOM, ZOOM);
     ctx.translate(-camX, -camY);
     for (const e of this.entities) if (e.back) e.draw(ctx);
     if (this.terrain) ctx.drawImage(this.terrain, 0, 0, this.room.w * TILE, this.room.h * TILE);

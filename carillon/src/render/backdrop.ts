@@ -4,6 +4,24 @@ import type { Room, ZoneId } from '../world/room';
 import { PALETTES } from '../world/zones';
 
 const images = new Map<string, HTMLImageElement>();
+/** Backdrops are pre-softened once (slight blur, darker, less saturated) so foreground silhouettes stay readable. */
+const softened = new Map<string, HTMLCanvasElement>();
+function soft(name: string): HTMLCanvasElement | null {
+  const done = softened.get(name);
+  if (done) return done;
+  const im = image(name);
+  if (!im.complete || !im.naturalWidth) return null;
+  const c = document.createElement('canvas');
+  const w = 1024;
+  const h = Math.round((w * im.naturalHeight) / im.naturalWidth);
+  c.width = w;
+  c.height = h;
+  const ctx = c.getContext('2d')!;
+  ctx.filter = 'blur(1.6px) saturate(0.85)';
+  ctx.drawImage(im, 0, 0, w, h);
+  softened.set(name, c);
+  return c;
+}
 function image(name: string): HTMLImageElement {
   let im = images.get(name);
   if (!im) {
@@ -25,16 +43,18 @@ export function drawBackdrop(ctx: CanvasRenderingContext2D, room: Room, camX: nu
   const pal = PALETTES[zone];
   const W = room.w * TILE;
   const H = room.h * TILE;
-  const im = image(`bg_${zone}_${room.def.bg ?? 'a'}`);
+  const im = soft(`bg_${zone}_${room.def.bg ?? 'a'}`);
   ctx.fillStyle = pal.fog;
   ctx.fillRect(0, 0, VIEW_W, VIEW_H);
-  if (im.complete && im.naturalWidth) {
+  if (im) {
     // Cover the view with a margin that slides a little as the camera moves through the room.
-    const scale = Math.max((VIEW_W * 1.25) / im.naturalWidth, (VIEW_H * 1.25) / im.naturalHeight);
-    const iw = im.naturalWidth * scale;
-    const ih = im.naturalHeight * scale;
-    const kx = W > VIEW_W ? camX / (W - VIEW_W) : 0.5;
-    const ky = H > VIEW_H ? camY / (H - VIEW_H) : 0.5;
+    const scale = Math.max((VIEW_W * 1.25) / im.width, (VIEW_H * 1.25) / im.height);
+    const iw = im.width * scale;
+    const ih = im.height * scale;
+    const vw = VIEW_W / 1.2;
+    const vh = VIEW_H / 1.2;
+    const kx = W > vw ? camX / (W - vw) : 0.5;
+    const ky = H > vh ? camY / (H - vh) : 0.5;
     ctx.drawImage(im, -(iw - VIEW_W) * kx, -(ih - VIEW_H) * ky, iw, ih);
   }
   ctx.fillStyle = `rgba(4,5,9,${pal.dim})`;
@@ -235,11 +255,12 @@ export function drawLighting(ctx: CanvasRenderingContext2D, scene: Scene, camX: 
     l.fillRect(x - r, y - r, r * 2, r * 2);
   };
   const p = scene.player;
-  hole(p.cx - camX, p.cy - camY, 70 + p.res * 14);
-  for (const e of scene.echoes) if (e.active) hole(e.frame.x + 6 - camX, e.frame.y + 13 - camY, 60, 0.8);
+  const Z = 1.2;
+  hole((p.cx - camX) * Z, (p.cy - camY) * Z, (70 + p.res * 14) * Z);
+  for (const e of scene.echoes) if (e.active) hole((e.frame.x + 6 - camX) * Z, (e.frame.y + 13 - camY) * Z, 60 * Z, 0.8);
   for (const e of scene.entities) {
     const light = (e as unknown as { light?: number }).light;
-    if (light) hole(e.cx - camX, e.cy - camY, light, 0.9);
+    if (light) hole((e.cx - camX) * Z, (e.cy - camY) * Z, light * Z, 0.9);
   }
   ctx.drawImage(lightCanvas, 0, 0);
 }

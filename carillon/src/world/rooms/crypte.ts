@@ -39,7 +39,7 @@ export const CRYPTE: RoomDef[] = [
   },
   {
     id: 'c_reliquaire', zone: 'crypte', at: [6, 6], dark: true, bg: 'b',
-    exits: { r: [[11, 14]] },
+    exits: { r: [[11, 14]], l: [[11, 14]] },
     solid: [[0, 15, 32, 3], [0, 0, 8, 11]],
     gate: [[7, 11, 1, 4, 'c_duo']],
     plat: [[18, 9, 4]],
@@ -65,12 +65,12 @@ export const CRYPTE: RoomDef[] = [
   },
   {
     id: 'c_arene', zone: 'crypte', at: [6, 7], size: [2, 1], dark: false, bg: 'a',
-    exits: { r: [[11, 14]], d: [[46, 49]] },
+    exits: { l: [[11, 14]], r: [[11, 14]], d: [[46, 49]] },
     solid: [[0, 15, 64, 3]],
     hole: [[46, 15, 4, 3]],
     gate: [[46, 15, 4, 1, 'boss_jumeaux']],
     plat: [[10, 10, 6], [48, 10, 6], [28, 7, 8]],
-    ents: [['arena', 32, 14, { boss: 'jumeaux', trigger: [12, 52], doors: [[63, 11, 1, 4]] }]],
+    ents: [['arena', 32, 14, { boss: 'jumeaux', trigger: [12, 52], doors: [[63, 11, 1, 4], [0, 11, 1, 4]] }]],
   },
   {
     id: 'c_sortie', zone: 'crypte', at: [7, 8], bg: 'b',

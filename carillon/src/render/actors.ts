@@ -213,6 +213,11 @@ export function drawPlayer(ctx: CanvasRenderingContext2D, p: Player, t: number):
       drawSonneur(ctx, h.x + 6, h.y + 26, h.facing, 'dash', t, null, { ...SONNEUR, alpha: 0.25 / i, cloak: '#8fa3c8' });
     }
   }
+  const halo = ctx.createRadialGradient(b.x + b.w / 2, b.y + 12, 2, b.x + b.w / 2, b.y + 12, 26);
+  halo.addColorStop(0, 'rgba(232,220,192,0.16)');
+  halo.addColorStop(1, 'rgba(232,220,192,0)');
+  ctx.fillStyle = halo;
+  ctx.fillRect(b.x - 24, b.y - 16, b.w + 48, 56);
   drawSonneur(ctx, b.x + b.w / 2, b.y + b.h, p.facing, p.pose, t, p.attack, SONNEUR, { res: p.res, maxRes: p.maxRes, vx: b.vx, vy: b.vy, heal: p.healT / p.stats.healFrames });
   if (p.perfectT > 60) {
     ctx.save();

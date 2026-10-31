@@ -377,7 +377,7 @@ class GameScreen implements Screen {
     const h = p.history[p.history.length - p.stats.echoFrames];
     if (h && p.abilities.has('echo')) {
       ctx.strokeStyle = 'rgba(168,240,255,0.5)';
-      ctx.strokeRect(h.x - this.scene.cam.x, h.y - this.scene.cam.y, 12, 26);
+      ctx.strokeRect((h.x - this.scene.cam.x) * 1.2, (h.y - this.scene.cam.y) * 1.2, 12 * 1.2, 26 * 1.2);
     }
   }
 

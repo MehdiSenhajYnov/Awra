@@ -141,9 +141,12 @@ export abstract class Boss extends Entity {
   staggerAt = 9;
   speed = 1;
   readonly key: string;
+  /** Flag set when it falls (differs from key for variations). */
+  flagKey: string;
   constructor(scene: Scene, x: number, y: number, w: number, h: number, hits: number, key: string, hard = false) {
     super(scene, x, y, w, h);
     this.key = key;
+    this.flagKey = key;
     const dmg = scene.player.stats.damage;
     this.maxHp = this.hp = Math.round(hits * Math.max(1, dmg) * (hard ? 1.4 : 1));
     this.speed = hard ? 1.25 : 1;
@@ -462,7 +465,7 @@ export class Gargouille extends Boss {
 
 export class MereCoulee extends Boss {
   constructor(scene: Scene, x: number, y: number, hard = false) {
-    super(scene, x, y, 46, 46, 34, 'mere', hard);
+    super(scene, x, y, 56, 58, 34, 'mere', hard);
     this.staggerAt = 11;
   }
   think(): void {
@@ -538,18 +541,25 @@ export class MereCoulee extends Boss {
     // Molten matron rising from it.
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
-    const g = ctx.createRadialGradient(cx, y + 6, 2, cx, y + 6, 30);
+    const bob = Math.sin(this.t * 0.07) * 2;
+    const g = ctx.createRadialGradient(cx, y - 6 + bob, 3, cx, y - 6 + bob, 46);
     g.addColorStop(0, '#fff0c0');
-    g.addColorStop(0.4, '#ff8a3a');
+    g.addColorStop(0.35, '#ff8a3a');
     g.addColorStop(1, 'rgba(120,30,0,0)');
     ctx.fillStyle = g;
+    // Torso and head of molten bronze rising from the crucible, arms resting on its rim.
     ctx.beginPath();
-    ctx.ellipse(cx, y + 2 + Math.sin(this.t * 0.07) * 2, 16, 22, 0, 0, Math.PI * 2);
+    ctx.moveTo(cx - 24, y + 12);
+    ctx.quadraticCurveTo(cx - 20, y - 18 + bob, cx, y - 30 + bob);
+    ctx.quadraticCurveTo(cx + 20, y - 18 + bob, cx + 24, y + 12);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(cx, y - 36 + bob, 11, 12, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
     ctx.fillStyle = '#2a0a00';
-    ctx.fillRect(cx - 6 + this.facing * 2, y - 6, 3, 3);
-    ctx.fillRect(cx + 3 + this.facing * 2, y - 6, 3, 3);
+    ctx.fillRect(cx - 6 + this.facing * 2, y - 38 + bob, 3, 4);
+    ctx.fillRect(cx + 3 + this.facing * 2, y - 38 + bob, 3, 4);
     // Sweeping arm.
     if (this.act === 'sweep') {
       const k = clamp((this.at - this.f(30)) / this.f(20), 0, 1);
@@ -667,7 +677,7 @@ export class Jumeau extends Boss {
   twin: Jumeau | null = null;
   log: { x: number; y: number; act: string; at: number; facing: number }[] = [];
   constructor(scene: Scene, x: number, y: number, public leader: boolean, hard = false) {
-    super(scene, x, y - 30, 20, 32, 20, leader ? 'jumeaux' : 'jumeaux_b', hard);
+    super(scene, x, y - 30, 20, 32, 20, 'jumeaux', hard);
     this.body.noPlatforms = true;
     this.contact = 1;
   }
@@ -790,7 +800,7 @@ export class Cantatrice extends Boss {
     switch (this.act) {
       case 'idle':
         b.x += (W / 2 + Math.sin(this.t * 0.01) * W * 0.3 - b.x) * 0.01;
-        b.y += (TILE * 5 + Math.sin(this.t * 0.03) * 10 - b.y) * 0.03;
+        b.y += (TILE * 7 + Math.sin(this.t * 0.03) * 10 - b.y) * 0.03;
         if (this.at > period * 2) this.setAct(this.choose([['notes', 3], ['pillars', 2], ['shards', 2], ...(this.phase >= 2 ? [['aria', 2] as [string, number]] : [])]));
         break;
       case 'notes':
@@ -861,7 +871,7 @@ export class Cantatrice extends Boss {
 export class Noye extends Boss {
   spots: number[] = [];
   constructor(scene: Scene, x: number, y: number, hard = false) {
-    super(scene, x, y, 40, 54, 44, 'noye', hard);
+    super(scene, x, y, 44, 80, 44, 'noye', hard);
     this.body.noPlatforms = true;
     this.hurtable = false;
     this.contact = 0;
@@ -886,7 +896,8 @@ export class Noye extends Boss {
         }
         break;
       case 'rise':
-        b.y = this.waterY + 10 - Math.min(1, this.at / 20) * (b.h + 6);
+        // Rises until its upper body is level with the ledges above the water.
+        b.y = this.waterY + 10 - Math.min(1, this.at / 20) * (this.waterY + 10 - (this.waterY - 120));
         if (this.at === 20) { this.hurtable = true; this.contact = 1; }
         if (this.at > 24) this.setAct(this.choose([['swipe', 3], ['spit', 2], ['wave', this.phase >= 2 ? 2 : 1]]));
         break;
@@ -1078,7 +1089,7 @@ export class Silence extends Boss {
     switch (this.act) {
       case 'idle':
         b.x += (clamp(this.p.cx - b.w / 2, TILE * 3, W - TILE * 3 - b.w) - b.x) * (this.phase === 2 ? 0.03 : 0.012);
-        b.y += (TILE * (this.phase === 2 ? 9 : 4) + Math.sin(this.t * 0.03) * 12 - b.y) * 0.03;
+        b.y += (TILE * (this.phase === 2 ? 9 : 7) + Math.sin(this.t * 0.03) * 12 - b.y) * 0.03;
         this.facing = Math.sign(dx) || 1;
         if (this.at > this.f(this.phase === 1 ? 46 : 30)) {
           this.setAct(this.phase === 1
@@ -1192,6 +1203,7 @@ export function makeBoss(scene: Scene, key: string, x: number, y: number, hard =
     case 'jumeaux': {
       const a = new Jumeau(scene, x - 60, y, true, hard);
       const b = new Jumeau(scene, scene.room.w * TILE - (x - 60), y, false, hard);
+      b.flagKey = a.flagKey;
       a.twin = b;
       b.twin = a;
       return [a, b];
