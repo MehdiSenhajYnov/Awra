@@ -2789,10 +2789,42 @@ awrasidebar .awra-navigation-item {
 .awra-dropdown,
 .awra-switch,
 .awra-switch slider,
-.awra-slider slider {
-  transition-property: background-color, color, box-shadow, border-color, opacity;
+.awra-slider slider,
+.awra-tab-pill,
+.awra-menu-item,
+awrabreadcrumbbar .awra-breadcrumb-button,
+awradataview columnview > header > button,
+awradataview columnview listview > row,
+.awra-role-collection-view > child,
+.awra-role-drop-zone {
+  transition-property: background-color, color, box-shadow, border-color, opacity, transform;
   transition-duration: 110ms;
   transition-timing-function: ease-out;
+}
+
+/* A press gives way under the pointer; transforms leave the layout alone. */
+.awra-button:active:not(:disabled),
+.awra-menu-button:active:not(:disabled),
+.awra-navigation-item:active {
+  transform: scale(.96);
+}
+
+.awra-menu-button-chevron {
+  transition: -gtk-icon-transform 110ms ease-out;
+}
+
+.awra-menu-button.awra-open .awra-menu-button-chevron {
+  -gtk-icon-transform: rotate(180deg);
+}
+
+/* Menus and dialogs unfold from where they appear instead of popping in. */
+@keyframes awra-unfold {
+  from { opacity: 0; transform: translateY(-4px) scale(.98); }
+  to { opacity: 1; transform: none; }
+}
+
+.awra-menu {
+  animation: awra-unfold 120ms cubic-bezier(.2, .8, .2, 1);
 }
 
 .awra-reduced-motion .awra-button,
@@ -2809,8 +2841,26 @@ awrasidebar .awra-navigation-item {
 .awra-reduced-motion .awra-dropdown,
 .awra-reduced-motion .awra-switch,
 .awra-reduced-motion .awra-switch slider,
-.awra-reduced-motion .awra-slider slider {
+.awra-reduced-motion .awra-slider slider,
+.awra-reduced-motion .awra-tab-pill,
+.awra-reduced-motion .awra-menu-item,
+.awra-reduced-motion awrabreadcrumbbar .awra-breadcrumb-button,
+.awra-reduced-motion awradataview columnview > header > button,
+.awra-reduced-motion awradataview columnview listview > row,
+.awra-reduced-motion .awra-role-collection-view > child,
+.awra-reduced-motion .awra-role-drop-zone,
+.awra-reduced-motion .awra-menu-button-chevron {
   transition-duration: 0s;
+}
+
+.awra-reduced-motion .awra-menu {
+  animation: none;
+}
+
+.awra-reduced-motion .awra-button:active,
+.awra-reduced-motion .awra-menu-button:active,
+.awra-reduced-motion .awra-navigation-item:active {
+  transform: none;
 }
 
 /* Windows: DWM provides the window shadow and corner rounding. */

@@ -81,6 +81,7 @@
 #include <awra/awra-shortcut-capture.h>
 #include <awra/awra-waveform-view.h>
 #include <awra/awra-timeline.h>
+#include <awra/awra-transition-bin.h>
 #include <awra/awra-aspect-paintable.h>
 #include <awra/awra-frame-pool.h>
 #include <awra/awra-texture-stream.h>

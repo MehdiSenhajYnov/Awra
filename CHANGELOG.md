@@ -9,6 +9,10 @@ unchanged (checked against the frozen 1.0.0 contract).
 
 ### Desktop workspace composition
 
+- `AwraTransitionBin` animates content replaced in place, such as a list that
+  receives another model, from the last frame it showed.
+- Rows, breadcrumbs, tabs and menus ease between states; presses give way,
+  menus unfold and menu chevrons turn, within the reduced-motion preference.
 - `AwraDragPreview` shows what a drag carries: one item as itself, several as
   a pile that fans out, with the total in a badge.
 - Toolbar buttons and menu buttons acknowledge the pointer like ghost buttons.

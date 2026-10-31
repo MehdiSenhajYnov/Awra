@@ -55875,6 +55875,408 @@
     {
       "attributes": {
         "final": "1",
+        "get-type": "awra_transition_bin_get_type",
+        "name": "TransitionBin",
+        "parent": "Gtk.Widget",
+        "symbol-prefix": "transition_bin",
+        "type": "AwraTransitionBin",
+        "type-name": "AwraTransitionBin",
+        "type-struct": "TransitionBinClass"
+      },
+      "children": [
+        {
+          "attributes": {
+            "identifier": "awra_transition_bin_new",
+            "name": "new",
+            "version": "1.1"
+          },
+          "children": [
+            {
+              "attributes": {
+                "transfer-ownership": "none"
+              },
+              "children": [
+                {
+                  "attributes": {
+                    "name": "Gtk.Widget",
+                    "type": "GtkWidget*"
+                  },
+                  "tag": "type"
+                }
+              ],
+              "tag": "return-value"
+            }
+          ],
+          "tag": "constructor"
+        },
+        {
+          "attributes": {
+            "name": "Gtk.Accessible"
+          },
+          "tag": "implements"
+        },
+        {
+          "attributes": {
+            "name": "Gtk.Buildable"
+          },
+          "tag": "implements"
+        },
+        {
+          "attributes": {
+            "name": "Gtk.ConstraintTarget"
+          },
+          "tag": "implements"
+        },
+        {
+          "attributes": {
+            "get-property": "child",
+            "identifier": "awra_transition_bin_get_child",
+            "name": "get_child",
+            "version": "1.1"
+          },
+          "children": [
+            {
+              "attributes": {},
+              "children": [
+                {
+                  "attributes": {
+                    "name": "self",
+                    "transfer-ownership": "none"
+                  },
+                  "children": [
+                    {
+                      "attributes": {
+                        "name": "TransitionBin",
+                        "type": "AwraTransitionBin*"
+                      },
+                      "tag": "type"
+                    }
+                  ],
+                  "tag": "instance-parameter"
+                }
+              ],
+              "tag": "parameters"
+            },
+            {
+              "attributes": {
+                "nullable": "1",
+                "transfer-ownership": "none"
+              },
+              "children": [
+                {
+                  "attributes": {
+                    "name": "Gtk.Widget",
+                    "type": "GtkWidget*"
+                  },
+                  "tag": "type"
+                }
+              ],
+              "tag": "return-value"
+            }
+          ],
+          "tag": "method"
+        },
+        {
+          "attributes": {
+            "get-property": "fixed-top",
+            "identifier": "awra_transition_bin_get_fixed_top",
+            "name": "get_fixed_top",
+            "version": "1.1"
+          },
+          "children": [
+            {
+              "attributes": {},
+              "children": [
+                {
+                  "attributes": {
+                    "name": "self",
+                    "transfer-ownership": "none"
+                  },
+                  "children": [
+                    {
+                      "attributes": {
+                        "name": "TransitionBin",
+                        "type": "AwraTransitionBin*"
+                      },
+                      "tag": "type"
+                    }
+                  ],
+                  "tag": "instance-parameter"
+                }
+              ],
+              "tag": "parameters"
+            },
+            {
+              "attributes": {
+                "transfer-ownership": "none"
+              },
+              "children": [
+                {
+                  "attributes": {
+                    "name": "gint",
+                    "type": "int"
+                  },
+                  "tag": "type"
+                }
+              ],
+              "tag": "return-value"
+            }
+          ],
+          "tag": "method"
+        },
+        {
+          "attributes": {
+            "identifier": "awra_transition_bin_play",
+            "name": "play",
+            "version": "1.1"
+          },
+          "children": [
+            {
+              "attributes": {},
+              "children": [
+                {
+                  "attributes": {
+                    "name": "self",
+                    "transfer-ownership": "none"
+                  },
+                  "children": [
+                    {
+                      "attributes": {
+                        "name": "TransitionBin",
+                        "type": "AwraTransitionBin*"
+                      },
+                      "tag": "type"
+                    }
+                  ],
+                  "tag": "instance-parameter"
+                },
+                {
+                  "attributes": {
+                    "name": "offset_x",
+                    "transfer-ownership": "none"
+                  },
+                  "children": [
+                    {
+                      "attributes": {
+                        "name": "gdouble",
+                        "type": "double"
+                      },
+                      "tag": "type"
+                    }
+                  ],
+                  "tag": "parameter"
+                },
+                {
+                  "attributes": {
+                    "name": "offset_y",
+                    "transfer-ownership": "none"
+                  },
+                  "children": [
+                    {
+                      "attributes": {
+                        "name": "gdouble",
+                        "type": "double"
+                      },
+                      "tag": "type"
+                    }
+                  ],
+                  "tag": "parameter"
+                }
+              ],
+              "tag": "parameters"
+            },
+            {
+              "attributes": {
+                "transfer-ownership": "none"
+              },
+              "children": [
+                {
+                  "attributes": {
+                    "name": "none",
+                    "type": "void"
+                  },
+                  "tag": "type"
+                }
+              ],
+              "tag": "return-value"
+            }
+          ],
+          "tag": "method"
+        },
+        {
+          "attributes": {
+            "identifier": "awra_transition_bin_set_child",
+            "name": "set_child",
+            "set-property": "child",
+            "version": "1.1"
+          },
+          "children": [
+            {
+              "attributes": {},
+              "children": [
+                {
+                  "attributes": {
+                    "name": "self",
+                    "transfer-ownership": "none"
+                  },
+                  "children": [
+                    {
+                      "attributes": {
+                        "name": "TransitionBin",
+                        "type": "AwraTransitionBin*"
+                      },
+                      "tag": "type"
+                    }
+                  ],
+                  "tag": "instance-parameter"
+                },
+                {
+                  "attributes": {
+                    "allow-none": "1",
+                    "name": "child",
+                    "nullable": "1",
+                    "transfer-ownership": "none"
+                  },
+                  "children": [
+                    {
+                      "attributes": {
+                        "name": "Gtk.Widget",
+                        "type": "GtkWidget*"
+                      },
+                      "tag": "type"
+                    }
+                  ],
+                  "tag": "parameter"
+                }
+              ],
+              "tag": "parameters"
+            },
+            {
+              "attributes": {
+                "transfer-ownership": "none"
+              },
+              "children": [
+                {
+                  "attributes": {
+                    "name": "none",
+                    "type": "void"
+                  },
+                  "tag": "type"
+                }
+              ],
+              "tag": "return-value"
+            }
+          ],
+          "tag": "method"
+        },
+        {
+          "attributes": {
+            "identifier": "awra_transition_bin_set_fixed_top",
+            "name": "set_fixed_top",
+            "set-property": "fixed-top",
+            "version": "1.1"
+          },
+          "children": [
+            {
+              "attributes": {},
+              "children": [
+                {
+                  "attributes": {
+                    "name": "self",
+                    "transfer-ownership": "none"
+                  },
+                  "children": [
+                    {
+                      "attributes": {
+                        "name": "TransitionBin",
+                        "type": "AwraTransitionBin*"
+                      },
+                      "tag": "type"
+                    }
+                  ],
+                  "tag": "instance-parameter"
+                },
+                {
+                  "attributes": {
+                    "name": "height",
+                    "transfer-ownership": "none"
+                  },
+                  "children": [
+                    {
+                      "attributes": {
+                        "name": "gint",
+                        "type": "int"
+                      },
+                      "tag": "type"
+                    }
+                  ],
+                  "tag": "parameter"
+                }
+              ],
+              "tag": "parameters"
+            },
+            {
+              "attributes": {
+                "transfer-ownership": "none"
+              },
+              "children": [
+                {
+                  "attributes": {
+                    "name": "none",
+                    "type": "void"
+                  },
+                  "tag": "type"
+                }
+              ],
+              "tag": "return-value"
+            }
+          ],
+          "tag": "method"
+        },
+        {
+          "attributes": {
+            "getter": "get_child",
+            "name": "child",
+            "setter": "set_child",
+            "transfer-ownership": "none",
+            "writable": "1"
+          },
+          "children": [
+            {
+              "attributes": {
+                "name": "Gtk.Widget"
+              },
+              "tag": "type"
+            }
+          ],
+          "tag": "property"
+        },
+        {
+          "attributes": {
+            "default-value": "0",
+            "getter": "get_fixed_top",
+            "name": "fixed-top",
+            "setter": "set_fixed_top",
+            "transfer-ownership": "none",
+            "writable": "1"
+          },
+          "children": [
+            {
+              "attributes": {
+                "name": "gint",
+                "type": "gint"
+              },
+              "tag": "type"
+            }
+          ],
+          "tag": "property"
+        }
+      ],
+      "tag": "class"
+    },
+    {
+      "attributes": {
+        "final": "1",
         "get-type": "awra_volume_control_get_type",
         "name": "VolumeControl",
         "parent": "Gtk.Widget",
@@ -63504,6 +63906,31 @@
         "is-gtype-struct-for": "Toolbar",
         "name": "ToolbarClass",
         "type": "AwraToolbarClass"
+      },
+      "children": [
+        {
+          "attributes": {
+            "name": "parent_class"
+          },
+          "children": [
+            {
+              "attributes": {
+                "name": "Gtk.WidgetClass",
+                "type": "GtkWidgetClass"
+              },
+              "tag": "type"
+            }
+          ],
+          "tag": "field"
+        }
+      ],
+      "tag": "record"
+    },
+    {
+      "attributes": {
+        "is-gtype-struct-for": "TransitionBin",
+        "name": "TransitionBinClass",
+        "type": "AwraTransitionBinClass"
       },
       "children": [
         {
