@@ -1637,6 +1637,20 @@ window.awra-dialog .awra-header-content {
   opacity: 1;
 }
 
+popover .awra-menu-scroller {
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+  outline: 0;
+  opacity: 1;
+}
+
 .awra-menu {
   min-width: 210px;
   padding: 7px;
@@ -1697,8 +1711,18 @@ window.awra-dialog .awra-header-content {
 }
 
 .awra-menu-item-accel {
-  margin-left: 18px;
+  min-width: 0;
+  min-height: 0;
+  margin: 0 0 0 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
   color: @awra_muted;
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+  outline: 0;
+  opacity: 1;
   font-size: .86em;
 }
 
@@ -2199,6 +2223,12 @@ awrabadge.awra-badge-custom {
   padding: 0;
   transition: none;
   animation: none;
+}
+
+/* Desktop themes give the slider negative margins, which GTK rejects when they
+ * exceed its minimum size. A scrollbar in an Awra interface never needs them. */
+.awra-window scrollbar slider {
+  margin: 0;
 }
 
 /* The rail scrolls through wheel/touchpad gestures and deliberately has no

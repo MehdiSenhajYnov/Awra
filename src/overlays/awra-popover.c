@@ -555,6 +555,7 @@ rebuild_menu (AwraPopover *self)
 
   awra_box_set_spacing (GTK_BOX (box), AWRA_SPACING_XS);
   gtk_widget_add_css_class (box, "awra-menu");
+  gtk_widget_add_css_class (scroller, "awra-menu-scroller");
   append_menu_model (self, GTK_BOX (box), self->menu_model);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroller), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
   gtk_scrolled_window_set_propagate_natural_width (GTK_SCROLLED_WINDOW (scroller), TRUE);

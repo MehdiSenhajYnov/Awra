@@ -31,6 +31,7 @@ int main() {
     printf("%s;%zu;%zu\n", "AwraDetailPaneClass", sizeof(AwraDetailPaneClass), alignof(AwraDetailPaneClass));
     printf("%s;%zu;%zu\n", "AwraDiagnosticsClass", sizeof(AwraDiagnosticsClass), alignof(AwraDiagnosticsClass));
     printf("%s;%zu;%zu\n", "AwraDialogClass", sizeof(AwraDialogClass), alignof(AwraDialogClass));
+    printf("%s;%zu;%zu\n", "AwraDragPreviewClass", sizeof(AwraDragPreviewClass), alignof(AwraDragPreviewClass));
     printf("%s;%zu;%zu\n", "AwraDropZoneClass", sizeof(AwraDropZoneClass), alignof(AwraDropZoneClass));
     printf("%s;%zu;%zu\n", "AwraDropdownClass", sizeof(AwraDropdownClass), alignof(AwraDropdownClass));
     printf("%s;%zu;%zu\n", "AwraEdgePanelClass", sizeof(AwraEdgePanelClass), alignof(AwraEdgePanelClass));
@@ -44,6 +45,7 @@ int main() {
     printf("%s;%zu;%zu\n", "AwraFormRowClass", sizeof(AwraFormRowClass), alignof(AwraFormRowClass));
     printf("%s;%zu;%zu\n", "AwraFrameClass", sizeof(AwraFrameClass), alignof(AwraFrameClass));
     printf("%s;%zu;%zu\n", "AwraFramePoolClass", sizeof(AwraFramePoolClass), alignof(AwraFramePoolClass));
+    printf("%s;%zu;%zu\n", "AwraGridViewClass", sizeof(AwraGridViewClass), alignof(AwraGridViewClass));
     printf("%s;%zu;%zu\n", "AwraHeaderClass", sizeof(AwraHeaderClass), alignof(AwraHeaderClass));
     printf("%s;%zu;%zu\n", "AwraInspectorClass", sizeof(AwraInspectorClass), alignof(AwraInspectorClass));
     printf("%s;%zu;%zu\n", "AwraKeyCapClass", sizeof(AwraKeyCapClass), alignof(AwraKeyCapClass));
@@ -71,6 +73,7 @@ int main() {
     printf("%s;%zu;%zu\n", "AwraPageHeaderClass", sizeof(AwraPageHeaderClass), alignof(AwraPageHeaderClass));
     printf("%s;%zu;%zu\n", "AwraPanelEdge", sizeof(AwraPanelEdge), alignof(AwraPanelEdge));
     printf("%s;%zu;%zu\n", "AwraPasswordEntryClass", sizeof(AwraPasswordEntryClass), alignof(AwraPasswordEntryClass));
+    printf("%s;%zu;%zu\n", "AwraPathBarClass", sizeof(AwraPathBarClass), alignof(AwraPathBarClass));
     printf("%s;%zu;%zu\n", "AwraPopoverClass", sizeof(AwraPopoverClass), alignof(AwraPopoverClass));
     printf("%s;%zu;%zu\n", "AwraProgressBarClass", sizeof(AwraProgressBarClass), alignof(AwraProgressBarClass));
     printf("%s;%zu;%zu\n", "AwraRadius", sizeof(AwraRadius), alignof(AwraRadius));
@@ -104,11 +107,13 @@ int main() {
     printf("%s;%zu;%zu\n", "AwraToggleButtonClass", sizeof(AwraToggleButtonClass), alignof(AwraToggleButtonClass));
     printf("%s;%zu;%zu\n", "AwraTokenSetClass", sizeof(AwraTokenSetClass), alignof(AwraTokenSetClass));
     printf("%s;%zu;%zu\n", "AwraToolbarClass", sizeof(AwraToolbarClass), alignof(AwraToolbarClass));
+    printf("%s;%zu;%zu\n", "AwraTransitionBinClass", sizeof(AwraTransitionBinClass), alignof(AwraTransitionBinClass));
     printf("%s;%zu;%zu\n", "AwraTypography", sizeof(AwraTypography), alignof(AwraTypography));
     printf("%s;%zu;%zu\n", "AwraValidationState", sizeof(AwraValidationState), alignof(AwraValidationState));
     printf("%s;%zu;%zu\n", "AwraVolumeControlClass", sizeof(AwraVolumeControlClass), alignof(AwraVolumeControlClass));
     printf("%s;%zu;%zu\n", "AwraWaveformViewClass", sizeof(AwraWaveformViewClass), alignof(AwraWaveformViewClass));
     printf("%s;%zu;%zu\n", "AwraWindow", sizeof(AwraWindow), alignof(AwraWindow));
     printf("%s;%zu;%zu\n", "AwraWindowClass", sizeof(AwraWindowClass), alignof(AwraWindowClass));
+    printf("%s;%zu;%zu\n", "AwraZoomControllerClass", sizeof(AwraZoomControllerClass), alignof(AwraZoomControllerClass));
     return 0;
 }

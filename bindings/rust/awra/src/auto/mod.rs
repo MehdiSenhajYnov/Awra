@@ -58,6 +58,9 @@ pub use self::diagnostics::Diagnostics;
 mod dialog;
 pub use self::dialog::Dialog;
 
+mod drag_preview;
+pub use self::drag_preview::DragPreview;
+
 #[cfg(feature = "v1_1")]
 #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 mod drop_zone;
@@ -176,6 +179,9 @@ pub use self::page_header::PageHeader;
 mod password_entry;
 pub use self::password_entry::PasswordEntry;
 
+mod path_bar;
+pub use self::path_bar::PathBar;
+
 mod popover;
 pub use self::popover::Popover;
 
@@ -269,6 +275,9 @@ pub use self::token_set::TokenSet;
 mod toolbar;
 pub use self::toolbar::Toolbar;
 
+mod transition_bin;
+pub use self::transition_bin::TransitionBin;
+
 #[cfg(feature = "v1_1")]
 #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
 mod volume_control;
@@ -337,6 +346,7 @@ pub(crate) mod builders {
     pub use super::data_view::DataViewBuilder;
     pub use super::detail_pane::DetailPaneBuilder;
     pub use super::dialog::DialogBuilder;
+    pub use super::drag_preview::DragPreviewBuilder;
     #[cfg(feature = "v1_1")]
     #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub use super::drop_zone::DropZoneBuilder;
@@ -373,6 +383,7 @@ pub(crate) mod builders {
     pub use super::page::PageBuilder;
     pub use super::page_header::PageHeaderBuilder;
     pub use super::password_entry::PasswordEntryBuilder;
+    pub use super::path_bar::PathBarBuilder;
     pub use super::popover::PopoverBuilder;
     pub use super::progress_bar::ProgressBarBuilder;
     pub use super::responsive_bin::ResponsiveBinBuilder;
@@ -402,6 +413,7 @@ pub(crate) mod builders {
     pub use super::toast_overlay::ToastOverlayBuilder;
     pub use super::toggle_button::ToggleButtonBuilder;
     pub use super::toolbar::ToolbarBuilder;
+    pub use super::transition_bin::TransitionBinBuilder;
     #[cfg(feature = "v1_1")]
     #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub use super::volume_control::VolumeControlBuilder;

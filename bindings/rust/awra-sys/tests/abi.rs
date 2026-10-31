@@ -364,6 +364,13 @@ const RUST_LAYOUTS: &[(&str, Layout)] = &[
         },
     ),
     (
+        "AwraDragPreviewClass",
+        Layout {
+            size: size_of::<AwraDragPreviewClass>(),
+            alignment: align_of::<AwraDragPreviewClass>(),
+        },
+    ),
+    (
         "AwraDropZoneClass",
         Layout {
             size: size_of::<AwraDropZoneClass>(),
@@ -452,6 +459,13 @@ const RUST_LAYOUTS: &[(&str, Layout)] = &[
         Layout {
             size: size_of::<AwraFramePoolClass>(),
             alignment: align_of::<AwraFramePoolClass>(),
+        },
+    ),
+    (
+        "AwraGridViewClass",
+        Layout {
+            size: size_of::<AwraGridViewClass>(),
+            alignment: align_of::<AwraGridViewClass>(),
         },
     ),
     (
@@ -641,6 +655,13 @@ const RUST_LAYOUTS: &[(&str, Layout)] = &[
         Layout {
             size: size_of::<AwraPasswordEntryClass>(),
             alignment: align_of::<AwraPasswordEntryClass>(),
+        },
+    ),
+    (
+        "AwraPathBarClass",
+        Layout {
+            size: size_of::<AwraPathBarClass>(),
+            alignment: align_of::<AwraPathBarClass>(),
         },
     ),
     (
@@ -875,6 +896,13 @@ const RUST_LAYOUTS: &[(&str, Layout)] = &[
         },
     ),
     (
+        "AwraTransitionBinClass",
+        Layout {
+            size: size_of::<AwraTransitionBinClass>(),
+            alignment: align_of::<AwraTransitionBinClass>(),
+        },
+    ),
+    (
         "AwraTypography",
         Layout {
             size: size_of::<AwraTypography>(),
@@ -914,6 +942,13 @@ const RUST_LAYOUTS: &[(&str, Layout)] = &[
         Layout {
             size: size_of::<AwraWindowClass>(),
             alignment: align_of::<AwraWindowClass>(),
+        },
+    ),
+    (
+        "AwraZoomControllerClass",
+        Layout {
+            size: size_of::<AwraZoomControllerClass>(),
+            alignment: align_of::<AwraZoomControllerClass>(),
         },
     ),
 ];

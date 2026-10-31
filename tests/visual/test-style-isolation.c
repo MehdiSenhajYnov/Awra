@@ -632,6 +632,9 @@ run_probe (const char *program,
   else
     environment = g_environ_unsetenv (environment,
                                       "AWRA_PROBE_RUNTIME_USER_PROVIDER");
+  /* A portal daemon started on this bus would write to the same stderr, and
+   * the check below judges the probe's own output. */
+  environment = g_environ_setenv (environment, "GDK_DEBUG", "no-portals", FALSE);
   g_assert_true (g_spawn_sync (NULL, arguments, environment,
                                G_SPAWN_DEFAULT, NULL, NULL,
                                &stdout_text, &stderr_text, &status, &error));

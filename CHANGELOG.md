@@ -9,6 +9,9 @@ unchanged (checked against the frozen 1.0.0 contract).
 
 ### Desktop workspace composition
 
+- Scrolling menus and their shortcut labels resist hostile themes, and theme
+  slider margins can no longer give an Awra scrollbar a negative size.
+- Rust bindings cover `AwraPathBar`, `AwraDragPreview` and `AwraTransitionBin`.
 - `awra_path_bar_get_item_at()` and `awra_path_bar_set_drop_item()` let each
   breadcrumb receive a drop.
 - Style roles `inline-edit`, `inline-action` and `usage-meter` cover editing in

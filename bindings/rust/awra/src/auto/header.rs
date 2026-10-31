@@ -65,6 +65,15 @@ impl Header {
         unsafe { from_glib_none(ffi::awra_header_get_center_widget(self.to_glib_none().0)) }
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    #[doc(alias = "awra_header_get_compact")]
+    #[doc(alias = "get_compact")]
+    #[doc(alias = "compact")]
+    pub fn is_compact(&self) -> bool {
+        unsafe { from_glib(ffi::awra_header_get_compact(self.to_glib_none().0)) }
+    }
+
     #[doc(alias = "awra_header_get_drag_enabled")]
     #[doc(alias = "get_drag_enabled")]
     #[doc(alias = "drag-enabled")]
@@ -77,6 +86,15 @@ impl Header {
     #[doc(alias = "end-widget")]
     pub fn end_widget(&self) -> Option<gtk::Widget> {
         unsafe { from_glib_none(ffi::awra_header_get_end_widget(self.to_glib_none().0)) }
+    }
+
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    #[doc(alias = "awra_header_get_expand_center")]
+    #[doc(alias = "get_expand_center")]
+    #[doc(alias = "expand-center")]
+    pub fn expands_center(&self) -> bool {
+        unsafe { from_glib(ffi::awra_header_get_expand_center(self.to_glib_none().0)) }
     }
 
     #[doc(alias = "awra_header_get_material")]
@@ -134,6 +152,16 @@ impl Header {
         }
     }
 
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    #[doc(alias = "awra_header_set_compact")]
+    #[doc(alias = "compact")]
+    pub fn set_compact(&self, compact: bool) {
+        unsafe {
+            ffi::awra_header_set_compact(self.to_glib_none().0, compact.into_glib());
+        }
+    }
+
     #[doc(alias = "awra_header_set_drag_enabled")]
     #[doc(alias = "drag-enabled")]
     pub fn set_drag_enabled(&self, drag_enabled: bool) {
@@ -150,6 +178,16 @@ impl Header {
                 self.to_glib_none().0,
                 widget.map(|p| p.as_ref()).to_glib_none().0,
             );
+        }
+    }
+
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    #[doc(alias = "awra_header_set_expand_center")]
+    #[doc(alias = "expand-center")]
+    pub fn set_expand_center(&self, expand: bool) {
+        unsafe {
+            ffi::awra_header_set_expand_center(self.to_glib_none().0, expand.into_glib());
         }
     }
 
@@ -197,6 +235,32 @@ impl Header {
         unsafe {
             ffi::awra_header_set_title(self.to_glib_none().0, title.to_glib_none().0);
         }
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn is_compact(&self) -> bool {
+        ObjectExt::property(self, "compact")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    pub fn set_compact(&self, compact: bool) {
+        ObjectExt::set_property(self, "compact", compact)
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "expand-center")]
+    pub fn expands_center(&self) -> bool {
+        ObjectExt::property(self, "expand-center")
+    }
+
+    #[cfg(not(feature = "v1_1"))]
+    #[cfg_attr(docsrs, doc(cfg(not(feature = "v1_1"))))]
+    #[doc(alias = "expand-center")]
+    pub fn set_expand_center(&self, expand_center: bool) {
+        ObjectExt::set_property(self, "expand-center", expand_center)
     }
 
     #[doc(alias = "blend-with-window")]
@@ -252,6 +316,31 @@ impl Header {
         }
     }
 
+    #[doc(alias = "compact")]
+    pub fn connect_compact_notify<F: Fn(&Self) + 'static>(&self, f: F) -> SignalHandlerId {
+        unsafe extern "C" fn notify_compact_trampoline<F: Fn(&Header) + 'static>(
+            this: *mut ffi::AwraHeader,
+            _param_spec: glib::ffi::gpointer,
+            f: glib::ffi::gpointer,
+        ) {
+            unsafe {
+                let f: &F = &*(f as *const F);
+                f(&from_glib_borrow(this))
+            }
+        }
+        unsafe {
+            let f: Box_<F> = Box_::new(f);
+            connect_raw(
+                self.as_ptr() as *mut _,
+                c"notify::compact".as_ptr(),
+                Some(std::mem::transmute::<*const (), unsafe extern "C" fn()>(
+                    notify_compact_trampoline::<F> as *const (),
+                )),
+                Box_::into_raw(f),
+            )
+        }
+    }
+
     #[doc(alias = "drag-enabled")]
     pub fn connect_drag_enabled_notify<F: Fn(&Self) + 'static>(&self, f: F) -> SignalHandlerId {
         unsafe extern "C" fn notify_drag_enabled_trampoline<F: Fn(&Header) + 'static>(
@@ -296,6 +385,31 @@ impl Header {
                 c"notify::end-widget".as_ptr(),
                 Some(std::mem::transmute::<*const (), unsafe extern "C" fn()>(
                     notify_end_widget_trampoline::<F> as *const (),
+                )),
+                Box_::into_raw(f),
+            )
+        }
+    }
+
+    #[doc(alias = "expand-center")]
+    pub fn connect_expand_center_notify<F: Fn(&Self) + 'static>(&self, f: F) -> SignalHandlerId {
+        unsafe extern "C" fn notify_expand_center_trampoline<F: Fn(&Header) + 'static>(
+            this: *mut ffi::AwraHeader,
+            _param_spec: glib::ffi::gpointer,
+            f: glib::ffi::gpointer,
+        ) {
+            unsafe {
+                let f: &F = &*(f as *const F);
+                f(&from_glib_borrow(this))
+            }
+        }
+        unsafe {
+            let f: Box_<F> = Box_::new(f);
+            connect_raw(
+                self.as_ptr() as *mut _,
+                c"notify::expand-center".as_ptr(),
+                Some(std::mem::transmute::<*const (), unsafe extern "C" fn()>(
+                    notify_expand_center_trampoline::<F> as *const (),
                 )),
                 Box_::into_raw(f),
             )
@@ -469,6 +583,12 @@ impl HeaderBuilder {
         }
     }
 
+    pub fn compact(self, compact: bool) -> Self {
+        Self {
+            builder: self.builder.property("compact", compact),
+        }
+    }
+
     pub fn drag_enabled(self, drag_enabled: bool) -> Self {
         Self {
             builder: self.builder.property("drag-enabled", drag_enabled),
@@ -480,6 +600,12 @@ impl HeaderBuilder {
             builder: self
                 .builder
                 .property("end-widget", end_widget.clone().upcast()),
+        }
+    }
+
+    pub fn expand_center(self, expand_center: bool) -> Self {
+        Self {
+            builder: self.builder.property("expand-center", expand_center),
         }
     }
 

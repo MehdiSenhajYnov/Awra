@@ -441,6 +441,20 @@ impl ::std::fmt::Debug for AwraDialogClass {
 
 #[derive(Copy, Clone)]
 #[repr(C)]
+pub struct AwraDragPreviewClass {
+    pub parent_class: gtk::GtkWidgetClass,
+}
+
+impl ::std::fmt::Debug for AwraDragPreviewClass {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraDragPreviewClass @ {self:p}"))
+            .field("parent_class", &self.parent_class)
+            .finish()
+    }
+}
+
+#[derive(Copy, Clone)]
+#[repr(C)]
 pub struct AwraDropZoneClass {
     pub parent_class: gtk::GtkWidgetClass,
 }
@@ -588,6 +602,20 @@ pub struct AwraFramePoolClass {
 impl ::std::fmt::Debug for AwraFramePoolClass {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         f.debug_struct(&format!("AwraFramePoolClass @ {self:p}"))
+            .field("parent_class", &self.parent_class)
+            .finish()
+    }
+}
+
+#[derive(Copy, Clone)]
+#[repr(C)]
+pub struct AwraGridViewClass {
+    pub parent_class: gtk::GtkWidgetClass,
+}
+
+impl ::std::fmt::Debug for AwraGridViewClass {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraGridViewClass @ {self:p}"))
             .field("parent_class", &self.parent_class)
             .finish()
     }
@@ -854,6 +882,20 @@ pub struct AwraPasswordEntryClass {
 impl ::std::fmt::Debug for AwraPasswordEntryClass {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         f.debug_struct(&format!("AwraPasswordEntryClass @ {self:p}"))
+            .field("parent_class", &self.parent_class)
+            .finish()
+    }
+}
+
+#[derive(Copy, Clone)]
+#[repr(C)]
+pub struct AwraPathBarClass {
+    pub parent_class: gtk::GtkWidgetClass,
+}
+
+impl ::std::fmt::Debug for AwraPathBarClass {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraPathBarClass @ {self:p}"))
             .field("parent_class", &self.parent_class)
             .finish()
     }
@@ -1239,6 +1281,20 @@ impl ::std::fmt::Debug for AwraToolbarClass {
 
 #[derive(Copy, Clone)]
 #[repr(C)]
+pub struct AwraTransitionBinClass {
+    pub parent_class: gtk::GtkWidgetClass,
+}
+
+impl ::std::fmt::Debug for AwraTransitionBinClass {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraTransitionBinClass @ {self:p}"))
+            .field("parent_class", &self.parent_class)
+            .finish()
+    }
+}
+
+#[derive(Copy, Clone)]
+#[repr(C)]
 pub struct AwraVolumeControlClass {
     pub parent_class: gtk::GtkWidgetClass,
 }
@@ -1277,6 +1333,20 @@ impl ::std::fmt::Debug for AwraWindowClass {
         f.debug_struct(&format!("AwraWindowClass @ {self:p}"))
             .field("parent_class", &self.parent_class)
             .field("padding", &self.padding)
+            .finish()
+    }
+}
+
+#[derive(Copy, Clone)]
+#[repr(C)]
+pub struct AwraZoomControllerClass {
+    pub parent_class: gobject::GObjectClass,
+}
+
+impl ::std::fmt::Debug for AwraZoomControllerClass {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraZoomControllerClass @ {self:p}"))
+            .field("parent_class", &self.parent_class)
             .finish()
     }
 }
@@ -1516,6 +1586,20 @@ impl ::std::fmt::Debug for AwraDialog {
 
 #[repr(C)]
 #[allow(dead_code)]
+pub struct AwraDragPreview {
+    _data: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
+}
+
+impl ::std::fmt::Debug for AwraDragPreview {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraDragPreview @ {self:p}"))
+            .finish()
+    }
+}
+
+#[repr(C)]
+#[allow(dead_code)]
 pub struct AwraDropZone {
     _data: [u8; 0],
     _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
@@ -1659,6 +1743,19 @@ impl ::std::fmt::Debug for AwraFramePool {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         f.debug_struct(&format!("AwraFramePool @ {self:p}"))
             .finish()
+    }
+}
+
+#[repr(C)]
+#[allow(dead_code)]
+pub struct AwraGridView {
+    _data: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
+}
+
+impl ::std::fmt::Debug for AwraGridView {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraGridView @ {self:p}")).finish()
     }
 }
 
@@ -1919,6 +2016,19 @@ impl ::std::fmt::Debug for AwraPasswordEntry {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         f.debug_struct(&format!("AwraPasswordEntry @ {self:p}"))
             .finish()
+    }
+}
+
+#[repr(C)]
+#[allow(dead_code)]
+pub struct AwraPathBar {
+    _data: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
+}
+
+impl ::std::fmt::Debug for AwraPathBar {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraPathBar @ {self:p}")).finish()
     }
 }
 
@@ -2288,6 +2398,20 @@ impl ::std::fmt::Debug for AwraToolbar {
 
 #[repr(C)]
 #[allow(dead_code)]
+pub struct AwraTransitionBin {
+    _data: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
+}
+
+impl ::std::fmt::Debug for AwraTransitionBin {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraTransitionBin @ {self:p}"))
+            .finish()
+    }
+}
+
+#[repr(C)]
+#[allow(dead_code)]
 pub struct AwraVolumeControl {
     _data: [u8; 0],
     _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
@@ -2324,6 +2448,20 @@ impl ::std::fmt::Debug for AwraWindow {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         f.debug_struct(&format!("AwraWindow @ {self:p}"))
             .field("parent_instance", &self.parent_instance)
+            .finish()
+    }
+}
+
+#[repr(C)]
+#[allow(dead_code)]
+pub struct AwraZoomController {
+    _data: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
+}
+
+impl ::std::fmt::Debug for AwraZoomController {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        f.debug_struct(&format!("AwraZoomController @ {self:p}"))
             .finish()
     }
 }
@@ -2791,6 +2929,33 @@ unsafe extern "C" {
     );
 
     //=========================================================================
+    // AwraDragPreview
+    //=========================================================================
+    pub fn awra_drag_preview_get_type() -> GType;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_drag_preview_new() -> *mut gtk::GtkWidget;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_drag_preview_get_count(self_: *mut AwraDragPreview) -> c_uint;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_drag_preview_get_icon_size(self_: *mut AwraDragPreview) -> c_int;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_drag_preview_set_count(self_: *mut AwraDragPreview, count: c_uint);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_drag_preview_set_icon_size(self_: *mut AwraDragPreview, size: c_int);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_drag_preview_set_item(
+        self_: *mut AwraDragPreview,
+        index: c_uint,
+        paintable: *mut gdk::GdkPaintable,
+    );
+
+    //=========================================================================
     // AwraDropZone
     //=========================================================================
     #[cfg(feature = "v1_1")]
@@ -3059,14 +3224,39 @@ unsafe extern "C" {
     pub fn awra_frame_pool_get_width(self_: *mut AwraFramePool) -> c_uint;
 
     //=========================================================================
+    // AwraGridView
+    //=========================================================================
+    pub fn awra_grid_view_get_type() -> GType;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_grid_view_new(
+        model: *mut gtk::GtkSelectionModel,
+        factory: *mut gtk::GtkListItemFactory,
+    ) -> *mut gtk::GtkWidget;
+    pub fn awra_grid_view_get_delegate(self_: *mut AwraGridView) -> *mut gtk::GtkGridView;
+    pub fn awra_grid_view_get_factory(self_: *mut AwraGridView) -> *mut gtk::GtkListItemFactory;
+    pub fn awra_grid_view_get_model(self_: *mut AwraGridView) -> *mut gtk::GtkSelectionModel;
+    pub fn awra_grid_view_set_factory(
+        self_: *mut AwraGridView,
+        factory: *mut gtk::GtkListItemFactory,
+    );
+    pub fn awra_grid_view_set_model(self_: *mut AwraGridView, model: *mut gtk::GtkSelectionModel);
+
+    //=========================================================================
     // AwraHeader
     //=========================================================================
     pub fn awra_header_get_type() -> GType;
     pub fn awra_header_new() -> *mut gtk::GtkWidget;
     pub fn awra_header_get_blend_with_window(self_: *mut AwraHeader) -> gboolean;
     pub fn awra_header_get_center_widget(self_: *mut AwraHeader) -> *mut gtk::GtkWidget;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_header_get_compact(self_: *mut AwraHeader) -> gboolean;
     pub fn awra_header_get_drag_enabled(self_: *mut AwraHeader) -> gboolean;
     pub fn awra_header_get_end_widget(self_: *mut AwraHeader) -> *mut gtk::GtkWidget;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_header_get_expand_center(self_: *mut AwraHeader) -> gboolean;
     pub fn awra_header_get_material(self_: *mut AwraHeader) -> *mut AwraMaterial;
     pub fn awra_header_get_show_window_controls(self_: *mut AwraHeader) -> gboolean;
     pub fn awra_header_get_start_widget(self_: *mut AwraHeader) -> *mut gtk::GtkWidget;
@@ -3074,8 +3264,14 @@ unsafe extern "C" {
     pub fn awra_header_get_title(self_: *mut AwraHeader) -> *const c_char;
     pub fn awra_header_set_blend_with_window(self_: *mut AwraHeader, blend: gboolean);
     pub fn awra_header_set_center_widget(self_: *mut AwraHeader, widget: *mut gtk::GtkWidget);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_header_set_compact(self_: *mut AwraHeader, compact: gboolean);
     pub fn awra_header_set_drag_enabled(self_: *mut AwraHeader, drag_enabled: gboolean);
     pub fn awra_header_set_end_widget(self_: *mut AwraHeader, widget: *mut gtk::GtkWidget);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_header_set_expand_center(self_: *mut AwraHeader, expand: gboolean);
     pub fn awra_header_set_material(self_: *mut AwraHeader, material: *mut AwraMaterial);
     pub fn awra_header_set_show_window_controls(self_: *mut AwraHeader, show_controls: gboolean);
     pub fn awra_header_set_start_widget(self_: *mut AwraHeader, widget: *mut gtk::GtkWidget);
@@ -3693,6 +3889,70 @@ unsafe extern "C" {
     pub fn awra_password_entry_set_text(self_: *mut AwraPasswordEntry, text: *const c_char);
 
     //=========================================================================
+    // AwraPathBar
+    //=========================================================================
+    pub fn awra_path_bar_get_type() -> GType;
+    pub fn awra_path_bar_new() -> *mut gtk::GtkWidget;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_path_bar_begin_edit(self_: *mut AwraPathBar, text: *const c_char);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_path_bar_get_edit_text(self_: *mut AwraPathBar) -> *const c_char;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_path_bar_get_editing(self_: *mut AwraPathBar) -> gboolean;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_path_bar_get_end_widget(self_: *mut AwraPathBar) -> *mut gtk::GtkWidget;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_path_bar_get_icon_name(self_: *mut AwraPathBar) -> *const c_char;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_path_bar_get_item_at(
+        self_: *mut AwraPathBar,
+        x: c_double,
+        y: c_double,
+    ) -> *mut AwraBreadcrumbItem;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_path_bar_get_model(self_: *mut AwraPathBar) -> *mut gio::GListModel;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_path_bar_get_placeholder_text(self_: *mut AwraPathBar) -> *const c_char;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_path_bar_get_suggestions(self_: *mut AwraPathBar) -> *mut gio::GListModel;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_path_bar_get_text(self_: *mut AwraPathBar) -> *const c_char;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_path_bar_set_drop_item(self_: *mut AwraPathBar, item: *mut AwraBreadcrumbItem);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_path_bar_set_editing(self_: *mut AwraPathBar, editing: gboolean);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_path_bar_set_end_widget(self_: *mut AwraPathBar, widget: *mut gtk::GtkWidget);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_path_bar_set_icon_name(self_: *mut AwraPathBar, icon_name: *const c_char);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_path_bar_set_model(self_: *mut AwraPathBar, model: *mut gio::GListModel);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_path_bar_set_placeholder_text(self_: *mut AwraPathBar, text: *const c_char);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_path_bar_set_suggestions(self_: *mut AwraPathBar, model: *mut gio::GListModel);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_path_bar_set_text(self_: *mut AwraPathBar, text: *const c_char);
+
+    //=========================================================================
     // AwraPopover
     //=========================================================================
     pub fn awra_popover_get_type() -> GType;
@@ -3777,6 +4037,11 @@ unsafe extern "C" {
         self_: *mut AwraSelectionToolbar,
     ) -> *mut gtk::GtkWidget;
     pub fn awra_selection_toolbar_get_auto_hide(self_: *mut AwraSelectionToolbar) -> gboolean;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_selection_toolbar_get_clear_label(
+        self_: *mut AwraSelectionToolbar,
+    ) -> *const c_char;
     pub fn awra_selection_toolbar_get_model(
         self_: *mut AwraSelectionToolbar,
     ) -> *mut gtk::GtkSelectionModel;
@@ -3792,6 +4057,12 @@ unsafe extern "C" {
     pub fn awra_selection_toolbar_set_auto_hide(
         self_: *mut AwraSelectionToolbar,
         auto_hide: gboolean,
+    );
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_selection_toolbar_set_clear_label(
+        self_: *mut AwraSelectionToolbar,
+        label: *const c_char,
     );
     pub fn awra_selection_toolbar_set_model(
         self_: *mut AwraSelectionToolbar,
@@ -4142,12 +4413,37 @@ unsafe extern "C" {
     ) -> *mut gtk::GtkWidget;
     pub fn awra_tab_view_close_page(self_: *mut AwraTabView, page: *mut gtk::GtkWidget);
     pub fn awra_tab_view_get_content_visible(self_: *mut AwraTabView) -> gboolean;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_tab_view_get_insertion_position(self_: *mut AwraTabView, x: c_double) -> c_uint;
+    pub fn awra_tab_view_get_page_tab(
+        self_: *mut AwraTabView,
+        page: *mut gtk::GtkWidget,
+    ) -> *mut gtk::GtkWidget;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_tab_view_get_scroll_selects(self_: *mut AwraTabView) -> gboolean;
     pub fn awra_tab_view_get_selected_name(self_: *mut AwraTabView) -> *const c_char;
     pub fn awra_tab_view_get_selected_page(self_: *mut AwraTabView) -> *mut gtk::GtkWidget;
     pub fn awra_tab_view_get_stack(self_: *mut AwraTabView) -> *mut gtk::GtkStack;
     pub fn awra_tab_view_get_tab_bar(self_: *mut AwraTabView) -> *mut gtk::GtkWidget;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_tab_view_hide_placeholder(self_: *mut AwraTabView);
     pub fn awra_tab_view_remove(self_: *mut AwraTabView, page: *mut gtk::GtkWidget);
+    pub fn awra_tab_view_reorder_page(
+        self_: *mut AwraTabView,
+        page: *mut gtk::GtkWidget,
+        position: c_uint,
+    );
     pub fn awra_tab_view_set_content_visible(self_: *mut AwraTabView, visible: gboolean);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_tab_view_set_page_dragged(
+        self_: *mut AwraTabView,
+        page: *mut gtk::GtkWidget,
+        dragged: gboolean,
+    );
     #[cfg(feature = "v1_1")]
     #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_tab_view_set_page_icon(
@@ -4179,8 +4475,14 @@ unsafe extern "C" {
         page: *mut gtk::GtkWidget,
         tooltip: *const c_char,
     );
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_tab_view_set_scroll_selects(self_: *mut AwraTabView, selects: gboolean);
     pub fn awra_tab_view_set_selected_name(self_: *mut AwraTabView, name: *const c_char);
     pub fn awra_tab_view_set_selected_page(self_: *mut AwraTabView, page: *mut gtk::GtkWidget);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_tab_view_show_placeholder(self_: *mut AwraTabView, position: c_uint);
 
     //=========================================================================
     // AwraTagEntry
@@ -4433,6 +4735,33 @@ unsafe extern "C" {
     pub fn awra_toolbar_set_start_widget(self_: *mut AwraToolbar, widget: *mut gtk::GtkWidget);
 
     //=========================================================================
+    // AwraTransitionBin
+    //=========================================================================
+    pub fn awra_transition_bin_get_type() -> GType;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_transition_bin_new() -> *mut gtk::GtkWidget;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_transition_bin_get_child(self_: *mut AwraTransitionBin) -> *mut gtk::GtkWidget;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_transition_bin_get_fixed_top(self_: *mut AwraTransitionBin) -> c_int;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_transition_bin_play(
+        self_: *mut AwraTransitionBin,
+        offset_x: c_double,
+        offset_y: c_double,
+    );
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_transition_bin_set_child(self_: *mut AwraTransitionBin, child: *mut gtk::GtkWidget);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_transition_bin_set_fixed_top(self_: *mut AwraTransitionBin, height: c_int);
+
+    //=========================================================================
     // AwraVolumeControl
     //=========================================================================
     #[cfg(feature = "v1_1")]
@@ -4545,6 +4874,55 @@ unsafe extern "C" {
     #[cfg(feature = "v1_1")]
     #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
     pub fn awra_window_set_overlay_chrome(self_: *mut AwraWindow, overlaid: gboolean);
+
+    //=========================================================================
+    // AwraZoomController
+    //=========================================================================
+    pub fn awra_zoom_controller_get_type() -> GType;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_zoom_controller_new(target: *mut gtk::GtkWidget) -> *mut AwraZoomController;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_zoom_controller_get_scale(self_: *mut AwraZoomController) -> c_double;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_zoom_controller_get_scale_text(self_: *mut AwraZoomController) -> gboolean;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_zoom_controller_get_target(self_: *mut AwraZoomController) -> *mut gtk::GtkWidget;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_zoom_controller_handle_scroll(
+        self_: *mut AwraZoomController,
+        delta: c_double,
+        modifiers: gdk::GdkModifierType,
+    ) -> gboolean;
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_zoom_controller_reset(self_: *mut AwraZoomController);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_zoom_controller_set_range(
+        self_: *mut AwraZoomController,
+        minimum: c_double,
+        maximum: c_double,
+    );
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_zoom_controller_set_scale(self_: *mut AwraZoomController, scale: c_double);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_zoom_controller_set_scale_text(
+        self_: *mut AwraZoomController,
+        scale_text: gboolean,
+    );
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_zoom_controller_zoom_in(self_: *mut AwraZoomController);
+    #[cfg(feature = "v1_1")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_1")))]
+    pub fn awra_zoom_controller_zoom_out(self_: *mut AwraZoomController);
 
     //=========================================================================
     // Other functions
