@@ -101,22 +101,23 @@ export function buildRoom(def: RoomDef, flags: Record<string, unknown> = {}): Ro
       if (side === 'd') set(i, h - 1, T.Empty);
     }
   };
-  for (const side of ['l', 'r', 'u', 'd'] as const) for (const s of def.exits[side] ?? []) open(side, s);
   for (const r of def.solid ?? []) rect(r, T.Solid);
   for (const r of def.hole ?? []) rect(r, T.Empty);
+  // Openings always win over the room's masses.
+  for (const side of ['l', 'r', 'u', 'd'] as const) for (const s of def.exits[side] ?? []) open(side, s);
   for (const [x, y, len] of def.plat ?? []) rect([x, y, len, 1], T.Platform);
   for (const r of def.spike ?? []) rect([r[0], r[1], r[2], r[3] || 1], T.Spikes);
   for (const r of def.ink ?? []) rect(r, T.Ink);
   for (const r of def.water ?? []) rect(r, T.Water);
   (def.brk ?? []).forEach((r, i) => {
     const flag = `${def.id}:brk${i}`;
-    if (!flags[flag]) rect(r, T.Breakable, flag);
+    rect(r, flags[flag] ? T.Empty : T.Breakable, flags[flag] ? undefined : flag);
   });
   (def.slam ?? []).forEach((r, i) => {
     const flag = `${def.id}:slam${i}`;
-    if (!flags[flag]) rect(r, T.Slam, flag);
+    rect(r, flags[flag] ? T.Empty : T.Slam, flags[flag] ? undefined : flag);
   });
-  for (const [x, y, gw, gh, flag] of def.gate ?? []) if (!flags[flag]) rect([x, y, gw, gh], T.Gate, flag);
+  for (const [x, y, gw, gh, flag] of def.gate ?? []) rect([x, y, gw, gh], flags[flag] ? T.Empty : T.Gate, flags[flag] ? undefined : flag);
   return { def, id: def.id, w, h, gx: def.at[0] * CELL_W, gy: def.at[1] * CELL_H, tiles, owner };
 }
 

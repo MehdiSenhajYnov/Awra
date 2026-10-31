@@ -23,7 +23,7 @@ export const GOUTTIERES: RoomDef[] = [
   {
     id: 'g_lutrin', zone: 'gouttieres', at: [6, 2], bg: 'a',
     exits: { l: [[11, 14]], r: [[11, 14]], u: [[14, 17]] },
-    solid: [[0, 15, 32, 3], [11, 1, 2, 10], [19, 1, 2, 10], [0, 0, 14, 1], [18, 0, 14, 1]],
+    solid: [[0, 15, 32, 3], [11, 1, 3, 12], [18, 1, 3, 12], [0, 0, 14, 1], [18, 0, 14, 1]],
     ents: [['lectern', 25, 14], ['hint', 16, 14, { text: 'wall' }]],
   },
   {
@@ -67,8 +67,11 @@ export const GOUTTIERES: RoomDef[] = [
   {
     id: 'g_sortie', zone: 'gouttieres', at: [10, 4], bg: 'b',
     exits: { l: [[11, 14]], r: [[11, 14]] },
-    solid: [[0, 15, 32, 3]],
-    plat: [[12, 10, 8]],
-    ents: [['lectern', 8, 14], ['page', 16, 9, { value: '10' }], ['hint', 22, 14, { text: 'heal' }]],
+    plat: [[12, 11, 8]],
+    solid: [[0, 15, 32, 3], [29, 0, 3, 11]],
+    ents: [
+      ['lectern', 8, 14], ['page', 16, 10, { value: '10' }], ['hint', 20, 14, { text: 'heal' }],
+      ['bell', 16, 12, { flag: 'g_timed', timed: 48, bars: [[29, 11, 1, 4]] }],
+    ],
   },
 ];

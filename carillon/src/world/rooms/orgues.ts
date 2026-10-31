@@ -51,7 +51,7 @@ export const ORGUES: RoomDef[] = [
     id: 'o_arene', zone: 'orgues', at: [13, 6], size: [2, 1], bg: 'b',
     exits: { l: [[11, 14]], d: [[14, 17]] },
     solid: [[0, 15, 64, 3]],
-    spike: [[59, 14, 4, 1], [1, 14, 3, 1]],
+    spike: [[59, 14, 4, 1]],
     plat: [[14, 10, 6], [44, 10, 6], [28, 6, 8]],
     hole: [[14, 15, 4, 3]],
     gate: [[14, 15, 4, 1, 'boss_souffleur']],

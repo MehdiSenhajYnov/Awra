@@ -6,7 +6,7 @@ export const FONDERIE: RoomDef[] = [
   {
     id: 'f_porche', zone: 'fonderie', at: [14, 3], size: [2, 1], title: true, bg: 'a',
     exits: { l: [[11, 14]], r: [[2, 5]] },
-    solid: [[0, 15, 64, 3], [0, 0, 64, 2], [18, 4, 5, 8], [28, 6, 36, 9]],
+    solid: [[0, 15, 64, 3], [0, 0, 64, 2], [18, 4, 6, 8], [28, 6, 36, 9]],
     ents: [['hint', 25, 14, { text: 'wall' }], ['scorie', 10, 14], ['fondeur', 40, 5], ['page', 56, 5, { value: '4' }]],
   },
   {
@@ -45,11 +45,11 @@ export const FONDERIE: RoomDef[] = [
   {
     id: 'f_creusets', zone: 'fonderie', at: [15, 5], bg: 'b',
     exits: { r: [[11, 14]], d: [[14, 17]] },
-    solid: [[0, 15, 32, 3], [0, 0, 32, 3], [4, 10, 5, 5]],
+    solid: [[0, 15, 32, 3], [0, 0, 32, 3], [4, 11, 5, 4]],
     hole: [[14, 15, 4, 3]],
     ink: [[20, 15, 6, 2]],
     plat: [[13, 15, 6], [19, 11, 8]],
-    ents: [['fondeur', 6, 9], ['fondeur', 23, 10], ['scorie', 28, 14], ['shard', 2, 14, { id: 'shard_f2' }]],
+    ents: [['fondeur', 6, 10], ['fondeur', 23, 10], ['scorie', 28, 14], ['shard', 2, 14, { id: 'shard_f2' }]],
   },
   {
     id: 'f_cave', zone: 'fonderie', at: [15, 6], bg: 'a',
@@ -70,7 +70,7 @@ export const FONDERIE: RoomDef[] = [
     id: 'f_sortie', zone: 'fonderie', at: [19, 5], bg: 'a',
     exits: { l: [[11, 14]] },
     solid: [[0, 15, 32, 3]],
-    plat: [[18, 10, 6]],
-    ents: [['vessel', 21, 9, { id: 'vessel_f' }], ['hint', 8, 14, { text: 'swap' }], ['lectern', 12, 14]],
+    plat: [[18, 11, 6]],
+    ents: [['vessel', 21, 10, { id: 'vessel_f' }], ['hint', 8, 14, { text: 'swap' }], ['lectern', 12, 14]],
   },
 ];
