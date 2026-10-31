@@ -21,7 +21,7 @@ function play(s: GameState, seconds: number, pace = 2.5, log?: string[]): void {
     if (s.floor >= 3) {
       for (const p of PERKS) buyPerk(s, p.id);
       const realm = s.realm;
-      bankrupt(s);
+      log?.push(`+${bankrupt(s)} shares`);
       for (const p of PERKS) while (buyPerk(s, p.id));
       log?.push(`realm ${realm} done at ${Math.round(s.time / 60)} min`);
       if (s.ended) return;

@@ -369,7 +369,7 @@ function checkMilestones(s: GameState): void {
 }
 
 /** Later realms ask for more, so the board's perks speed them up without trivialising them. */
-export const REALM_GOAL_FACTOR = [1, 4, 16, 64];
+export const REALM_GOAL_FACTOR = [1, 3, 9, 27];
 
 export function floorGoal(s: GameState): number {
   return FLOOR_GOALS[Math.min(s.floor, FLOOR_GOALS.length - 1)] * realmOf(s).mult * REALM_GOAL_FACTOR[s.realm];
@@ -463,7 +463,9 @@ export function trialAnswer(s: GameState, handIndex: number | null): TrialStep {
 /** Holding shares a bankruptcy would pay out now. */
 export function sharesFor(s: GameState): number {
   if (s.floor < FLOORS) return 0;
-  return 3 + s.realm * 2 + Math.floor(Math.sqrt(s.lifetime / (realmOf(s).mult * 300000)));
+  // Staying longer in a conquered realm pays, with diminishing returns.
+  const final = FLOOR_GOALS[FLOOR_GOALS.length - 1] * realmOf(s).mult * REALM_GOAL_FACTOR[s.realm];
+  return 3 + s.realm * 2 + Math.floor(3 * Math.sqrt(Math.max(0, s.lifetime / final - 1)));
 }
 
 /** "Fraudulent bankruptcy": cash in shares and move to the next realm (or replay hell after the end). */
