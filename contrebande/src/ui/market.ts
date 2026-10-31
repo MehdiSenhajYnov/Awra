@@ -154,6 +154,9 @@ export function showMarket(run: RunState, onCross: (lane: number) => void): void
       h('span.muted', {}, t.market.rotate),
       button(t.market.unpack, () => { run.pieces.forEach((p) => { if (def(p).kind !== 'tool') p.x = -1; }); audio.play('zip'); save(); refresh(); }, 'small ghost'));
     const scale = Math.min(cell, 56);
+    // First steps: make the stock pulse until something is packed.
+    const packed = run.pieces.some((p) => isPlaced(p) && def(p).kind !== 'tool');
+    stock.classList.toggle('hint', inStock.length > 0 && !packed && run.border === 1);
     stock.replaceChildren(...(inStock.length ? inStock.map((p) => {
       const el = pieceEl({ ...p, rot: false }, scale);
       el.classList.add('in-stock');

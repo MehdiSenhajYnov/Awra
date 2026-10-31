@@ -191,6 +191,8 @@ h1, h2, h3 { margin: 0; font-weight: 800; }
 .stock-head .muted { color: #e9d9b3; flex: 1; }
 .stock { flex: 1; min-height: 0; background: #2f1d12cc; border: 3px dashed #c9a46b; border-radius: 12px; padding: 10px; display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start; overflow-y: auto; }
 .stock .muted { color: #e9d9b3; margin: auto; }
+.stock.hint { animation: hint 1.4s ease-in-out infinite; }
+@keyframes hint { 50% { border-color: var(--mustard); box-shadow: 0 0 24px #e3a72866; } }
 .piece.in-stock { position: relative; background: #f3e7cc22; border-radius: 6px; }
 
 .right { position: absolute; right: 16px; top: 80px; width: 520px; bottom: 16px; display: flex; flex-direction: column; gap: 10px; }
