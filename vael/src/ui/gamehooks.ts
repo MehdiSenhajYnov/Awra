@@ -71,6 +71,7 @@ export class GameHooks {
         const b = s.boss!;
         s.cameraFocus = { x: (s.player.cx + b.cx) / 2, y: b.cy - 80 };
         this.app.view.camera.setZoom(0.9);
+        this.app.hideZoneTitle();
         this.app.push(new BossCard(arg));
         setTimeout(() => {
           s.cameraFocus = null;

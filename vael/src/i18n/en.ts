@@ -251,7 +251,7 @@ export const EN = {
     gate: 'Down + {blade} in the air: the blade passes through the grate. Then {blink}.',
     forge: 'Master Vey works at the back of the hall. Star iron will loosen his tongue.',
     crystal: 'Black crystal. A comet rush would shatter it.',
-    eye: 'The blade passes through grates. Aim for the star eye: Up + {blade} throws upward.',
+    eye: 'The blade passes through grates. From the ledge, throw it ({blade}) at the star eye.',
     end: 'End of the Crown. The rest of the kingdom is under construction.',
     heal: 'Hold {heal}: heal with the Lumen gained by striking',
   },

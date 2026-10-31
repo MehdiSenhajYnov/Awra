@@ -19,6 +19,7 @@ import { Hud } from './hud';
 import { ChoiceBox, type Modal } from './modals';
 import { TitleScreen } from './title';
 import { Cinematic } from './cinematic';
+import { ControlsScreen } from './controls';
 import { Inventory } from './inventory';
 import { MapScreen } from './map';
 import { GameHooks } from './gamehooks';
@@ -123,7 +124,7 @@ export class App {
         });
       },
       options: () => this.openOptions(),
-      credits: () => {},
+      credits: () => this.push(new Cinematic([{ lines: tl('credits'), title: 'VAEL' }], () => {})),
       quit: () => (window as unknown as { carillonDesktop?: { quit(): void }; vaelDesktop?: { quit(): void } }).vaelDesktop?.quit(),
     });
     this.overlay.addChild(this.title.c);
@@ -160,6 +161,10 @@ export class App {
     this.onBlack = fn;
   }
 
+  hideZoneTitle(): void {
+    this.zoneT = 0;
+  }
+
   push(m: Modal): void {
     this.modals.push(m);
     this.overlay.addChild(m.c);
@@ -185,6 +190,8 @@ export class App {
       { label: () => `${t('options.sfx')} : ${pct(st.sfx)}`, adjust: (d) => { st.sfx = Math.max(0, Math.min(1, st.sfx + d * 0.1)); audio.setVolumes(st.music, st.sfx); audio.play('hit'); } },
       { label: () => `${t('options.shake')} : ${pct(st.shake)}`, adjust: (d) => { st.shake = Math.max(0, Math.min(1, st.shake + d * 0.25)); this.view.camera.shakeScale = st.shake; } },
       { label: () => `${t('options.lang')} : ${st.lang === 'fr' ? 'Français' : 'English'}`, adjust: () => { st.lang = st.lang === 'fr' ? 'en' : 'fr'; setLang(st.lang); }, action: () => { st.lang = st.lang === 'fr' ? 'en' : 'fr'; setLang(st.lang); } },
+      { label: () => t('options.keys'), action: () => this.push(new ControlsScreen(() => { st.bindings = { ...input.bindings }; writeSettings(st); })) },
+      { label: () => `${t('options.fullscreen')} : ${document.fullscreenElement ? t('options.on') : t('options.off')}`, action: () => { if (document.fullscreenElement) void document.exitFullscreen(); else void document.documentElement.requestFullscreen?.(); } },
       { label: () => t('menu.back'), action: () => { box.closed = true; } },
     ]);
     this.push(box);

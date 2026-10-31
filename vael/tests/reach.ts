@@ -21,6 +21,7 @@ export interface ReachResult {
   bosses: Set<string>;
   heart: boolean;
   log: string[];
+  positions: string[];
 }
 
 function macros(s: Scene): { name: string; m: Macro; frames: number }[] {
@@ -128,7 +129,7 @@ function macros(s: Scene): { name: string; m: Macro; frames: number }[] {
 export function explore(opts: { ban?: string; maxRounds?: number; verbose?: boolean } = {}): ReachResult {
   const save = newSave(1);
   save.notches = 3;
-  const res: ReachResult = { rooms: new Set(), flags: new Set(), abilities: new Set(), bosses: new Set(), heart: false, log: [] };
+  const res: ReachResult = { rooms: new Set(), flags: new Set(), abilities: new Set(), bosses: new Set(), heart: false, log: [], positions: [] };
   const scene = new Scene(save, { roomDef: (id) => roomDef(id), neighbour, spawn: spawnEntity });
   scene.headless = true;
   scene.god = true;
@@ -248,6 +249,7 @@ export function explore(opts: { ban?: string; maxRounds?: number; verbose?: bool
     const after = `${save.abilities.length}|${Object.keys(save.flags).length}`;
     if (opts.verbose) console.log(`round ${round}: ${seen.size} positions, ${res.rooms.size} rooms, abilities ${[...save.abilities].join(',')}, ${steps} macros`);
     res.log.push(`round ${round}: ${seen.size} positions, rooms ${res.rooms.size}`);
+    res.positions = [...seen];
     if (after === before) break;
   }
   return res;

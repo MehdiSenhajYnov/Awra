@@ -17,23 +17,23 @@ export const COURONNE: RoomDef[] = [
     // A long gallery: first foes, first pit of thorns, a cracked wall hiding a life shard.
     id: 'c_galerie', zone: 'couronne', at: [9, 5], size: [2, 1],
     exits: { l: [[18, 21]], r: [[18, 21]] },
-    solid: [[0, 22, 96, 5], [0, 0, 96, 4], [26, 22, 0, 0], [44, 16, 10, 6], [62, 4, 4, 9], [78, 19, 18, 3]],
+    solid: [[0, 22, 96, 5], [0, 0, 96, 4], [44, 16, 10, 6], [60, 12, 20, 4], [78, 16, 2, 6]],
     hole: [[30, 22, 8, 5]],
     spike: [[30, 26, 8, 1]],
-    brk: [[62, 13, 4, 3, 'crack_c1']],
+    brk: [[60, 16, 2, 6, 'crack_c1']],
     ents: [
-      ['hint', 6, 21, { text: 'attack' }], ['acarien', 20, 21], ['acarien', 50, 15], ['coquille', 70, 21],
-      ['tablet', 56, 21, { lore: 'l3' }], ['crack', 64, 15, { flag: 'crack_c1', w: 4, h: 3 }], ['shard', 64, 8, { id: 'shard_c1' }],
+      ['hint', 6, 21, { text: 'attack' }], ['acarien', 20, 21], ['acarien', 50, 15], ['coquille', 88, 21],
+      ['tablet', 40, 21, { lore: 'l3' }], ['crack', 61, 21, { flag: 'crack_c1', w: 2, h: 6 }], ['shard', 70, 21, { id: 'shard_c1' }],
     ],
   },
   {
     // The shaft: too high to jump. Throw the blade into the wall while rising, land on it, go higher.
     id: 'c_puits', zone: 'couronne', at: [11, 4], size: [1, 2],
     exits: { l: [[45, 48]], r: [[6, 9]] },
-    solid: [[0, 49, 48, 5], [0, 0, 6, 45], [42, 10, 6, 44], [6, 37, 14, 3], [28, 26, 14, 3], [6, 14, 16, 3], [36, 0, 12, 6]],
-    plat: [[22, 44, 6]],
+    solid: [[0, 49, 48, 5], [0, 0, 6, 45], [42, 10, 6, 44], [26, 37, 16, 3], [26, 40, 2, 9], [6, 28, 16, 3], [26, 19, 12, 3], [30, 10, 12, 3], [36, 0, 12, 6]],
+    plat: [[18, 13, 5]],
     ents: [
-      ['hint', 12, 48, { text: 'blade' }], ['lampion', 24, 22], ['vessel', 9, 12, { id: 'vessel_c1' }], ['acarien', 34, 25],
+      ['hint', 16, 48, { text: 'blade' }], ['lampion', 16, 20], ['vessel', 9, 27, { id: 'vessel_c1' }], ['acarien', 34, 36],
     ],
   },
   {
@@ -61,22 +61,21 @@ export const COURONNE: RoomDef[] = [
     // The watcher's tower: the Grey Warden on his ledge, a vial fragment for climbers.
     id: 'c_tour', zone: 'couronne', at: [13, 6],
     exits: { l: [[18, 21]], r: [[18, 21]] },
-    solid: [[0, 22, 48, 5], [0, 0, 48, 3], [18, 9, 12, 3], [40, 3, 8, 12], [4, 3, 4, 12]],
+    solid: [[0, 22, 48, 5], [0, 0, 48, 3], [18, 9, 12, 3], [40, 3, 8, 9], [4, 3, 4, 12]],
     plat: [[10, 15, 5], [33, 15, 5]],
     ents: [['npc', 24, 8, { who: 'veilleur' }], ['coquille', 36, 21], ['shard', 44, 14, { id: 'shard_c2' }], ['chant', 27, 8, { value: 'couronne', id: 'chant_c' }]],
   },
   {
-    // The choir: an eye behind a grate opens the way; spikes; the dash gap to the windows (later).
+    // The choir: an iron gate; through the bars beside it, a star eye that opens it. Thorns, then the dash gap.
     id: 'c_choeur', zone: 'couronne', at: [14, 5], size: [2, 1],
     exits: { l: [[13, 16]], r: [[18, 21]], d: [[80, 85]] },
-    solid: [[0, 17, 30, 10], [0, 0, 96, 3], [30, 22, 50, 5], [86, 22, 10, 5], [44, 12, 4, 10], [60, 3, 4, 10]],
-    spike: [[48, 21, 10, 1], [70, 21, 10, 1]],
-    hole: [[80, 22, 6, 5]],
-    grate: [[44, 3, 4, 9]],
-    brk: [[78, 10, 2, 12, 'gate_c1']],
-    plat: [[52, 15, 5], [66, 16, 4]],
+    solid: [[0, 17, 30, 10], [0, 0, 96, 3], [30, 22, 32, 5], [62, 22, 18, 5], [86, 22, 10, 5], [62, 3, 2, 7]],
+    spike: [[36, 21, 7, 1], [47, 21, 6, 1]],
+    grate: [[62, 10, 2, 4]],
+    brk: [[62, 14, 2, 8, 'gate_c1']],
+    plat: [[40, 16, 5], [54, 14, 5], [88, 15, 5]],
     ents: [
-      ['eye', 46, 6, { flag: 'gate_c1' }], ['hint', 36, 21, { text: 'eye' }], ['lampion', 56, 8], ['coquille', 40, 21], ['acarien', 90, 21],
+      ['eye', 68, 13, { flag: 'gate_c1' }], ['hint', 56, 13, { text: 'eye' }], ['lampion', 46, 8], ['coquille', 34, 21], ['acarien', 72, 21], ['coquille', 90, 21],
     ],
   },
   {

@@ -319,7 +319,7 @@ export const FR = {
     gate: 'Bas + {blade} en l\'air : la lame passe à travers la grille. Puis {blink}.',
     forge: 'Maître Vey forge au fond de la salle. Le fer d\'étoile le rendra bavard.',
     crystal: 'Du cristal noir. Une ruée de comète le briserait.',
-    eye: 'La lame traverse les grilles. Visez l\'œil d\'étoile : Haut + {blade} pour lancer vers le haut.',
+    eye: 'La lame traverse les grilles. Depuis la corniche, lancez-la ({blade}) sur l\'œil d\'étoile.',
     end: 'Fin de la démonstration de la Couronne. La suite du royaume est en construction.',
     heal: '{heal} maintenu : se soigner avec le Lumen gagné en frappant',
   },
