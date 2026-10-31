@@ -83,7 +83,7 @@ button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
   padding: 2px 12px; transform: rotate(-14deg); opacity: 0.85; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.1em;
   animation: stamp-in 0.5s 0.4s both cubic-bezier(0.2, 1.6, 0.4, 1);
 }
-.tagline { font-style: italic; text-align: center; margin: 6px 0 10px; color: var(--ink-soft); }
+.tagline { font-style: italic; text-align: center; margin: 40px 0 10px; color: var(--ink-soft); }
 .menu { display: flex; flex-direction: column; gap: 10px; width: 420px; }
 .version { position: absolute; right: 18px; bottom: 10px; margin: 0; font-size: 0.75em; color: var(--ink-soft); }
 
