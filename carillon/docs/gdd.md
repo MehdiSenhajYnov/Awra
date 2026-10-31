@@ -25,28 +25,29 @@ Ce système crée un vrai plafond de compétence :
 
 | Action | Clavier | Manette |
 |---|---|---|
-| Déplacer | flèches / ZQSD | stick, croix |
-| Sauter | Espace / C | A |
+| Déplacer | flèches / WASD (positions physiques) | stick, croix |
+| Sauter (maintenir pour monter plus haut) | Espace / Z | A |
 | Frapper (haut/bas selon la direction tenue) | X / J | X |
 | Note juste (parade) | V / K | LB |
-| Écho / Contretemps (maintenir) | F / L | Y |
-| Accord (soin, maintenir) | A / U | B |
-| Glissando (dash) | Maj / I | RB |
-| Carte, inventaire | Tab / M | Select |
-| Pause | Échap | Start |
+| Écho, puis Contretemps | F / L | Y |
+| Accord (soin, maintenir) | C / U | B |
+| Glissando (dash) ; Frappe : bas + Glissando en l’air ; Appel : Glissando près d’une cloche-ancre | Maj / I | RB / RT |
+| Interagir (lutrin, personnage) | Haut | Haut |
+| Carte | Tab / M | Select |
+| Pause | Échap / P | Start |
 
-Les touches sont reconfigurables.
+Les touches du clavier sont reconfigurables dans les options.
 
 ## Physique (60 images/s, tuile de 20 px, écran de 32×18 tuiles)
 
 | Mouvement | Valeur |
 |---|---|
 | Course | 3,1 px/image |
-| Saut | 4,5 tuiles (saut variable) |
+| Saut | 5 tuiles (saut variable, zoom de caméra ×1,2) |
 | Glissando | 3,6 tuiles en 12 images, sans gravité, une fois en l'air |
 | Double saut | 3,3 tuiles |
-| Mur | glissade à 2,5 px/image ; saut mural 3 tuiles en arrière |
-| Rebond sur coup vers le bas (pogo) | 3,4 tuiles |
+| Mur | glissade à 2,4 px/image ; saut mural vers l’arrière, escalade de cheminées de 4 tuiles |
+| Rebond sur coup vers le bas (pogo, ennemis et pointes) | 3,4 tuiles |
 
 ## Combat
 
@@ -59,30 +60,39 @@ Les touches sont reconfigurables.
 
 ## Progression
 
-| Zone | Capacité gagnée | Grande cloche (boss) |
-|---|---|---|
-| 1. Le Beffroi | Écho | Le Sonneur Déchu |
-| 2. Les Gouttières | Glissando | La Gargouille |
-| 3. La Fonderie | Crampons (saut mural) | Mère Coulée |
-| 4. Les Orgues | Contretemps | Le Souffleur |
-| 5. La Crypte | Envolée (double saut) | Les Jumeaux Glas |
-| 6. Le Jardin de Verre | Frappe (coup plongeant qui brise les dalles) | La Cantatrice |
-| 7. Les Cisternes | Appel (traction vers les cloches-ancres) | Le Noyé |
-| 8. L'Horlogerie | Clé du Bourdon | L'Échappement |
-| 9. Le Bourdon | — | Le Silence (deux phases) |
+L’Écho est donné dès le Beffroi par Maître Glas. Chaque grande cloche rendue donne la capacité qui ouvre la zone suivante. Le vérificateur de parcours (`tests/reach.test.ts`) prouve à la fois que cet ordre est faisable et que chaque capacité est réellement nécessaire.
+
+| Zone | Accès nécessite | Grande cloche (boss) | Récompense |
+|---|---|---|---|
+| 1. Le Beffroi | — (Écho trouvé sur place) | Le Sonneur Déchu | Glissando |
+| 2. Les Gouttières | Glissando | La Gargouille | Crampons |
+| 3. La Fonderie | Crampons | Mère Coulée | Contretemps |
+| 4. Les Orgues | Contretemps (grilles à minuterie) | Le Souffleur | Envolée |
+| 5. La Crypte | Envolée | Les Jumeaux Glas | Frappe |
+| 6. Le Jardin de Verre | Frappe (dalles fêlées) | La Cantatrice | Appel |
+| 7. Les Cisternes | Appel (eau noire) | Le Noyé | Fiole de Résonance |
+| 8. L’Horlogerie | Victoire sur le Noyé | L’Échappement | Portée de Notes |
+| 9. Le Bourdon | Les huit grandes cloches | Le Silence | Fin |
+
+Deux fins. La meilleure demande d’avoir écouté Maître Glas après la huitième cloche, puis de faire sonner ensemble les trois cloches de l’arène finale (avec ses Échos).
 
 ## Contenu au lancement
 
-- 9 zones et environ 100 salles.
-- 9 boss principaux et 3 Variations (boss remixés, plus difficiles).
-- 19 types d'ennemis.
-- 16 Notes (équipements, à la manière de charmes) dans 3 à 6 emplacements.
-- 12 éclats de cloche, 3 fioles de Résonance, 4 améliorations d'étain, 20 partitions de récit.
-- 3 marchands et personnages, un lutrin par zone ou plus.
-- Une carte automatique et des voyages rapides entre les lutrins découverts.
-- Après la fin : **mode Fêlé** (dégâts doublés, pas de Glas) et **Salle des Variations** (enchaînement des boss).
+- **82 salles** (114 écrans) dans 9 zones, dont 7 Épreuves optionnelles (une par capacité) et 3 Variations.
+- **12 combats de boss** : 9 grandes cloches à trois phases et 3 Variations plus rapides et plus résistantes (Sonneur Déchu, Jumeaux Glas, Échappement).
+- **18 types d’ennemis**, avec 15 comportements : rampants, volants, gardes à bouclier, tourelles, sauteurs, bretteurs, chargeurs, drainants, plongeurs, engrenages, et l’Ombre qui marche là où vous étiez.
+- **16 Notes** dans 3 à 6 emplacements : 11 cachées dans le monde, 5 vendues.
+- **19 éclats de cloche** (17 à trouver, 2 en boutique) : 16 suffisent pour les 4 cloches de vie supplémentaires. 7 fioles de Résonance (6 charges au plus). 3 Portées supplémentaires (6 emplacements). 4 niveaux d’étain pour le marteau.
+- **20 partitions de récit**, 5 personnages (Maître Glas, Madame Tierce, la Fondeuse, Fa, le Gardien muet).
+- Carte automatique, voyage rapide entre les lutrins, Glas à récupérer après la mort.
+- Ennemis qui restent morts jusqu’au prochain repos.
+- Après la fin : **mode Fêlé** (dégâts doublés, pas de Glas) et **Salle des Variations** (les 9 gardiens à la suite, chronométrés).
 
 ## Durée visée
 
-- Chemin principal : 5 à 6 h pour un joueur habitué au genre.
-- 100 % : 8 h ou plus.
+Estimation, pas une mesure :
+
+- Chemin principal : 5 à 7 h pour un joueur qui découvre (114 écrans, 9 boss, morts et allers-retours compris).
+- 100 % : 8 à 10 h (Épreuves, Variations, objets cachés).
+
+Un robot invulnérable qui frappe sans esquiver met entre 12 s et 1 min 45 par boss : ce sont des durées planchers. Un joueur qui doit esquiver met 2 à 4 fois plus longtemps par tentative.

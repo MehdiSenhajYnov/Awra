@@ -41,6 +41,8 @@ export abstract class Entity {
   /** Not counted for "room cleared" and not drawn with a health flash. */
   prop = false;
   t = 0;
+  /** Where it was placed in the world, to remember slain foes. */
+  uid = '';
 
   constructor(public scene: Scene, x: number, y: number, w: number, h: number) {
     // x, y: feet position in pixels.

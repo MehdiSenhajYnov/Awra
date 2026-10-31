@@ -54,7 +54,7 @@ export const CRYPTE: RoomDef[] = [
     solid: [[0, 15, 64, 3], [36, 0, 4, 9], [44, 0, 4, 9]],
     slam: [[8, 15, 4, 2]],
     plat: [[38, 9, 8], [26, 11, 6], [50, 11, 6]],
-    ents: [['lamp', 40, 12], ['lamp', 18, 10], ['muet', 22, 8], ['squelette', 30, 14], ['squelette', 52, 14], ['feu', 12, 6]],
+    ents: [['lamp', 40, 12], ['lamp', 18, 10], ['muet', 22, 8], ['squelette', 30, 14], ['bedeau', 52, 14], ['feu', 12, 6]],
   },
   {
     id: 'c_caveau', zone: 'crypte', at: [8, 8], dark: true, bg: 'b',

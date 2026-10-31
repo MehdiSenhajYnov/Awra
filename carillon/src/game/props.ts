@@ -176,7 +176,8 @@ export type ItemKind = 'shard' | 'vessel' | 'tin' | 'page' | 'note' | 'ability' 
 export class Pickup extends Entity {
   light = 50;
   constructor(scene: Scene, x: number, y: number, public kind: ItemKind, public value: string, public flag: string) {
-    super(scene, x, y, 14, 14);
+    // A tall pick-up zone from the floor of its tile up: touching the glow is enough.
+    super(scene, x, y + 10, 18, 34);
     this.hurtable = false;
     this.contact = 0;
     this.prop = true;
@@ -190,7 +191,7 @@ export class Pickup extends Entity {
     }
   }
   draw(ctx: CanvasRenderingContext2D): void {
-    const y = this.cy + Math.sin(this.t * 0.06) * 3;
+    const y = this.body.y + 10 + Math.sin(this.t * 0.06) * 3;
     const color = this.kind === 'ability' ? '#fff4c8' : this.kind === 'note' ? '#a8e0ff' : this.kind === 'shard' ? '#e8b86a' : this.kind === 'vessel' ? '#ffffff' : this.kind === 'page' ? '#e8d8b0' : '#c0c8d8';
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';

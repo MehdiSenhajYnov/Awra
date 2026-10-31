@@ -55,7 +55,7 @@ export const EPREUVES: RoomDef[] = [
     solid: [[24, 15, 8, 3], [0, 17, 24, 1]],
     spike: [[0, 16, 24, 1]],
     plat: [[16, 11, 3], [8, 8, 3], [1, 11, 3]],
-    ents: [['lamp', 17, 9], ['lamp', 9, 6], ['feu', 12, 5], ['shard', 2, 10, { id: 'shard_e5' }], ['page', 9, 7, { value: '2' }]],
+    ents: [['lamp', 17, 9], ['lamp', 9, 6], ['feu', 12, 5], ['shard', 2, 10, { id: 'shard_e5' }]],
   },
   {
     // Three cracked floors stacked: plunge through each, keepers waiting between.

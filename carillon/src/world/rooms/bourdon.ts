@@ -17,7 +17,7 @@ export const BOURDON: RoomDef[] = [
     hole: [[10, 15, 4, 3]],
     ink: [[20, 15, 16, 2], [40, 15, 12, 2]],
     plat: [[24, 10, 5], [44, 10, 5], [9, 15, 6]],
-    ents: [['ombre', 50, 14], ['muet', 30, 7], ['feu', 46, 6], ['chauve', 14, 6]],
+    ents: [['ombre', 50, 14], ['muet', 30, 7], ['feu', 46, 6], ['bedeau', 56, 14], ['chauve', 14, 6]],
   },
   {
     id: 'bo_abime', zone: 'bourdon', at: [11, 13], size: [1, 2], bg: 'a',

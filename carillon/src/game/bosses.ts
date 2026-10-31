@@ -179,21 +179,35 @@ export abstract class Boss extends Entity {
       if (this.stun === 1) this.setAct('idle');
       return;
     }
-    const ratio = this.hp / this.maxHp;
-    const next = ratio < 0.33 ? 3 : ratio < 0.66 ? 2 : 1;
-    if (next > this.phase) {
-      this.phase = next;
-      this.onPhase(next);
-    }
+    this.updatePhase();
     this.think();
   }
+  /** Phases follow health; none is skipped, even under a burst of blows. */
+  updatePhase(): void {
+    const ratio = this.hp / this.maxHp;
+    const next = ratio < 0.33 ? 3 : ratio < 0.66 ? 2 : 1;
+    while (this.phase < next) {
+      this.phase++;
+      this.onPhase(this.phase);
+    }
+  }
+
+  /** Some keepers cannot fall to blows alone (the Silence waits for its bells). */
+  keepAlive(): boolean {
+    return false;
+  }
+
   onPhase(_n: number): void {
     this.scene.sfx('roar');
     this.scene.shakeBy(8);
   }
   abstract think(): void;
   damage(amount: number, fromX: number, source: DamageSource): boolean {
+    // Never skip the last phase: a killing blow first lands it at the edge of phase three.
+    if (this.phase < 3 && this.hp - amount <= 0) amount = Math.max(0, this.hp - this.maxHp * 0.3);
+    if (this.keepAlive() && this.hp - amount < 1) amount = Math.max(0, this.hp - 1);
     const ok = super.damage(amount, fromX, source);
+    if (ok && !this.dead) this.updatePhase();
     if (ok) {
       this.stagger++;
       if (this.stagger >= this.staggerAt && this.stun === 0) {
@@ -1142,14 +1156,9 @@ export class Silence extends Boss {
       this.scene.ui.toast(this.scene.uiText('toast.ringBells'));
     }
   }
-  damage(amount: number, fromX: number, source: DamageSource): boolean {
-    // In the last phase only the great bell can end it.
-    if (this.phase === 3 && this.hp - amount <= 1) {
-      this.hp = 1;
-      this.flash = 6;
-      return true;
-    }
-    return super.damage(amount, fromX, source);
+  keepAlive(): boolean {
+    // Only the great bell can end it.
+    return !this.scene.flags.final_ring;
   }
   draw(ctx: CanvasRenderingContext2D): void {
     const { x, y, w, h } = this.body;

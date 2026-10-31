@@ -67,6 +67,8 @@ export class Scene {
   god = false;
   ui: UiHooks;
   respawning = false;
+  /** Foes slain since the last rest: they stay down until the Sonneur rests or falls. */
+  killed = new Set<string>();
 
   constructor(public save: Save, ui: Partial<UiHooks> = {}) {
     const noop = () => undefined;
@@ -119,8 +121,10 @@ export class Scene {
     this.boss = null;
     this.ui.bossBar(null);
     for (const [kind, x, y, opts] of def.ents ?? []) {
-      const e = spawnEntity(this, kind, x * TILE + TILE / 2, (y + 1) * TILE, opts ?? {}, `${id}:${kind}:${x}:${y}`);
-      if (e) this.entities.push(e);
+      const uid = `${id}:${kind}:${x}:${y}`;
+      if (this.killed.has(uid)) continue;
+      const e = spawnEntity(this, kind, x * TILE + TILE / 2, (y + 1) * TILE, opts ?? {}, uid);
+      if (e) { e.uid = uid; this.entities.push(e); }
     }
     // The dropped bronze waits where the player fell.
     const g = this.save.glas;
@@ -212,12 +216,14 @@ export class Scene {
       }
     }
     if (this.modal) {
-      if (this.modal.update(this)) {
-        this.modal = null;
+      const m = this.modal;
+      if (m.update(this)) {
+        // A modal may hand over to another one (a dialogue opening a shop): keep the newcomer.
+        if (this.modal === m) this.modal = null;
         input.clearBuffer();
         return;
       }
-      if (!this.modal.live) return;
+      if (!m.live) return;
     }
     if (this.freeze > 0) { this.freeze--; return; }
     if (this.pending) return;
@@ -479,6 +485,7 @@ export class Scene {
     p.hurtT = 0;
     p.attack = null;
     this.respawning = false;
+    this.killed.clear();
     this.enter(this.save.lectern);
     writeSlot(this.save);
   }
@@ -489,6 +496,7 @@ export class Scene {
     this.applySave();
     p.hp = p.maxHp;
     this.save.lectern = this.room.id;
+    this.killed.clear();
     if (!this.save.lecterns.includes(this.room.id)) this.save.lecterns.push(this.room.id);
     writeSlot(this.save);
     this.sfx('rest');
@@ -633,6 +641,7 @@ export class Scene {
   }
 
   killFx(e: Entity): void {
+    if (e.uid && !e.prop) this.killed.add(e.uid);
     this.sfx('enemyDie', 0.8 + fx.next() * 0.4);
     this.particles.burst(e.cx, e.cy, 22, '#0a0a0e', { speed: 4, life: 40 });
     this.particles.burst(e.cx, e.cy, 10, PALETTES[this.room.def.zone].accent, { speed: 3, kind: 'spark' });

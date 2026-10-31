@@ -59,7 +59,8 @@ export class App {
 
   update(): void {
     if (this.overlay) {
-      if (this.overlay.update(null as unknown as Scene)) this.overlay = null;
+      const o = this.overlay;
+      if (o.update(null as unknown as Scene) && this.overlay === o) this.overlay = null;
       return;
     }
     this.screen.update();
@@ -183,7 +184,7 @@ function rushSave(): Save {
 // ---------------------------------------------------------------- game
 
 const ARENAS: Record<string, string> = {};
-for (const r of ROOMS) for (const e of r.ents ?? []) if (e[0] === 'arena') ARENAS[(e[3] as { boss: string }).boss] = r.id;
+for (const r of ROOMS) for (const e of r.ents ?? []) if (e[0] === 'arena' && !(e[3] as { variant?: string }).variant) ARENAS[(e[3] as { boss: string }).boss] = r.id;
 
 class GameScreen implements Screen {
   scene: Scene;

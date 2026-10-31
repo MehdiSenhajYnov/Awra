@@ -18,7 +18,7 @@ export const GOUTTIERES: RoomDef[] = [
     solid: [[0, 15, 32, 3], [4, 9, 6, 2], [22, 9, 6, 2]],
     hole: [[14, 15, 4, 3]],
     plat: [[13, 6, 6]],
-    ents: [['gargouillette', 6, 8], ['gargouillette', 25, 8], ['sonnaille', 24, 14], ['page', 15, 5, { value: '3' }]],
+    ents: [['gargouillette', 6, 8], ['gargouillette', 25, 8], ['bedeau', 24, 14], ['page', 15, 5, { value: '3' }]],
   },
   {
     id: 'g_lutrin', zone: 'gouttieres', at: [6, 2], bg: 'a',

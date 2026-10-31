@@ -224,7 +224,7 @@ export class MapScreen implements Modal {
     const s = this.scene;
     ctx.fillStyle = 'rgba(10,9,8,0.96)';
     ctx.fillRect(0, 0, VIEW_W, VIEW_H);
-    const scale = 0.55;
+    const scale = 1.3;
     const ox = VIEW_W / 2 - this.panX * scale;
     const oy = VIEW_H / 2 - this.panY * scale;
     for (const r of ROOMS) {
