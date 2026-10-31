@@ -1,8 +1,8 @@
 // Actions, not keys: keyboard (rebindable, by physical key code) and standard gamepads feed the same per-frame state.
 
-export type Action = 'left' | 'right' | 'up' | 'down' | 'jump' | 'attack' | 'blade' | 'blink' | 'art' | 'heal' | 'dash' | 'map' | 'pause' | 'confirm' | 'back';
+export type Action = 'left' | 'right' | 'up' | 'down' | 'jump' | 'attack' | 'blade' | 'blink' | 'art' | 'heal' | 'dash' | 'map' | 'inv' | 'pause' | 'confirm' | 'back';
 
-export const ACTIONS: Action[] = ['left', 'right', 'up', 'down', 'jump', 'attack', 'blade', 'blink', 'art', 'heal', 'dash', 'map', 'pause'];
+export const ACTIONS: Action[] = ['left', 'right', 'up', 'down', 'jump', 'attack', 'blade', 'blink', 'art', 'heal', 'dash', 'map', 'inv', 'pause'];
 
 export type Bindings = Record<Action, string[]>;
 
@@ -19,6 +19,7 @@ export const DEFAULT_KEYS: Bindings = {
   heal: ['KeyF', 'KeyU'],
   dash: ['ShiftLeft', 'KeyI'],
   map: ['Tab', 'KeyM'],
+  inv: ['KeyE', 'KeyB'],
   pause: ['Escape', 'KeyP'],
   confirm: ['Enter', 'Space'],
   back: ['Escape', 'Backspace'],
@@ -38,6 +39,7 @@ const PAD: Record<Action, number[]> = {
   heal: [4],
   dash: [5, 6],
   map: [8],
+  inv: [],
   pause: [9],
   confirm: [0],
   back: [1],

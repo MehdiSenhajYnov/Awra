@@ -89,7 +89,7 @@ export class GameView {
     this.vignette = new Sprite(ft.vignette);
     this.vignette.width = VIEW_W;
     this.vignette.height = VIEW_H;
-    this.vignette.alpha = 0.55;
+    this.vignette.alpha = 0.45;
     this.screenFx.addChild(this.vignette);
     r.addChild(this.screenFx);
     this.screenFx.addChild(this.flashRect);
@@ -272,11 +272,36 @@ export class GameView {
         this.platLayer.addChild(s);
       }
     }
+    // Still water.
+    for (const [x, y, w, h] of room.def.water ?? []) {
+      const g = new Graphics();
+      g.rect(x * TILE, y * TILE + 10, w * TILE, h * TILE - 10).fill({ color: 0x0a3040, alpha: 0.55 });
+      g.rect(x * TILE, y * TILE + 8, w * TILE, 3).fill({ color: 0x9ff0ff, alpha: 0.6 });
+      this.platLayer.addChild(g);
+    }
+    // Polished rock: a glassy sheen so the hero learns the blade will not bite.
+    for (const [x, y, w, h] of room.def.slick ?? []) {
+      const g = new Graphics();
+      const X = x * TILE;
+      const Y = y * TILE;
+      const W = w * TILE;
+      const H = h * TILE;
+      g.rect(X, Y, W, H).fill({ color: 0x9fb8ff, alpha: 0.07 });
+      for (let i = -H; i < W; i += 46) {
+        const x0 = Math.max(X, X + i);
+        const y0 = Y + Math.max(0, -i);
+        const len = Math.min(W - Math.max(0, i), H - Math.max(0, -i));
+        if (len > 0) g.moveTo(x0, y0).lineTo(x0 + len, y0 + len).stroke({ color: 0xcfe0ff, width: 3, alpha: 0.18 });
+      }
+      g.rect(X, Y, W, H).stroke({ color: 0xcfe0ff, width: 2, alpha: 0.35 });
+      this.platLayer.addChild(g);
+    }
     // Gloam pools.
     for (const [x, y, w, h] of room.def.gloam ?? []) {
       const g = new Graphics();
-      g.rect(x * TILE, y * TILE + 8, w * TILE, h * TILE - 8).fill({ color: 0x1a0626, alpha: 0.95 });
-      g.rect(x * TILE, y * TILE + 6, w * TILE, 5).fill({ color: 0xa35cff, alpha: 0.9 });
+      g.rect(x * TILE, y * TILE + 8, w * TILE, h * TILE - 8).fill({ color: L.pool, alpha: 0.95 });
+      g.rect(x * TILE, y * TILE + 6, w * TILE, 5).fill({ color: L.poolGlow, alpha: 0.9 });
+      g.rect(x * TILE, y * TILE - 10, w * TILE, 16).fill({ color: L.poolGlow, alpha: 0.12 });
       this.platLayer.addChild(g);
     }
     // Foreground silhouettes (parallax 1.25), sparse.

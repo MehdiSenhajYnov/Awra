@@ -33,7 +33,18 @@ export function sheet(name: string): Sheet | null {
 }
 
 /** Loads images from public/img (webp) and sprite atlases from public/sprites (png + json). Missing files are skipped. */
-export async function loadAssets(images: string[], atlases: string[], progress?: (p: number) => void): Promise<void> {
+export async function loadAssets(imagesWanted: string[], atlasesWanted: string[], progress?: (p: number) => void): Promise<void> {
+  let images = imagesWanted;
+  let atlases = atlasesWanted;
+  try {
+    const m = (await fetch(`${base()}manifest.json`).then((r) => r.json())) as { img: string[]; sprites: string[] };
+    const hi = new Set(m.img);
+    const hs = new Set(m.sprites);
+    images = imagesWanted.filter((n) => hi.has(n));
+    atlases = atlasesWanted.filter((n) => hs.has(n));
+  } catch {
+    /* no manifest: try everything */
+  }
   const total = images.length + atlases.length;
   let done = 0;
   const step = () => progress?.(++done / total);

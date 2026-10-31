@@ -1,6 +1,6 @@
 import { TILE } from '../engine/core';
 import { type Ledge, raycast } from '../engine/physics';
-import type { Room } from '../world/room';
+import { type Room, T, tileAt } from '../world/room';
 
 export type BladeState = 'held' | 'flying' | 'stuck' | 'branded' | 'returning';
 
@@ -29,6 +29,8 @@ export class Blade {
   t = 0;
   /** Lodged in a wall: the wall's side (-1 left wall, 1 right wall), 0 for floor or ceiling. */
   wallSide = 0;
+  /** Lodged in a floor (1) or a ceiling (-1). */
+  floorSide = 0;
   target: BladeTarget | null = null;
   /** Offset from the branded target's centre. */
   ox = 0;
@@ -91,7 +93,7 @@ export class Blade {
   /**
    * Advances the blade. hx, hy: the hero's hand. Returns 'caught' when it reaches the hand, 'lodged' when it sticks.
    */
-  update(room: Room, hx: number, hy: number): 'caught' | 'lodged' | 'expired' | null {
+  update(room: Room, hx: number, hy: number): 'caught' | 'lodged' | 'expired' | 'bounced' | null {
     this.t++;
     if (this.state === 'flying') {
       const nx = this.x + this.vx;
@@ -100,8 +102,16 @@ export class Blade {
       if (hit) {
         this.x = hit.x;
         this.y = hit.y;
+        // Polished rock: the blade skids off and comes home.
+        const tx = Math.floor((hit.x + Math.sign(this.vx) * 6) / TILE);
+        const ty = Math.floor((hit.y + Math.sign(this.vy) * 6) / TILE);
+        if (tileAt(room, tx, ty) === T.Slick || tileAt(room, Math.floor((hit.x - hit.nx * 6) / TILE), Math.floor((hit.y - hit.ny * 6) / TILE)) === T.Slick) {
+          this.recall();
+          return 'bounced';
+        }
         this.state = 'stuck';
         this.wallSide = hit.nx !== 0 ? -hit.nx : 0;
+        this.floorSide = hit.nx === 0 && hit.ny !== 0 ? -hit.ny : 0;
         // Bite a little into the rock.
         this.x += Math.sign(this.vx) * 10;
         this.y += Math.sign(this.vy) * (hit.ny !== 0 ? 10 : 0);

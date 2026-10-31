@@ -23,10 +23,10 @@ export const EN = {
   },
   actions: {
     left: 'Left', right: 'Right', up: 'Up / interact', down: 'Down', jump: 'Jump', attack: 'Strike', blade: 'Throw / recall the blade',
-    blink: 'Starstep', art: 'Art', heal: 'Focus (hold)', dash: 'Wake', map: 'Map', pause: 'Pause',
+    blink: 'Starstep', art: 'Art', heal: 'Focus (hold)', dash: 'Wake', map: 'Map', inv: 'Inventory', pause: 'Pause',
   },
   hud: { dust: 'Stardust' },
-  prompt: { rest: 'Rest', talk: 'Talk', read: 'Read', enter: 'Enter', take: 'Take' },
+  prompt: { rest: 'Rest', talk: 'Talk', read: 'Read', enter: 'Enter', take: 'Take', touch: 'Touch the heart' },
   rest: { title: 'Star Altar', rested: 'Your wounds close. The creatures of Vael rise again.', seals: 'Change Seals', travel: 'Travel', leave: 'Leave' },
   toast: {
     saved: 'Game saved', lostDust: 'Your stardust fell here.', recovered: 'Stardust recovered', needAbility: 'Something is missing to get through.',
@@ -195,8 +195,11 @@ export const EN = {
   },
   pickup: { press: 'Press {key}' },
   ending: {
+    choose: 'The heart of the star',
+    wait: 'Not yet',
     a: {
       title: 'The New Bond',
+      hint: 'Take the chain from the king. Vael will live.',
       lines: [
         'You take the chain from the old king\'s hands. It is warm. It beats.',
         'Light flows back into Vael. The streets light up. The husks remember their names.',
@@ -206,6 +209,7 @@ export const EN = {
     },
     b: {
       title: 'The Release',
+      hint: 'Cut the thousand chains. The star will go home.',
       lines: [
         'In a single stroke, you cut the thousand chains.',
         'The star rises. She passes through the rock as one passes through a dream.',
@@ -242,6 +246,13 @@ export const EN = {
     move: '{left} {right} move · {jump} jump (hold to go higher)',
     attack: '{attack} strike · Up / Down + {attack} strike up / down',
     blade: '{blade} throw the blade — it lodges in stone: stand on it. {blade} again: recall it.',
+    ring: 'With the Tether, the blade catches in astral rings: throw it at one, then {blink}.',
+    double: 'Too high for a single jump. The Second Breath, perhaps.',
+    gate: 'Down + {blade} in the air: the blade passes through the grate. Then {blink}.',
+    forge: 'Master Vey works at the back of the hall. Star iron will loosen his tongue.',
+    crystal: 'Black crystal. A comet rush would shatter it.',
+    eye: 'The blade passes through grates. Aim for the star eye: Up + {blade} throws upward.',
+    end: 'End of the Crown. The rest of the kingdom is under construction.',
     heal: 'Hold {heal}: heal with the Lumen gained by striking',
   },
 };

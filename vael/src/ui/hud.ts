@@ -1,6 +1,7 @@
 import { Container, Graphics, type Text } from 'pixi.js';
 import type { Scene } from '../game/scene';
 import { t } from '../i18n';
+import { keys } from './gamehooks';
 import { GOLD, PALE, star, style, text } from './draw';
 
 /** Lives (star crystals), the Lumen orb, stardust and the boss bar. */
@@ -17,13 +18,16 @@ export class Hud {
   private lastHp = 0;
   private bossShown = 0;
   private toastText: Text;
+  private hintText: Text;
+  private hintK = 0;
 
   constructor() {
     this.dustText = text('0', style('body', GOLD, 30), 216, 118, 0, 0.5);
     this.bossName = text('', style('menu', PALE, 26, 'center'), 960, 1002, 0.5, 1);
     this.bossSub = text('', style('italic', 0xb8bcd8, 22, 'center'), 960, 1004, 0.5, 0);
     this.toastText = text('', style('italic', PALE, 32, 'center'), 960, 200, 0.5, 0.5);
-    this.c.addChild(this.g, this.dustText, this.bossName, this.bossSub, this.toastText);
+    this.hintText = text('', style('body', PALE, 36, 'center', 1500), 960, 980, 0.5, 0.5);
+    this.c.addChild(this.g, this.dustText, this.bossName, this.bossSub, this.toastText, this.hintText);
   }
 
   update(scene: Scene): void {
@@ -105,6 +109,10 @@ export class Hud {
       g.rect(x, y, w, 8).stroke({ color: GOLD, width: 1, alpha: 0.5 * this.bossShown });
       this.bossName.text = b.bossKey ? t(`bosses.${b.bossKey}.name`) : '';
     }
+    // Tutorial hint.
+    if (scene.hint) this.hintText.text = keys(t(`tutorial.${scene.hint}`));
+    this.hintK += ((scene.hint ? 1 : 0) - this.hintK) * 0.08;
+    this.hintText.alpha = this.hintK;
     // Toast.
     const toast = scene.toast;
     this.toastText.text = toast?.text ?? '';

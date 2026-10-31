@@ -59,12 +59,12 @@ void main() {
   vec2 g = vec2(sdAt(vPos + vec2(e, 0.0)) - sdAt(vPos - vec2(e, 0.0)), sdAt(vPos + vec2(0.0, e)) - sdAt(vPos - vec2(0.0, e)));
   vec2 nrm = -g / max(length(g), 1e-4);
   vec3 rock = texture(uRock, vPos / uRockScale).rgb;
-  float depth = smoothstep(0.0, 170.0, px);
-  vec3 col = mix(rock * uRim * 1.6, uDeep, depth);
+  float depth = smoothstep(10.0, 240.0, px);
+  vec3 col = mix(rock * (uRim * 1.4 + 0.55), uDeep, depth * 0.92);
   // Light catches the surfaces facing up, a cold rim elsewhere.
   float up = clamp(-nrm.y, 0.0, 1.0);
-  float band = 1.0 - smoothstep(0.0, 22.0, px);
-  col += uTop * up * band * 0.9;
+  float band = 1.0 - smoothstep(0.0, 26.0, px);
+  col += uTop * up * band * 1.1;
   col += uRim * (1.0 - smoothstep(0.0, 4.0, px)) * 0.55;
   // Faint inner veins of starlight.
   float vein = smoothstep(0.82, 0.95, vnoise(vPos * 0.012 + vec2(vnoise(vPos * 0.03) * 1.5)) * 0.5 + 0.5);

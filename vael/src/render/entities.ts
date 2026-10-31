@@ -1,4 +1,4 @@
-import { Container, Sprite } from 'pixi.js';
+import { Container, Graphics, Sprite } from 'pixi.js';
 import type { Entity } from '../game/entity';
 import type { Scene } from '../game/scene';
 import { AnimSprite, type Clip } from './anim';
@@ -23,6 +23,12 @@ export interface Look {
   /** Custom rotation from the entity (projectiles). */
   rotate?: boolean;
   tint?: number;
+  /** Procedural drawing on top of (or instead of) the picture. */
+  custom?: (g: Graphics, e: Entity, now: number) => void;
+  /** Hide the picture (custom drawing only). */
+  noBody?: boolean;
+  /** Draw the custom layer additively. */
+  customAdd?: boolean;
 }
 
 const LOOKS: Record<string, Look> = {};
@@ -33,6 +39,11 @@ export function defineLook(key: string, look: Look): void {
 
 /** Default clips for 4×2 sheets: row 1 loops (move), row 2 = wind-up (4-5) and strike (6-7). */
 function clipFor(e: Entity, l: Look): { clip: Clip; t: number } {
+  if (e.anim.startsWith('@')) {
+    // Explicit clip from any sheet: "@sheet|a,b,c|hold|loop".
+    const [sh, list, hold, loop] = e.anim.slice(1).split('|');
+    return { clip: { sheet: sh, frames: list.split(',').map(Number), hold: Number(hold || 6), loop: loop === '1' }, t: e.animT };
+  }
   const s = l.sheet!;
   switch (e.anim) {
     case 'windup':
@@ -56,6 +67,7 @@ interface View {
   body: AnimSprite;
   flash: Sprite;
   look: Look;
+  g: Graphics | null;
 }
 
 export class EntityViews {
@@ -79,8 +91,18 @@ export class EntityViews {
     if (look.additive) body.blendMode = 'add';
     if (look.tint !== undefined) body.tint = look.tint;
     c.addChild(body, flash);
+    let g: Graphics | null = null;
+    if (look.custom) {
+      g = new Graphics();
+      if (look.customAdd) g.blendMode = 'add';
+      c.addChild(g);
+    }
+    if (look.noBody) {
+      body.visible = false;
+      flash.visible = false;
+    }
     this.gv.actors.addChild(c);
-    const v = { c, body, flash, look };
+    const v = { c, body, flash, look, g };
     this.views.set(e.id, v);
     return v;
   }
@@ -99,6 +121,7 @@ export class EntityViews {
       if (l.sheet && sheet(l.sheet)) {
         const { clip, t } = clipFor(e, l);
         const s = sheet(l.sheet)!;
+        if (!sheet(clip.sheet)) clip.sheet = l.sheet;
         const ref = s.frames[0];
         scale = (l.height / ref.tex.frame.height) * e.scale;
         shown = v.body.show(clip, t, facing, scale);
@@ -126,6 +149,11 @@ export class EntityViews {
       v.flash.alpha = e.flash > 0 ? (e.flash / 7) * 0.9 : e.stun > 0 ? 0.15 + Math.sin(e.t * 0.6) * 0.1 : 0;
       v.flash.tint = e.stun > 0 && e.flash === 0 ? 0xffe0a0 : 0xffffff;
       v.c.alpha = (e as unknown as { fade?: number }).fade ?? 1;
+      if (v.g && l.custom) {
+        v.g.clear();
+        v.g.position.set(-v.c.x, -v.c.y);
+        l.custom(v.g, e, performance.now() / 1000);
+      }
     }
     for (const [id, v] of this.views) {
       if (!alive.has(id)) {

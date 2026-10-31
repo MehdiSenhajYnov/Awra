@@ -66,6 +66,11 @@ export abstract class Entity {
     return { x: this.body.x, y: this.body.y, w: this.body.w, h: this.body.h };
   }
 
+  /** Plays frames of a named sheet (bosses use several sheets). */
+  play(sheetName: string, frames: number[], hold: number, loop = false): void {
+    this.setAnim(`@${sheetName}|${frames.join(',')}|${hold}|${loop ? 1 : 0}`);
+  }
+
   setAnim(a: string): void {
     if (this.anim !== a) {
       this.anim = a;

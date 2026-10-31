@@ -12,8 +12,8 @@ export const PHYS = {
   gravity: 1.4,
   apexGravity: 0.75,
   maxFall: 25,
-  jumpSpeed: 19.5,
-  jumpHold: 13,
+  jumpSpeed: 20,
+  jumpHold: 15,
   doubleSpeed: 17.5,
   doubleHold: 8,
   coyote: 6,
@@ -77,6 +77,8 @@ export interface PlayerWorld {
   blinkTarget(): { x: number; y: number; execute: boolean; zip?: boolean } | null;
   /** Dash length multiplier (Comet Wake). */
   dashMul(): number;
+  seal(name: string): boolean;
+  gainLumen(n: number): void;
   afterBlink(execute: boolean): void;
   spendLumen(n: number): boolean;
   heal(): void;
@@ -124,6 +126,8 @@ export class Player {
   dead = false;
   /** Frames since the last footstep event. */
   private stepT = 0;
+  /** A down-strike bounced this frame (Rebound seal). */
+  pogoed = false;
   /** Being pulled to an astral ring. */
   zip: { x: number; y: number; t: number } | null = null;
   /** Last safe ground, for hazard respawns. */
@@ -182,6 +186,7 @@ export class Player {
     a.landed = true;
     if (a.dir === 'down' && bounce) {
       this.body.vy = -PHYS.pogo;
+      this.pogoed = true;
       this.jumping = false;
       this.doubleUsed = false;
       this.airDashUsed = false;
@@ -256,7 +261,7 @@ export class Player {
         b.vx = approach(b.vx, 0, PHYS.decelGround);
         move(w.room, b, b.vx, 0, w.ledges);
         this.setPose('heal');
-        if (this.healT >= 52) {
+        if (this.healT >= (w.seal('sang') ? 34 : 52)) {
           this.healT = 1;
           w.heal();
           ev.push({ kind: 'healed' });
@@ -410,8 +415,9 @@ export class Player {
     if (this.attack) {
       const a = this.attack;
       a.t++;
-      if (a.t >= a.total) this.attack = null;
-      else if (a.t >= a.chain && this.attackBuf > 0 && a.dir === 'side' && this.combo < 3) this.attack = null;
+      const quick = w.seal('braise') ? 3 : 0;
+      if (a.t >= a.total - quick) this.attack = null;
+      else if (a.t >= a.chain - quick && this.attackBuf > 0 && a.dir === 'side' && this.combo < 3) this.attack = null;
     }
     if (!this.attack && this.attackBuf > 0 && this.throwT === 0) {
       this.attackBuf = 0;
@@ -441,7 +447,7 @@ export class Player {
     const wantX = this.wallLockT > 0 ? 0 : c.x;
     if (this.wallLockT > 0) this.wallLockT--;
     const attacking = !!this.attack && this.attack.dir === 'side' && b.onGround;
-    const target = wantX * PHYS.run * (attacking ? 0.35 : 1);
+    const target = wantX * PHYS.run * (attacking ? 0.35 : 1) * (w.seal('coureur') ? 1.15 : 1);
     if (this.wallLockT === 0) {
       const accel = b.onGround ? (wantX !== 0 ? PHYS.accelGround : PHYS.decelGround) : PHYS.accelAir;
       b.vx = approach(b.vx, target, Math.abs(b.vx) > PHYS.run + 0.5 ? 1.2 : accel);
@@ -497,11 +503,13 @@ export class Player {
     }
     // Variable height: constant rise while held, then gravity; releasing early cuts the jump.
     if (this.jumping) {
-      if (c.jumpHeld && this.jumpHoldT > 0 && b.vy < 0) {
+      // A tap still gives a minimum hop: the first frames of the rise always play.
+      const minRise = this.jumpHoldT > PHYS.jumpHold - 8 && !this.doubleUsed;
+      if ((c.jumpHeld || minRise) && this.jumpHoldT > 0 && b.vy < 0) {
         this.jumpHoldT--;
         b.vy = Math.min(b.vy, -PHYS.jumpSpeed * (this.doubleUsed && this.jumpHoldT < PHYS.doubleHold ? 0.9 : 1));
       } else {
-        if (!c.jumpHeld && b.vy < -4) b.vy *= 0.45;
+        if (!c.jumpHeld && b.vy < -7) b.vy = -7;
         this.jumping = false;
         this.jumpHoldT = 0;
       }

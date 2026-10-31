@@ -187,3 +187,69 @@ export class Ring extends Entity {
 
   update(): void {}
 }
+
+/** The boss arena: when the hero steps in, the doors close, the keeper rises and the card shows. */
+export class Arena extends Entity {
+  started = false;
+
+  constructor(scene: Scene, x: number, feet: number, public boss: string, public x0: number, public x1: number, public door: string) {
+    super(scene, x, feet, 10, 10);
+    this.hurtable = false;
+    this.contact = 0;
+    this.prop = true;
+    this.brandable = false;
+    this.body.noClip = true;
+    this.keep = true;
+    // Doors stand open until the fight starts.
+    if (door) scene.openBreakable(door, false);
+  }
+
+  keep = true;
+
+  update(): void {
+    const s = this.scene;
+    if (s.flags[`boss_${this.boss}`]) {
+      this.dead = true;
+      this.keep = false;
+      return;
+    }
+    const px = s.player.cx;
+    if (!this.started && px > this.x0 && px < this.x1 && s.player.body.onGround) {
+      this.started = true;
+      if (this.door) s.closeBreakable(this.door);
+      s.startBoss(this.boss, this.body.x, this.body.y + this.body.h);
+    }
+  }
+}
+
+/** A tutorial hint shown at the bottom of the screen while the hero is near. */
+export class Hint extends Entity {
+  constructor(scene: Scene, x: number, feet: number, public key: string) {
+    super(scene, x, feet, 10, 10);
+    this.hurtable = false;
+    this.contact = 0;
+    this.prop = true;
+    this.brandable = false;
+    this.body.noClip = true;
+  }
+
+  update(): void {
+    const p = this.scene.player;
+    if (Math.abs(p.cx - this.cx) < 420 && Math.abs(p.cy - this.cy) < 300) this.scene.hint = this.key;
+  }
+}
+
+/** The heart of the star: the end of the journey. */
+export class Heart extends Interactive {
+  constructor(scene: Scene, x: number, feet: number) {
+    super(scene, x, feet, 200, 300);
+    this.sprite = 'heart';
+    this.prompt = 'touch';
+  }
+
+  update(): void {}
+
+  interact(): void {
+    this.scene.ui('heart', '');
+  }
+}

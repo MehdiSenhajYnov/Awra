@@ -1,2 +1,19 @@
-{"hero_run": 0.36, "hero_idle": 0.351, "hero_idle_free": 0.354, "hero_run_free": 0.345, "hero_slash": 0.414, "hero_slash2": 0.46, "hero_slash3": 0.427,
- "hero_slash_up": 0.398, "hero_slash_down": 0.34, "hero_jump": 0.45, "hero_jump_free": 0.398, "hero_throw": 0.39, "hero_palm": 0.376, "hero_dash_wall": 0.348}
+{
+ "hero_run": 0.36,
+ "hero_idle": 0.351,
+ "hero_idle_free": 0.354,
+ "hero_run_free": 0.345,
+ "hero_slash": 0.414,
+ "hero_slash2": 0.46,
+ "hero_slash3": 0.427,
+ "hero_slash_up": 0.398,
+ "hero_slash_down": 0.34,
+ "hero_jump": 0.45,
+ "hero_jump_free": 0.398,
+ "hero_throw": 0.39,
+ "hero_palm": 0.376,
+ "hero_dash_wall": 0.348,
+ "hero_art": 0.4,
+ "hero_heal": 0.406,
+ "hero_hurt_death": 0.4
+}

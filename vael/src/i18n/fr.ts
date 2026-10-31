@@ -41,7 +41,7 @@ export const FR = {
   },
   actions: {
     left: 'Gauche', right: 'Droite', up: 'Haut / interagir', down: 'Bas', jump: 'Sauter', attack: 'Frapper', blade: 'Lancer / rappeler la lame',
-    blink: "Saut d'Étoile", art: 'Art', heal: 'Recueillement (maintenir)', dash: 'Sillage', map: 'Carte', pause: 'Pause',
+    blink: "Saut d'Étoile", art: 'Art', heal: 'Recueillement (maintenir)', dash: 'Sillage', map: 'Carte', inv: 'Inventaire', pause: 'Pause',
   },
   hud: {
     dust: 'Poussière d\'étoile',
@@ -52,6 +52,7 @@ export const FR = {
     read: 'Lire',
     enter: 'Entrer',
     take: 'Prendre',
+    touch: 'Toucher le cœur',
   },
   rest: {
     title: "Autel d'Étoile",
@@ -262,8 +263,11 @@ export const FR = {
     press: 'Appuyez sur {key}',
   },
   ending: {
+    choose: 'Le cœur de l\'étoile',
+    wait: 'Pas encore',
     a: {
       title: 'Le Nouveau Lien',
+      hint: 'Prendre la chaîne des mains du roi. Vael vivra.',
       lines: [
         'Vous prenez la chaîne des mains du vieux roi. Elle est chaude. Elle bat.',
         'La lumière remonte dans Vael. Les rues s\'allument. Les coquilles se souviennent de leurs noms.',
@@ -273,6 +277,7 @@ export const FR = {
     },
     b: {
       title: 'La Libération',
+      hint: 'Trancher les mille chaînes. L\'étoile rentrera chez elle.',
       lines: [
         'D\'un seul coup, vous tranchez les mille chaînes.',
         'L\'étoile se lève. Elle traverse la roche comme on traverse un rêve.',
@@ -309,6 +314,13 @@ export const FR = {
     move: '{left} {right} se déplacer · {jump} sauter (maintenir pour monter plus haut)',
     attack: '{attack} frapper · Haut / Bas + {attack} frapper vers le haut / le bas',
     blade: '{blade} lancer la lame — elle se plante dans la pierre : montez dessus. {blade} de nouveau : la rappeler.',
+    ring: 'Avec le Lien, la lame se prend dans les anneaux astraux : lancez-la dessus, puis {blink}.',
+    double: 'Trop haut pour un seul saut. Le Second Souffle, peut-être.',
+    gate: 'Bas + {blade} en l\'air : la lame passe à travers la grille. Puis {blink}.',
+    forge: 'Maître Vey forge au fond de la salle. Le fer d\'étoile le rendra bavard.',
+    crystal: 'Du cristal noir. Une ruée de comète le briserait.',
+    eye: 'La lame traverse les grilles. Visez l\'œil d\'étoile : Haut + {blade} pour lancer vers le haut.',
+    end: 'Fin de la démonstration de la Couronne. La suite du royaume est en construction.',
     heal: '{heal} maintenu : se soigner avec le Lumen gagné en frappant',
   },
 };

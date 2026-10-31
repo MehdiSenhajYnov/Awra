@@ -1,14 +1,16 @@
 import { type Box, Rng, TILE, clamp, overlap } from '../engine/core';
 import { type Ledge, fits, move } from '../engine/physics';
 import { type Room, type RoomDef, T, buildRoom, setTile, tileAt } from '../world/room';
-import { castArt } from './arts';
+import { Comet, castArt } from './arts';
 import { Blade, segDist } from './blade';
 import type { Controls } from './controls';
 import { type DamageSource, Entity } from './entity';
 import type { FxEvent } from './events';
 import { type AttackDir, PHYS, Player, type PlayerWorld } from './player';
 import type { Save } from './save';
-import type { Pickup } from './props';
+import { Pickup, type PickupKind } from './props';
+import { makeBoss } from './bosses';
+import type { Boss } from './boss';
 import { t as tr } from '../i18n';
 
 export interface SceneHooks {
@@ -16,6 +18,18 @@ export interface SceneHooks {
   neighbour(room: RoomDef, side: 'l' | 'r' | 'u' | 'd', px: number, py: number): { def: RoomDef; x: number; y: number } | null;
   spawn(scene: Scene, kind: string, x: number, y: number, opts: Record<string, unknown>, uid: string): Entity | null;
 }
+
+/** What each keeper leaves behind. */
+export const BOSS_REWARD: Record<string, [PickupKind, string]> = {
+  gardien: ['ability', 'dash'],
+  racine: ['ability', 'walljump'],
+  forgeron: ['ability', 'blink'],
+  bibliothecaire: ['ability', 'double'],
+  geoliers: ['ability', 'ring'],
+  oiseau: ['ability', 'comet'],
+  reine: ['art', 'chute2'],
+  veilleur: ['notch', 'veilleur'],
+};
 
 /** Base damage of one slash at forge level 0. Foes have HP in the same unit. */
 export const BASE_DAMAGE = 10;
@@ -54,6 +68,8 @@ export class Scene implements PlayerWorld {
   cameraFocus: { x: number; y: number } | null = null;
   boss: Entity | null = null;
   toast: { text: string; t: number } | null = null;
+  /** Tutorial hint key shown this frame. */
+  hint = '';
 
   constructor(public save: Save, public hooks: SceneHooks) {
     this.player = new Player(0, 0);
@@ -77,8 +93,16 @@ export class Scene implements PlayerWorld {
     return 99 + this.save.vessels * 33;
   }
 
+  /** A seal is worn. */
+  seal(name: string): boolean {
+    return this.save.sealsOn.includes(name);
+  }
+
   damageMul(): number {
-    return 1 + this.save.forge * 0.25;
+    let m = 1 + this.save.forge * 0.25;
+    if (this.seal('fragile')) m *= 2;
+    if (this.seal('lueur') && this.player.hp <= 1) m *= 1.5;
+    return m;
   }
 
   emit(e: FxEvent): void {
@@ -138,7 +162,9 @@ export class Scene implements PlayerWorld {
 
   throwBlade(dx: number, dy: number): void {
     const p = this.player;
+    Blade.RANGE = this.seal('longfil') ? 960 : 640;
     this.blade.throw(p.cx + dx * 20, p.cy - 8 + dy * 10, dx, dy);
+    if (this.seal('jumelle')) this.add(new Comet(this, p.cx + dx * 30, p.cy - 30, dx >= 0 ? 1 : -1, false, true, dy * 20));
     this.emit({ t: 'throw', x: p.cx, y: p.cy, dir: p.facing });
   }
 
@@ -159,7 +185,8 @@ export class Scene implements PlayerWorld {
 
   blinkTarget(): { x: number; y: number; execute: boolean; zip?: boolean } | null {
     const b = this.blade;
-    if (b.state === 'held' || b.state === 'returning') return null;
+    // Only a planted blade can be joined.
+    if (b.state !== 'stuck' && b.state !== 'branded') return null;
     if (b.ring) return { x: b.ring.x, y: b.ring.y + 40, execute: false, zip: true };
     if (b.state === 'branded' && b.target) {
       const e = b.target as unknown as Entity;
@@ -167,7 +194,9 @@ export class Scene implements PlayerWorld {
       const side = Math.sign(this.player.cx - e.cx) || -1;
       return { x: e.cx + side * (e.body.w / 2 + 30), y: e.cy, execute: true };
     }
-    // From a wall, stand just out of it.
+    // From a wall, stand just out of it; from a floor, just above; from a ceiling, just below.
+    if (b.floorSide > 0) return { x: b.x, y: b.y - 60, execute: false };
+    if (b.floorSide < 0) return { x: b.x, y: b.y + 60, execute: false };
     return { x: b.x - b.wallSide * 26, y: b.y + 20, execute: false };
   }
 
@@ -231,14 +260,16 @@ export class Scene implements PlayerWorld {
 
   /** Deals damage with all the feedback. Returns true when it landed. */
   strike(e: Entity, amount: number, fromX: number, source: DamageSource): boolean {
+    if (this.seal('marque') && this.blade.state === 'branded' && this.blade.target === (e as unknown as typeof this.blade.target)) amount *= 1.3;
     if (!e.damage(amount, fromX, source)) return false;
     const p = this.player;
     const big = source === 'rip' || source === 'execute' || source === 'art' || e.dead;
     const dx = Math.sign(e.cx - fromX) || p.facing;
     this.emit({ t: 'hit', x: e.cx, y: e.cy, dx, dy: 0, big, kind: source });
     this.freeze = Math.max(this.freeze, e.dead ? 7 : big ? 6 : 3);
-    if (source === 'slash' || source === 'palm') this.gainLumen(LUMEN_PER_HIT);
-    else if (source === 'blade') this.gainLumen(4);
+    const harvest = this.seal('moisson') ? 1.5 : 1;
+    if (source === 'slash' || source === 'palm') this.gainLumen(LUMEN_PER_HIT * harvest);
+    else if (source === 'blade') this.gainLumen(4 * harvest);
     return true;
   }
 
@@ -246,8 +277,9 @@ export class Scene implements PlayerWorld {
     this.emit({ t: 'kill', x: e.cx, y: e.cy, size: Math.max(e.body.w, e.body.h), color: 0x8a5cff, sprite: e.sprite, id: e.id });
     if (e.uid) this.killed.add(e.uid);
     if (e.dust > 0) {
-      this.save.dust += e.dust;
-      this.emit({ t: 'dust', x: e.cx, y: e.cy, n: e.dust });
+      const n = Math.round(e.dust * (this.seal('avare') ? 1.5 : 1));
+      this.save.dust += n;
+      this.emit({ t: 'dust', x: e.cx, y: e.cy, n });
     }
   }
 
@@ -260,9 +292,17 @@ export class Scene implements PlayerWorld {
       return;
     }
     if (p.invuln > 0) return;
-    const dmg = this.save.hard ? amount * 2 : amount;
+    let dmg = this.save.hard ? amount * 2 : amount;
+    if (this.seal('fragile')) dmg *= 2;
     p.hp -= dmg;
     p.hurt(fromX);
+    if (this.seal('epines')) {
+      for (const e of this.entities) {
+        if (e.dead || !e.hurtable || e.prop) continue;
+        if (Math.hypot(e.cx - p.cx, e.cy - p.cy) < 260) this.strike(e, BASE_DAMAGE * 1.5, p.cx, 'wave');
+      }
+      this.emit({ t: 'boom', x: p.cx, y: p.cy, r: 200, color: 0xa8c0ff });
+    }
     this.freeze = 10;
     this.blade.state === 'held' || this.blade.recall();
     this.emit({ t: 'hurt', x: p.cx, y: p.cy });
@@ -271,7 +311,7 @@ export class Scene implements PlayerWorld {
 
   triggerEclipse(): void {
     if (this.eclipse > 0) return;
-    this.eclipse = 90;
+    this.eclipse = this.seal('eclipse') ? 180 : 90;
     this.player.invuln = Math.max(this.player.invuln, 40);
     this.gainLumen(25);
     this.emit({ t: 'dodge', x: this.player.cx, y: this.player.cy });
@@ -304,6 +344,7 @@ export class Scene implements PlayerWorld {
 
   update(c: Controls): void {
     this.t++;
+    this.hint = '';
     if (this.toast && --this.toast.t <= 0) this.toast = null;
     if (this.freeze > 0) {
       this.freeze--;
@@ -392,6 +433,7 @@ export class Scene implements PlayerWorld {
     if (b.state === 'held') return;
     const r = b.update(this.room, p.cx, p.cy - 8);
     if (r === 'caught') this.emit({ t: 'catch', x: p.cx, y: p.cy });
+    if (r === 'bounced') this.emit({ t: 'clank', x: b.x, y: b.y });
     if (r === 'lodged') {
       this.emit({ t: 'lodge', x: b.x, y: b.y, angle: b.angle });
       // Lodged under the hero's feet would trap them inside the step; nothing to do, the step is one-way.
@@ -413,7 +455,7 @@ export class Scene implements PlayerWorld {
         const reach = Math.max(e.body.w, e.body.h) / 2 + 16;
         if (segDist(e.cx, e.cy, s.x0, s.y0, s.x1, s.y1) > reach) continue;
         b.pierced.add(e.id);
-        const dmg = BASE_DAMAGE * (b.state === 'returning' ? 1.2 : 0.8) * this.damageMul();
+        const dmg = BASE_DAMAGE * (b.state === 'returning' ? 1.2 * (this.seal('retour') ? 2 : 1) : 0.8) * this.damageMul();
         const landed = this.strike(e, dmg, b.x - b.vx, 'blade');
         if (b.state === 'flying' && landed && !e.dead && e.brandable) {
           b.brand(e);
@@ -443,6 +485,8 @@ export class Scene implements PlayerWorld {
       const dmg = BASE_DAMAGE * a.mul * this.damageMul();
       const landed = this.strike(e, dmg, p.cx, a.palm ? 'palm' : 'slash');
       p.onAttackLanded(landed ? 'foe' : 'wall', true);
+      if (p.pogoed && this.seal('rebond')) this.gainLumen(6);
+      p.pogoed = false;
       if (!landed) this.emit({ t: 'clank', x: (box.x + box.w / 2 + e.cx) / 2, y: e.cy });
     }
     // Down-strikes bounce off spikes too.
@@ -534,9 +578,15 @@ export class Scene implements PlayerWorld {
   ui: (kind: string, arg: string, extra?: unknown) => void = () => {};
 
   collect(p: Pickup): void {
+    this.give(p.kind, p.value, p.flag, p.cx, p.cy);
+  }
+
+  /** Grants a reward (pickups, shops, keepers). */
+  give(kind: PickupKind, value: string, flag: string, x = this.player.cx, y = this.player.cy): void {
     const s = this.save;
-    this.setFlag(p.flag);
-    this.emit({ t: 'pickup', x: p.cx, y: p.cy, what: p.kind });
+    const p = { kind, value };
+    this.setFlag(flag);
+    this.emit({ t: 'pickup', x, y, what: kind });
     this.freeze = 12;
     switch (p.kind) {
       case 'ability':
@@ -628,6 +678,28 @@ export class Scene implements PlayerWorld {
   }
 
   onRest: (key: string) => void = () => {};
+
+  /** Spawns a keeper and starts the fight. */
+  startBoss(key: string, x: number, feet: number): void {
+    const b = makeBoss(this, key, x, feet);
+    if (!b) return;
+    this.add(b);
+    this.boss = b;
+    this.ui('bossIntro', key);
+  }
+
+  /** A keeper fell: reward, doors, flags. */
+  bossDefeated(b: Boss): void {
+    this.setFlag(`boss_${b.bossKey}`);
+    this.boss = null;
+    for (const [, , , , flag] of this.room.def.brk ?? []) if (flag.startsWith('seal_')) this.openBreakable(flag, true);
+    const reward = BOSS_REWARD[b.bossKey];
+    if (reward) {
+      const p = new Pickup(this, b.cx, b.body.y + b.body.h - 40, reward[0], reward[1], `got_${b.bossKey}`);
+      this.add(p);
+    }
+    this.ui('bossDown', b.bossKey);
+  }
 
   say(text: string, frames = 180): void {
     this.toast = { text, t: frames };

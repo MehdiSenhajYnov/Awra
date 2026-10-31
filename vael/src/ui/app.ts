@@ -7,7 +7,7 @@ import { Interactive } from '../game/props';
 import { type Save, type Settings, loadSettings, newSave, writeSave, writeSettings } from '../game/save';
 import { Scene } from '../game/scene';
 import { spawnEntity } from '../game/spawn';
-import { setLang, t } from '../i18n';
+import { setLang, t, tl } from '../i18n';
 import { loadAssets } from '../render/assets';
 import { sound } from '../render/director';
 import { registerLooks } from '../render/looks';
@@ -18,6 +18,9 @@ import { GOLD, style, text } from './draw';
 import { Hud } from './hud';
 import { ChoiceBox, type Modal } from './modals';
 import { TitleScreen } from './title';
+import { Cinematic } from './cinematic';
+import { Inventory } from './inventory';
+import { MapScreen } from './map';
 import { GameHooks } from './gamehooks';
 
 export const IMAGES = [
@@ -25,12 +28,15 @@ export const IMAGES = [
   'prop_banner', 'prop_candles', 'prop_lamp', 'fg_couronne_a', 'fg_couronne_b', 'plat_couronne', 'edge_top', 'en_test',
   'fx_slash', 'fx_slash_wide', 'fx_slash_spin', 'fx_impact', 'fx_glyph', 'fx_explosion', 'fx_gloam', 'fx_tether', 'blade', 'shrine', 'fallen_star',
   'bg_jardins_a', 'bg_jardins_b', 'tex_jardins', 'prop_flower', 'prop_mushrooms', 'prop_roots', 'prop_greenhouse', 'prop_tree', 'fg_jardins_a', 'fg_jardins_b', 'plat_jardins',
+  'bg_forge_a', 'bg_forge_b', 'tex_forge', 'fg_forge_a', 'plat_forge', 'edge_forge', 'prop_forge_0', 'prop_forge_1', 'prop_forge_2', 'prop_forge_3', 'prop_forge_4', 'bg_archives_a', 'bg_archives_b', 'tex_archives', 'fg_archives_a', 'plat_archives', 'edge_archives', 'prop_archives_0', 'prop_archives_1', 'prop_archives_2', 'prop_archives_3', 'prop_archives_4', 'bg_bastion_a', 'bg_bastion_b', 'tex_bastion', 'fg_bastion_a', 'plat_bastion', 'edge_bastion', 'prop_bastion_0', 'prop_bastion_1', 'prop_bastion_2', 'prop_bastion_3', 'prop_bastion_4', 'bg_firmament_a', 'bg_firmament_b', 'tex_firmament', 'fg_firmament_a', 'plat_firmament', 'edge_firmament', 'prop_firmament_0', 'prop_firmament_1', 'prop_firmament_2', 'prop_firmament_3', 'prop_firmament_4', 'bg_penombre_a', 'bg_penombre_b', 'tex_penombre', 'fg_penombre_a', 'plat_penombre', 'edge_penombre', 'prop_penombre_0', 'prop_penombre_1', 'prop_penombre_2', 'prop_penombre_3', 'prop_penombre_4', 'bg_coeur_a', 'bg_coeur_b', 'tex_coeur', 'fg_coeur_a', 'plat_coeur', 'edge_coeur', 'prop_coeur_0', 'prop_coeur_1', 'prop_coeur_2', 'prop_coeur_3', 'prop_coeur_4', 'tablet', 'npc_orsa', 'pt_orsa', 'npc_vey', 'pt_vey', 'npc_lunelle', 'pt_lunelle', 'npc_veilleur', 'pt_veilleur', 'npc_pip', 'npc_murmure', 'pt_murmure', 'cut_intro1', 'cut_intro2', 'cut_intro3', 'cut_intro4', 'fin_lien', 'fin_liberation', 'fin_aube', 'map_paper', 'ui_frame', 'ic_seal_0', 'ic_seal_1', 'ic_seal_2', 'ic_seal_3', 'ic_seal_4', 'ic_seal_5', 'ic_seal_6', 'ic_seal_7', 'ic_seal_8', 'ic_seal_9', 'ic_seal_10', 'ic_seal_11', 'ic_seal_12', 'ic_seal_13', 'ic_seal_14', 'ic_seal_15', 'ic_item_0', 'ic_item_1', 'ic_item_2', 'ic_item_3', 'ic_item_4', 'ic_item_5', 'ic_item_6', 'ic_item_7', 'ic_item_8', 'ic_item_9', 'ic_item_10', 'ic_item_11', 'ic_item_12', 'ic_item_13', 'ic_item_14', 'ic_item_15', 'ic_art_0', 'ic_art_1', 'ic_art_2', 'ic_art_3', 'ic_art_4', 'ic_art_5', 'ic_art_6', 'ic_art_7', 'ic_art_8', 'ic_art_9', 'ic_art_10', 'ic_art_11', 'ic_art_12', 'ic_art_13', 'ic_art_14', 'ic_art_15', 'ic_ab_blade', 'ic_ab_dash', 'ic_ab_walljump', 'ic_ab_blink', 'ic_ab_double', 'ic_ab_ring', 'ic_ab_comet', 'ic_art_comete', 'ic_art_comete2', 'ic_art_ascension', 'ic_art_ascension2', 'ic_art_chute', 'ic_art_chute2', 'ic_art_constellation',
 ];
 
 export const ATLASES = [
   'hero_idle', 'hero_idle_free', 'hero_run', 'hero_run_free', 'hero_jump', 'hero_jump_free', 'hero_slash', 'hero_slash2', 'hero_slash3', 'hero_slash_up',
   'hero_slash_down', 'hero_dash_wall', 'hero_throw', 'hero_palm', 'hero_heal', 'hero_hurt_death', 'hero_art',
   'en_coquille', 'en_acarien', 'en_lampion', 'en_pretre', 'en_chevalier', 'en_ronce', 'en_spore', 'en_mante', 'boss_gardien_a', 'boss_gardien_b', 'boss_gardien_c',
+  'en_forgeron_mineur', 'en_enclume', 'en_etincelle', 'en_noye', 'en_anguille', 'en_geolier', 'en_corbeau', 'en_astre', 'en_ombre', 'en_sentinelle', 'en_veilleur',
+  ...['racine', 'forgeron', 'bibliothecaire', 'geoliers', 'oiseau', 'reine', 'enchaineur'].flatMap((b) => [`boss_${b}_a`, `boss_${b}_b`, `boss_${b}_c`]), 'boss_etoile',
 ];
 
 type Mode = 'loading' | 'title' | 'game';
@@ -107,7 +113,13 @@ export class App {
         this.fadeTo(() => {
           this.title?.c.destroy({ children: true });
           this.title = null;
-          this.startGame(s);
+          if (save) this.startGame(s);
+          else {
+            // A new game opens on the story of the fall.
+            const lines = tl('intro');
+            audio.playMusic('title');
+            this.push(new Cinematic(lines.map((l, i) => ({ image: `cut_intro${i + 1}`, lines: [l] })), () => this.fadeTo(() => this.startGame(s))));
+          }
         });
       },
       options: () => this.openOptions(),
@@ -155,6 +167,7 @@ export class App {
 
   private enteredRoom(): void {
     const s = this.scene;
+    this.hooks.entered();
     const z = s.room.def.zone;
     audio.playMusic(s.boss ? 'boss' : zoneLook(z).music);
     if (z !== this.lastZone && s.room.def.title !== false) {
@@ -186,6 +199,8 @@ export class App {
   private pause(): void {
     const box: ChoiceBox = new ChoiceBox(t('menu.resume').toUpperCase(), [
       { label: () => t('menu.resume'), action: () => { box.closed = true; } },
+      { label: () => t('menu.inventory'), action: () => { box.closed = true; this.push(new Inventory(this.scene)); } },
+      { label: () => t('menu.map'), action: () => { box.closed = true; this.push(new MapScreen(this.scene)); } },
       { label: () => t('menu.options'), action: () => this.openOptions() },
       { label: () => t('menu.quitTitle'), action: () => { box.closed = true; this.saveNow(); this.fadeTo(() => { this.clearModals(); this.showTitle(); }); } },
     ]);
@@ -235,6 +250,14 @@ export class App {
     }
     if (input.pressed('pause') && !this.modals.length && !s.player.dead) {
       this.pause();
+      return;
+    }
+    if (input.pressed('map') && !this.modals.length && !s.player.dead) {
+      this.push(new MapScreen(s));
+      return;
+    }
+    if (input.pressed('inv') && !this.modals.length && !s.player.dead) {
+      this.push(new Inventory(s));
       return;
     }
     const c = this.fadeTarget === 1 || this.deathT > 0 ? NO_CONTROLS : readControls();

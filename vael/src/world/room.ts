@@ -16,13 +16,15 @@ export const enum T {
   Water = 6,
   /** Iron grate: blocks bodies, lets the thrown blade through. */
   Grate = 7,
+  /** Polished rock: solid, but the blade cannot bite into it (bounces off). */
+  Slick = 8,
 }
 
-export const isSolid = (t: number) => t === T.Solid || t === T.Breakable || t === T.Grate;
+export const isSolid = (t: number) => t === T.Solid || t === T.Breakable || t === T.Grate || t === T.Slick;
 /** Solid for the flying blade (grates let it through). */
-export const bladeSolid = (t: number) => t === T.Solid || t === T.Breakable;
+export const bladeSolid = (t: number) => t === T.Solid || t === T.Breakable || t === T.Slick;
 /** Drawn as rock by the terrain shader. */
-export const rockTile = (t: number) => t === T.Solid || t === T.Breakable;
+export const rockTile = (t: number) => t === T.Solid || t === T.Breakable || t === T.Slick;
 export const isHazard = (t: number) => t === T.Spike || t === T.Gloam;
 
 export type Rect = [x: number, y: number, w: number, h: number];
@@ -52,6 +54,8 @@ export interface RoomDef {
    */
   brk?: [number, number, number, number, string][];
   grate?: Rect[];
+  /** Polished rock the blade bounces off (applied over solids). */
+  slick?: Rect[];
   ents?: EntDef[];
   /** Background variant, decor seed, darkness. */
   bg?: string;
@@ -73,8 +77,8 @@ export interface Room {
 
 export function tileAt(room: Room, tx: number, ty: number): number {
   if (tx < 0 || tx >= room.w || ty < 0 || ty >= room.h) {
-    // Outside: open where an exit is, otherwise rock.
-    return outsideOpen(room, tx, ty) ? T.Empty : T.Solid;
+    // Outside: open where an exit is, otherwise polished rock (the blade never bites into a room's border).
+    return outsideOpen(room, tx, ty) ? T.Empty : T.Slick;
   }
   return room.tiles[ty * room.w + tx];
 }
@@ -119,6 +123,7 @@ export function buildRoom(def: RoomDef, flags: Record<string, boolean | number>)
   for (const r of def.gloam ?? []) fill(r, T.Gloam);
   for (const r of def.water ?? []) fill(r, T.Water);
   for (const r of def.grate ?? []) fill(r, T.Grate);
+  for (const r of def.slick ?? []) fill(r, T.Slick);
   for (const [x, y, bw, bh, flag] of def.brk ?? []) fill([x, y, bw, bh], flags[flag] ? T.Empty : T.Breakable);
   return room;
 }
