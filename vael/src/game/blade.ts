@@ -96,7 +96,7 @@ export class Blade {
     if (this.state === 'flying') {
       const nx = this.x + this.vx;
       const ny = this.y + this.vy;
-      const hit = raycast(room, this.x, this.y, nx, ny);
+      const hit = raycast(room, this.x, this.y, nx, ny, true);
       if (hit) {
         this.x = hit.x;
         this.y = hit.y;

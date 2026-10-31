@@ -12,6 +12,8 @@ export interface Save {
   shards: number;
   /** Lumen capacity: 99 + 33 per vessel. */
   vessels: number;
+  vesselFrags: number;
+  ore: number;
   /** Blade forge level (damage). */
   forge: number;
   dust: number;
@@ -31,7 +33,7 @@ export interface Save {
 
 export function newSave(slot: number): Save {
   return {
-    version: 1, slot, shrine: 'start', shrineRoom: 'c_reveil', abilities: [], arts: [], maxHp: 5, shards: 0, vessels: 0,
+    version: 1, slot, shrine: 'start', shrineRoom: 'c_reveil', abilities: [], arts: [], maxHp: 5, shards: 0, vessels: 0, vesselFrags: 0, ore: 0,
     forge: 0, dust: 0, seals: [], sealsOn: [], notches: 3, flags: {}, seen: [], lost: null, playTime: 0, deaths: 0, hard: false,
   };
 }

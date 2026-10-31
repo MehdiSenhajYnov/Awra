@@ -14,9 +14,15 @@ export const enum T {
   Gloam = 5,
   /** Still water: slows, no harm. */
   Water = 6,
+  /** Iron grate: blocks bodies, lets the thrown blade through. */
+  Grate = 7,
 }
 
-export const isSolid = (t: number) => t === T.Solid || t === T.Breakable;
+export const isSolid = (t: number) => t === T.Solid || t === T.Breakable || t === T.Grate;
+/** Solid for the flying blade (grates let it through). */
+export const bladeSolid = (t: number) => t === T.Solid || t === T.Breakable;
+/** Drawn as rock by the terrain shader. */
+export const rockTile = (t: number) => t === T.Solid || t === T.Breakable;
 export const isHazard = (t: number) => t === T.Spike || t === T.Gloam;
 
 export type Rect = [x: number, y: number, w: number, h: number];
@@ -40,8 +46,12 @@ export interface RoomDef {
   spike?: Rect[];
   gloam?: Rect[];
   water?: Rect[];
-  /** Breakable walls: [x, y, w, h, flag]. */
+  /**
+   * Walls that open with a flag: [x, y, w, h, flag]. The flag's prefix sets the look and how it opens:
+   * crack_ (struck), gate_ (iron bars, a switch), crys_ (black crystal, Comet Wake), seal_ (boss door).
+   */
   brk?: [number, number, number, number, string][];
+  grate?: Rect[];
   ents?: EntDef[];
   /** Background variant, decor seed, darkness. */
   bg?: string;
@@ -108,6 +118,7 @@ export function buildRoom(def: RoomDef, flags: Record<string, boolean | number>)
   for (const r of def.spike ?? []) fill(r, T.Spike);
   for (const r of def.gloam ?? []) fill(r, T.Gloam);
   for (const r of def.water ?? []) fill(r, T.Water);
+  for (const r of def.grate ?? []) fill(r, T.Grate);
   for (const [x, y, bw, bh, flag] of def.brk ?? []) fill([x, y, bw, bh], flags[flag] ? T.Empty : T.Breakable);
   return room;
 }

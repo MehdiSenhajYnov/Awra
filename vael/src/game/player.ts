@@ -61,7 +61,7 @@ export interface Attack {
 }
 
 export type PlayerEvent =
-  | { kind: 'jump' | 'doubleJump' | 'land' | 'wallJump' | 'dash' | 'throw' | 'recall' | 'blink' | 'healStart' | 'healed' | 'footstep' | 'pogo' | 'art'; x?: number; y?: number; dir?: number; big?: boolean; art?: string }
+  | { kind: 'jump' | 'doubleJump' | 'land' | 'wallJump' | 'dash' | 'throw' | 'recall' | 'blink' | 'healStart' | 'healed' | 'footstep' | 'pogo' | 'art' | 'dashWall' | 'zip' | 'zipEnd'; x?: number; y?: number; dir?: number; big?: boolean; art?: string }
   | { kind: 'attack'; attack: Attack; facing: number };
 
 export interface PlayerWorld {
@@ -74,7 +74,9 @@ export interface PlayerWorld {
   throwBlade(dirX: number, dirY: number): void;
   recallBlade(): void;
   /** Teleport target when the blade can be reached, else null. */
-  blinkTarget(): { x: number; y: number; execute: boolean } | null;
+  blinkTarget(): { x: number; y: number; execute: boolean; zip?: boolean } | null;
+  /** Dash length multiplier (Comet Wake). */
+  dashMul(): number;
   afterBlink(execute: boolean): void;
   spendLumen(n: number): boolean;
   heal(): void;
@@ -111,6 +113,9 @@ export class Player {
   hurtT = 0;
   invuln = 0;
   artT = 0;
+  /** An art moves the body (no gravity from the player). */
+  artFree = false;
+  artHoldT = 0;
   landT = 0;
   recoilT = 0;
   recoilV = 0;
@@ -119,6 +124,8 @@ export class Player {
   dead = false;
   /** Frames since the last footstep event. */
   private stepT = 0;
+  /** Being pulled to an astral ring. */
+  zip: { x: number; y: number; t: number } | null = null;
   /** Last safe ground, for hazard respawns. */
   safe = { x: 0, y: 0 };
   /** Position history for afterimages (render only reads it). */
@@ -260,26 +267,70 @@ export class Player {
     }
 
     // Arts.
-    if (this.artT > 0) {
-      this.artT--;
-      b.vx = approach(b.vx, 0, 1.2);
-      b.vy = this.artT > 6 ? Math.min(b.vy + 0.3, 2) : Math.min(b.vy + PHYS.gravity, PHYS.maxFall);
+    if (this.artT > 0 || this.artFree) {
+      if (this.artT > 0) this.artT--;
+      if (!this.artFree) {
+        b.vx = approach(b.vx, 0, 1.2);
+        b.vy = this.artT > 6 ? Math.min(b.vy + 0.3, 2) : Math.min(b.vy + PHYS.gravity, PHYS.maxFall);
+      }
       move(w.room, b, b.vx, b.vy, w.ledges);
+      this.setPose('art');
       return ev;
     }
-    if (c.artPressed && !this.attack && this.dashT === 0) {
-      const dir: AttackDir = c.y < 0 ? 'up' : c.y > 0 && !b.onGround ? 'down' : 'side';
-      if (w.castArt(dir)) {
-        this.artT = dir === 'down' ? 4 : 22;
+    // Arts: up/down fire on press; the neutral one on release (a long hold with full Lumen: Constellation).
+    if (c.artHeld) this.artHoldT++;
+    const wantDir: AttackDir = c.y < 0 ? 'up' : c.y > 0 && !b.onGround ? 'down' : 'side';
+    let cast: AttackDir | 'ultimate' | null = null;
+    if (c.artPressed && wantDir !== 'side') cast = wantDir;
+    if (!c.artHeld && this.artHoldT > 0) {
+      if (this.artHoldT < 30 && wantDir === 'side') cast = 'side';
+      this.artHoldT = 0;
+    }
+    if (c.artHeld && this.artHoldT === 45) cast = 'ultimate';
+    if (cast && !this.attack && this.dashT === 0) {
+      if (w.castArt(cast as AttackDir)) {
+        if (cast === 'ultimate') this.artHoldT = 0;
+        this.artT = cast === 'down' ? 4 : 22;
         this.setPose('art');
-        ev.push({ kind: 'art', dir: this.facing, art: dir });
+        ev.push({ kind: 'art', dir: this.facing, art: cast });
         return ev;
       }
     }
 
-    // Blink to the blade.
+    // Pulled to a ring: fast straight flight, released with momentum.
+    if (this.zip) {
+      const z = this.zip;
+      z.t++;
+      const dx = z.x - this.cx;
+      const dy = z.y - this.cy;
+      const d = Math.hypot(dx, dy);
+      const sp = Math.min(34, 12 + z.t * 3);
+      b.vx = (dx / (d || 1)) * sp;
+      b.vy = (dy / (d || 1)) * sp;
+      const r = move(w.room, b, b.vx, b.vy, w.ledges);
+      this.pushTrail();
+      this.setPose('dash');
+      if (d < sp + 30 || r.hitX || r.hitY || z.t > 50) {
+        this.zip = null;
+        b.vx *= 0.75;
+        b.vy = Math.min(b.vy * 0.6, -10);
+        this.doubleUsed = false;
+        this.airDashUsed = false;
+        ev.push({ kind: 'zipEnd', x: this.cx, y: this.cy });
+      }
+      return ev;
+    }
+
+    // Blink to the blade (or zip to a ring).
     if (c.blinkPressed && w.has('blink')) {
       const t = w.blinkTarget();
+      if (t && t.zip) {
+        this.zip = { x: t.x, y: t.y, t: 0 };
+        this.attack = null;
+        this.dashT = 0;
+        ev.push({ kind: 'zip', x: this.cx, y: this.cy });
+        return ev;
+      }
       if (t) {
         const from = { x: this.cx, y: this.cy };
         const spot = findSpot(w.room, t.x - b.w / 2, t.y - b.h / 2, b.w, b.h);
@@ -333,7 +384,7 @@ export class Player {
       if (c.x !== 0) this.facing = Math.sign(c.x);
       if (b.wall !== 0 && !b.onGround) this.facing = -b.wall;
       this.dashDir = this.facing;
-      this.dashT = PHYS.dashFrames;
+      this.dashT = Math.round(PHYS.dashFrames * w.dashMul());
       this.dashCd = PHYS.dashCooldown;
       if (!b.onGround) this.airDashUsed = true;
       this.attack = null;
@@ -345,7 +396,10 @@ export class Player {
       b.vx = this.dashDir * PHYS.dashSpeed;
       b.vy = 0;
       const r = move(w.room, b, b.vx, 0, w.ledges);
-      if (r.hitX) this.dashT = 0;
+      if (r.hitX) {
+        this.dashT = 0;
+        ev.push({ kind: 'dashWall', x: this.dashDir > 0 ? b.x + b.w + 6 : b.x - 6, y: this.cy, dir: this.dashDir });
+      }
       if (this.dashT === 0) b.vx = this.dashDir * PHYS.run;
       this.setPose('dash');
       this.pushTrail();

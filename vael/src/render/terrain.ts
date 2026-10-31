@@ -1,6 +1,6 @@
 import { BufferImageSource, Geometry, Mesh, Shader, Texture, type TextureSource } from 'pixi.js';
 import { TILE } from '../engine/core';
-import { type Room, isSolid, tileAt } from '../world/room';
+import { type Room, rockTile, tileAt } from '../world/room';
 
 /** Margin of rock drawn around the room so the edges of the view never show emptiness. */
 const MARGIN = 10;
@@ -77,7 +77,12 @@ function distanceField(room: Room): { data: Uint8Array; gw: number; gh: number }
   const gw = room.w + MARGIN * 2;
   const gh = room.h + MARGIN * 2;
   const solid = new Uint8Array(gw * gh);
-  for (let y = 0; y < gh; y++) for (let x = 0; x < gw; x++) solid[y * gw + x] = isSolid(tileAt(room, x - MARGIN, y - MARGIN)) ? 1 : 0;
+  for (let y = 0; y < gh; y++) for (let x = 0; x < gw; x++) solid[y * gw + x] = rockTile(tileAt(room, x - MARGIN, y - MARGIN)) ? 1 : 0;
+  // Gates, black crystal and boss doors are drawn as objects, not rock.
+  for (const [bx, by, bw, bh, flag] of room.def.brk ?? []) {
+    if (flag.startsWith('crack_')) continue;
+    for (let y = by; y < by + bh; y++) for (let x = bx; x < bx + bw; x++) solid[(y + MARGIN) * gw + x + MARGIN] = 0;
+  }
   // Two-pass chamfer distance to the nearest tile of the other kind.
   const INF = 1e6;
   const dist = new Float32Array(gw * gh).fill(INF);

@@ -50,6 +50,7 @@ def main() -> None:
     ap.add_argument("--flip", action="store_true", help="mirror so the character faces right")
     ap.add_argument("--min-area", type=int, default=400)
     ap.add_argument("--frames", type=str, default="", help="comma list of cell indices to keep, in order")
+    ap.add_argument("--star", type=float, default=0, help="scale so the floating star above the hood is this tall (px)")
     args = ap.parse_args()
 
     img = Image.open(args.src)
@@ -85,11 +86,32 @@ def main() -> None:
         band = m[y0 + int(h * 0.10): y0 + int(h * 0.30), x0:x1]
         bx = np.nonzero(band)[1]
         head_x = float(np.median(bx)) if len(bx) else (x1 - x0) / 2
-        frames.append({"img": crop, "h": h, "ax": head_x, "ay": float(h)})
+        # The floating star: the largest small piece near the top of the frame (undilated pieces).
+        sub = m[y0:y1, x0:x1]
+        slab, sn = ndimage.label(sub)
+        star_h = 0
+        best = 0
+        if sn > 1:
+            objs = ndimage.find_objects(slab)
+            for k, sl in enumerate(objs):
+                if sl is None:
+                    continue
+                hh = sl[0].stop - sl[0].start
+                ww = sl[1].stop - sl[1].start
+                area = int((slab[sl] == k + 1).sum())
+                if sl[0].start < h * 0.3 and 150 <= area < sub.sum() * 0.08 and hh < h * 0.25 and 0.5 < ww / max(1, hh) < 2.2 and area > best:
+                    best = area
+                    star_h = max(hh, ww)
+        frames.append({"img": crop, "h": h, "ax": head_x, "ay": float(h), "star": star_h})
     heights = sorted(f["h"] for f in frames)
     median_h = heights[len(heights) // 2]
-    scale = args.scale or args.height / median_h
-    print(f"{len(frames)} frames, median height {median_h}px, scale {scale:.3f}")
+    stars = sorted(f["star"] for f in frames if f["star"] > 0)
+    median_star = stars[len(stars) // 2] if stars else 0
+    if args.star and median_star:
+        scale = args.star / median_star
+    else:
+        scale = args.scale or args.height / median_h
+    print(f"{len(frames)} frames, median height {median_h}px, star {median_star}px ({len(stars)} found), scale {scale:.3f}")
     outs = []
     for f in frames:
         im = Image.fromarray(np.clip(f["img"], 0, 255).astype(np.uint8), "RGBA")
@@ -121,7 +143,7 @@ def main() -> None:
     out.parent.mkdir(parents=True, exist_ok=True)
     atlas.save(out.with_suffix(".png"))
     json.dump({"frames": meta, "scale": scale}, open(out.with_suffix(".json"), "w"))
-    print(f"atlas {aw}x{ah} -> {out.with_suffix('.png')}")
+    print(f"atlas {aw}x{ah} -> {out.with_suffix('.png')}", flush=True)
 
 
 if __name__ == "__main__":

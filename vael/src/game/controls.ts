@@ -12,12 +12,13 @@ export interface Controls {
   dashPressed: boolean;
   healHeld: boolean;
   artPressed: boolean;
+  artHeld: boolean;
   interactPressed: boolean;
 }
 
 export const NO_CONTROLS: Controls = {
   x: 0, y: 0, jumpPressed: false, jumpHeld: false, attackPressed: false, bladePressed: false,
-  blinkPressed: false, dashPressed: false, healHeld: false, artPressed: false, interactPressed: false,
+  blinkPressed: false, dashPressed: false, healHeld: false, artPressed: false, artHeld: false, interactPressed: false,
 };
 
 /** Reads the devices; presses are buffered for a few frames (consumed by the player when used). */
@@ -33,6 +34,7 @@ export function readControls(): Controls {
     dashPressed: input.pressed('dash'),
     healHeld: input.held('heal'),
     artPressed: input.pressed('art'),
+    artHeld: input.held('art'),
     interactPressed: input.pressed('up'),
   };
 }

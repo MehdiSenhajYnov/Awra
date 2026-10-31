@@ -1,5 +1,5 @@
 import { TILE } from './core';
-import { type Room, T, isHazard, isSolid, tileAt } from '../world/room';
+import { type Room, T, bladeSolid, isHazard, isSolid, tileAt } from '../world/room';
 
 /** An axis-aligned box moving through the tile grid; position is its top-left corner in pixels. */
 export interface Body {
@@ -173,7 +173,8 @@ export function fits(room: Room, x: number, y: number, w: number, h: number): bo
 }
 
 /** First solid tile hit along a segment (for the thrown blade and line of sight). */
-export function raycast(room: Room, x0: number, y0: number, x1: number, y1: number): { x: number; y: number; nx: number; ny: number } | null {
+export function raycast(room: Room, x0: number, y0: number, x1: number, y1: number, blade = false): { x: number; y: number; nx: number; ny: number } | null {
+  const solid = blade ? bladeSolid : isSolid;
   const len = Math.hypot(x1 - x0, y1 - y0);
   const steps = Math.max(1, Math.ceil(len / 4));
   let px = x0;
@@ -181,7 +182,7 @@ export function raycast(room: Room, x0: number, y0: number, x1: number, y1: numb
   for (let i = 1; i <= steps; i++) {
     const x = x0 + ((x1 - x0) * i) / steps;
     const y = y0 + ((y1 - y0) * i) / steps;
-    if (isSolid(tileAt(room, Math.floor(x / TILE), Math.floor(y / TILE)))) {
+    if (solid(tileAt(room, Math.floor(x / TILE), Math.floor(y / TILE)))) {
       const nx = Math.floor(x / TILE) !== Math.floor(px / TILE) ? -Math.sign(x1 - x0) : 0;
       const ny = Math.floor(y / TILE) !== Math.floor(py / TILE) ? -Math.sign(y1 - y0) : 0;
       return { x: px, y: py, nx, ny };

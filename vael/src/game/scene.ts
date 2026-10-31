@@ -1,12 +1,15 @@
 import { type Box, Rng, TILE, clamp, overlap } from '../engine/core';
 import { type Ledge, fits, move } from '../engine/physics';
 import { type Room, type RoomDef, T, buildRoom, setTile, tileAt } from '../world/room';
+import { castArt } from './arts';
 import { Blade, segDist } from './blade';
 import type { Controls } from './controls';
 import { type DamageSource, Entity } from './entity';
 import type { FxEvent } from './events';
 import { type AttackDir, PHYS, Player, type PlayerWorld } from './player';
 import type { Save } from './save';
+import type { Pickup } from './props';
+import { t as tr } from '../i18n';
 
 export interface SceneHooks {
   roomDef(id: string): RoomDef | undefined;
@@ -150,9 +153,14 @@ export class Scene implements PlayerWorld {
     this.emit({ t: 'recall', x: b.x, y: b.y });
   }
 
-  blinkTarget(): { x: number; y: number; execute: boolean } | null {
+  dashMul(): number {
+    return this.has('comet') ? 1.4 : 1;
+  }
+
+  blinkTarget(): { x: number; y: number; execute: boolean; zip?: boolean } | null {
     const b = this.blade;
     if (b.state === 'held' || b.state === 'returning') return null;
+    if (b.ring) return { x: b.ring.x, y: b.ring.y + 40, execute: false, zip: true };
     if (b.state === 'branded' && b.target) {
       const e = b.target as unknown as Entity;
       // Land just beside the foe, on the hero's side.
@@ -202,16 +210,22 @@ export class Scene implements PlayerWorld {
     this.emit({ t: 'heal', x: this.player.cx, y: this.player.cy });
   }
 
-  castArt(dir: AttackDir): boolean {
+  castArt(dir: AttackDir | 'ultimate'): boolean {
+    if (dir === 'ultimate') {
+      if (!this.save.arts.includes('constellation') || this.lumen < this.maxLumen()) return false;
+      this.lumen = 0;
+      castArt(this, 'constellation');
+      return true;
+    }
     const name = dir === 'up' ? 'ascension' : dir === 'down' ? 'chute' : 'comete';
     if (!this.save.arts.includes(name)) return false;
     if (!this.spendLumen(ART_COST)) return false;
-    this.artCast(name);
+    castArt(this, name);
     return true;
   }
 
-  /** Hook filled by arts.ts. */
-  artCast: (name: string) => void = () => {};
+  /** Frames during which foes are frozen (Constellation). */
+  timeStop = 0;
 
   // ---- Combat ---------------------------------------------------------------------------------------------
 
@@ -317,6 +331,13 @@ export class Scene implements PlayerWorld {
         this.emit({ t: e.kind, x: e.x ?? p.cx, y: e.y ?? p.feet, dir: e.dir, big: e.big });
       } else if (e.kind === 'dash') {
         this.emit({ t: 'dash', x: p.cx, y: p.cy, dir: e.dir ?? p.facing });
+      } else if (e.kind === 'dashWall') {
+        this.dashIntoWall(e.x ?? p.cx, e.y ?? p.cy);
+      } else if (e.kind === 'zip') {
+        this.emit({ t: 'dash', x: p.cx, y: p.cy, dir: p.facing });
+      } else if (e.kind === 'zipEnd') {
+        this.blade.catchNow();
+        this.emit({ t: 'catch', x: p.cx, y: p.cy });
       } else if (e.kind === 'healStart') {
         this.emit({ t: 'healStart', x: p.cx, y: p.cy });
       } else if (e.kind === 'art') {
@@ -327,7 +348,14 @@ export class Scene implements PlayerWorld {
     this.updateBlade();
     this.playerAttacks();
 
-    // Foes (slowed during the Éclipse).
+    // Foes (slowed during the Éclipse, frozen by Constellation). Art effects always run.
+    if (this.timeStop > 0) {
+      this.timeStop--;
+      for (const e of this.entities) if (!e.dead && e.prop && !e.hurtable) { e.tick(); e.update(); }
+      this.entities = this.entities.filter((e) => !e.dead || (e as unknown as { keep?: boolean }).keep);
+      if (!p.dead && this.touchesHazard()) this.hazard();
+      return;
+    }
     this.enemyClock += this.eclipse > 0 ? 0.3 : 1;
     while (this.enemyClock >= 1) {
       this.enemyClock -= 1;
@@ -367,6 +395,16 @@ export class Scene implements PlayerWorld {
     if (r === 'lodged') {
       this.emit({ t: 'lodge', x: b.x, y: b.y, angle: b.angle });
       // Lodged under the hero's feet would trap them inside the step; nothing to do, the step is one-way.
+    }
+    if (b.state === 'flying' && this.has('ring')) {
+      for (const e of this.entities) {
+        if (e.sprite !== 'ring') continue;
+        if (Math.hypot(e.cx - b.x, e.cy - b.y) < 46) {
+          b.lodgeInRing(e.cx, e.cy);
+          this.emit({ t: 'lodge', x: e.cx, y: e.cy, angle: b.angle });
+          return;
+        }
+      }
     }
     if (b.state === 'flying' || b.state === 'returning') {
       const s = b.sweep();
@@ -434,15 +472,127 @@ export class Scene implements PlayerWorld {
     }
   }
 
-  /** Opens a breakable wall (flag) and refreshes tiles. */
-  openBreakable(flag: string): void {
-    this.setFlag(flag);
+  /** Opens a flag-gated wall and refreshes tiles (persist: remembered in the save). */
+  openBreakable(flag: string, persist = true): void {
+    if (persist) this.setFlag(flag);
+    this.tempOpen.add(flag);
     for (const [x, y, w, h, f] of this.room.def.brk ?? []) {
       if (f !== flag) continue;
       for (let ty = y; ty < y + h; ty++) for (let tx = x; tx < x + w; tx++) setTile(this.room, tx, ty, T.Empty);
       this.emit({ t: 'break', x: x * TILE, y: y * TILE, w: w * TILE, h: h * TILE });
     }
+    this.tilesChanged++;
   }
+
+  /** Closes a timed gate again (never on top of the hero). */
+  closeBreakable(flag: string): void {
+    this.tempOpen.delete(flag);
+    for (const [x, y, w, h, f] of this.room.def.brk ?? []) {
+      if (f !== flag) continue;
+      for (let ty = y; ty < y + h; ty++) for (let tx = x; tx < x + w; tx++) setTile(this.room, tx, ty, T.Breakable);
+    }
+    const b = this.player.body;
+    if (!fits(this.room, b.x, b.y, b.w, b.h)) {
+      // Pushed out sideways rather than trapped.
+      for (let d = 10; d < 200; d += 10) {
+        if (fits(this.room, b.x - d, b.y, b.w, b.h)) { b.x -= d; break; }
+        if (fits(this.room, b.x + d, b.y, b.w, b.h)) { b.x += d; break; }
+      }
+    }
+    this.tilesChanged++;
+    this.sfx('door');
+  }
+
+  /** A dash into black crystal shatters it with Comet Wake. */
+  private dashIntoWall(x: number, y: number): void {
+    const tx = Math.floor(x / TILE);
+    const ty = Math.floor(y / TILE);
+    for (const [bx, by, bw, bh, flag] of this.room.def.brk ?? []) {
+      if (!flag.startsWith('crys_')) continue;
+      if (tx >= bx - 1 && tx <= bx + bw && ty >= by - 1 && ty <= by + bh) {
+        if (this.has('comet')) {
+          this.openBreakable(flag);
+          this.emit({ t: 'boom', x, y, r: 220, color: 0xc890ff });
+        } else {
+          this.emit({ t: 'clank', x, y });
+          this.say(tr('toast.needAbility'), 120);
+        }
+        return;
+      }
+    }
+  }
+
+  /** Bumped when tiles change, so the view rebuilds the terrain. */
+  tilesChanged = 0;
+  tempOpen = new Set<string>();
+
+  text(key: string, vars?: Record<string, string | number>): string {
+    return tr(key, vars);
+  }
+
+  /** UI requests (dialogues, revelations, lore) handled by the game screen. */
+  ui: (kind: string, arg: string, extra?: unknown) => void = () => {};
+
+  collect(p: Pickup): void {
+    const s = this.save;
+    this.setFlag(p.flag);
+    this.emit({ t: 'pickup', x: p.cx, y: p.cy, what: p.kind });
+    this.freeze = 12;
+    switch (p.kind) {
+      case 'ability':
+        if (!s.abilities.includes(p.value)) s.abilities.push(p.value);
+        this.ui('reveal', p.value);
+        break;
+      case 'art':
+        if (!s.arts.includes(p.value)) s.arts.push(p.value);
+        this.ui('revealArt', p.value);
+        break;
+      case 'shard':
+        s.shards++;
+        if (s.shards >= 4) {
+          s.shards = 0;
+          s.maxHp++;
+          this.player.maxHp = s.maxHp;
+          this.player.hp = s.maxHp;
+          this.ui('banner', 'heart');
+        } else this.ui('banner', 'shard');
+        break;
+      case 'vessel':
+        s.vesselFrags++;
+        if (s.vesselFrags >= 3) {
+          s.vesselFrags = 0;
+          s.vessels++;
+          this.lumen = this.maxLumen();
+          this.ui('banner', 'vesselFull');
+        } else this.ui('banner', 'vessel');
+        break;
+      case 'ore':
+        s.ore++;
+        this.ui('banner', 'ore');
+        break;
+      case 'notch':
+        s.notches++;
+        this.ui('banner', 'notch');
+        break;
+      case 'chant':
+        this.setFlag(`chant_${p.value}`);
+        this.ui('banner', 'chant');
+        break;
+      case 'seal':
+        if (!s.seals.includes(p.value)) s.seals.push(p.value);
+        this.ui('bannerSeal', p.value);
+        break;
+      case 'map':
+        this.setFlag(`map_${p.value}`);
+        this.ui('bannerMap', p.value);
+        break;
+      case 'key':
+        this.setFlag(`key_${p.value}`);
+        this.ui('banner', 'key');
+        break;
+    }
+  }
+
 
   private checkExit(): void {
     const p = this.player;
@@ -467,6 +617,17 @@ export class Scene implements PlayerWorld {
   fits(x: number, y: number, w: number, h: number): boolean {
     return fits(this.room, x, y, w, h);
   }
+
+  /** Rest at an altar: heal, save point, foes return. */
+  rest(key: string): void {
+    this.save.shrine = key;
+    this.save.shrineRoom = this.room.id;
+    this.player.hp = this.player.maxHp;
+    this.killed.clear();
+    this.onRest(key);
+  }
+
+  onRest: (key: string) => void = () => {};
 
   say(text: string, frames = 180): void {
     this.toast = { text, t: frames };
