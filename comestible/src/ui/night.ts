@@ -67,7 +67,8 @@ export function runNight(state: GameState, plan: NightPlan, onEnd: (report: Nigh
   const ruler = h('div.ruler');
   const stampMark = h('div.stamp-mark');
   const trayLabel = h('div.tray-label');
-  const tray = h('div.tray', {}, trayLabel, specimenWrap, ruler, stampMark);
+  const trayDark = h('div.tray-dark');
+  const tray = h('div.tray', { 'data-empty': t.hud.trayEmpty }, trayLabel, specimenWrap, trayDark, ruler, stampMark);
 
   const stampBtns: Partial<Record<Verdict, HTMLButtonElement>> = {};
   const stamps = h('div.stamps');
@@ -136,6 +137,7 @@ export function runNight(state: GameState, plan: NightPlan, onEnd: (report: Nigh
 
   const refreshButtons = () => {
     const hasSpec = !!current && !busy;
+    tray.classList.toggle('empty', !current);
     for (const b of Object.values(stampBtns)) b!.disabled = !hasSpec;
     for (const [tool, b] of Object.entries(toolBtns)) {
       b!.classList.toggle('used', used.has(tool as Tool));
@@ -320,12 +322,14 @@ export function runNight(state: GameState, plan: NightPlan, onEnd: (report: Nigh
         refreshButtons();
         audio.play('blow');
         darkness.classList.add('on');
+        trayDark.classList.add('on');
         const glow = !!sp?.glows && !tell;
         specimenWrap.classList.toggle('glow', glow);
         specimenWrap.classList.toggle('face', tell);
         if (tell || strange) setTimeout(() => audio.play('whisper'), 500);
         await wait(2400);
         darkness.classList.remove('on');
+        trayDark.classList.remove('on');
         specimenWrap.classList.remove('glow', 'face');
         busy = false;
         if (strange) addLog(tool, t.anomalyResults.bougie, 'bad');

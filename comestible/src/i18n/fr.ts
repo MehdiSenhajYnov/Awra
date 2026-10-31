@@ -88,6 +88,7 @@ export const fr = {
     endlessNight: 'Saison, nuit {n}',
     money: '{n} sous',
     basket: 'Panier : {n}',
+    trayEmpty: 'Plateau d’examen',
     examine: 'Examiner le panier',
     next: 'Spécimen suivant',
     nextClient: 'Client suivant',

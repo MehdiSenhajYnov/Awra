@@ -89,6 +89,7 @@ export const en: Locale = {
     endlessNight: 'Season, night {n}',
     money: '{n} sous',
     basket: 'Basket: {n}',
+    trayEmpty: 'Examination tray',
     examine: 'Examine the basket',
     next: 'Next specimen',
     nextClient: 'Next customer',
