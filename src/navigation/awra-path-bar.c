@@ -776,3 +776,47 @@ awra_path_bar_set_suggestions (AwraPathBar *self,
   rebuild_suggestions (self);
   g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_SUGGESTIONS]);
 }
+
+AwraBreadcrumbItem *
+awra_path_bar_get_item_at (AwraPathBar *self,
+                           double       x,
+                           double       y)
+{
+  GtkWidget *node;
+
+  g_return_val_if_fail (AWRA_IS_PATH_BAR (self), NULL);
+  node = gtk_widget_pick (GTK_WIDGET (self), x, y, GTK_PICK_DEFAULT);
+  for (; node != NULL && node != GTK_WIDGET (self); node = gtk_widget_get_parent (node)) {
+    AwraBreadcrumbItem *item = g_object_get_data (G_OBJECT (node), "awra-breadcrumb-item");
+
+    if (item != NULL)
+      return item;
+  }
+  return NULL;
+}
+
+static void
+mark_drop_item (GtkWidget          *widget,
+                AwraBreadcrumbItem *item)
+{
+  gpointer own = g_object_get_data (G_OBJECT (widget), "awra-breadcrumb-item");
+
+  if (own != NULL) {
+    if (own == item)
+      gtk_widget_add_css_class (widget, "awra-breadcrumb-drop");
+    else
+      gtk_widget_remove_css_class (widget, "awra-breadcrumb-drop");
+  }
+  for (GtkWidget *child = gtk_widget_get_first_child (widget); child != NULL;
+       child = gtk_widget_get_next_sibling (child))
+    mark_drop_item (child, item);
+}
+
+void
+awra_path_bar_set_drop_item (AwraPathBar        *self,
+                             AwraBreadcrumbItem *item)
+{
+  g_return_if_fail (AWRA_IS_PATH_BAR (self));
+  g_return_if_fail (item == NULL || AWRA_IS_BREADCRUMB_ITEM (item));
+  mark_drop_item (GTK_WIDGET (self->breadcrumbs), item);
+}

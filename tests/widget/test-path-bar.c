@@ -73,6 +73,10 @@ path_bar_contract (void)
   g_signal_connect (bar, "submit", G_CALLBACK (submit_cb), NULL);
   awra_path_bar_set_model (bar, trail);
   g_assert_true (awra_path_bar_get_model (bar) == trail);
+  /* Nothing is under an unallocated bar, and marking no item is always valid. */
+  g_assert_null (awra_path_bar_get_item_at (bar, 4, 4));
+  awra_path_bar_set_drop_item (bar, NULL);
+  awra_path_bar_set_drop_item (bar, g_list_model_get_item (trail, 0));
   awra_path_bar_set_text (bar, "/home");
   awra_path_bar_set_icon_name (bar, "folder-symbolic");
   awra_path_bar_set_end_widget (bar, end);

@@ -251,6 +251,12 @@ awrapathbar awrabreadcrumbbar .awra-breadcrumb-button:hover {
   background-color: @awra_control_hover;
 }
 
+awrapathbar awrabreadcrumbbar .awra-breadcrumb-button.awra-breadcrumb-drop {
+  color: @awra_accent_content;
+  background-color: @awra_accent_soft;
+  box-shadow: inset 0 0 0 1px @awra_accent;
+}
+
 .awra-menu-item.awra-path-bar-suggestion-highlighted {
   background-color: @awra_selection;
   color: @awra_accent_content;

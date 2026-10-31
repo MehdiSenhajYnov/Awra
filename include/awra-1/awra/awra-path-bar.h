@@ -172,4 +172,32 @@ GListModel *awra_path_bar_get_suggestions (AwraPathBar *self);
 void        awra_path_bar_set_suggestions (AwraPathBar *self,
                                            GListModel  *model);
 
+/**
+ * awra_path_bar_get_item_at:
+ * @self: a path bar
+ * @x: horizontal position, in the coordinates of the path bar
+ * @y: vertical position, in the coordinates of the path bar
+ *
+ * Finds the breadcrumb under a point, for instance to make each one a drop
+ * target. Nothing is found while the text field is shown.
+ *
+ * Returns: (transfer none) (nullable): the breadcrumb at this position
+ *
+ * Since: 1.1
+ */
+AwraBreadcrumbItem *awra_path_bar_get_item_at (AwraPathBar *self,
+                                               double       x,
+                                               double       y);
+/**
+ * awra_path_bar_set_drop_item:
+ * @self: a path bar
+ * @item: (nullable): the breadcrumb that would receive a drop
+ *
+ * Marks one breadcrumb as the target of the drag in progress.
+ *
+ * Since: 1.1
+ */
+void        awra_path_bar_set_drop_item       (AwraPathBar        *self,
+                                               AwraBreadcrumbItem *item);
+
 G_END_DECLS

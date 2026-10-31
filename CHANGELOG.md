@@ -9,6 +9,8 @@ unchanged (checked against the frozen 1.0.0 contract).
 
 ### Desktop workspace composition
 
+- `awra_path_bar_get_item_at()` and `awra_path_bar_set_drop_item()` let each
+  breadcrumb receive a drop.
 - Style roles `inline-edit`, `inline-action` and `usage-meter` cover editing in
   a row, actions inside a row and capacity gauges.
 - `AwraTransitionBin` animates content replaced in place, such as a list that
